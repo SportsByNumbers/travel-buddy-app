@@ -8,7 +8,7 @@
     "lucide-react": "^0.364.0"
   },
   "scripts": {
-    "start": "webpack serve --mode development",
+    "start": "serve -s build -l 7860",
     "build": "webpack --mode production",
     "test": "echo \"No custom test script configured for this example\""
   },
@@ -45,6 +45,8 @@
     "css-loader": "^7.1.1",
     "style-loader": "^4.0.0",
     "postcss-loader": "^8.1.1",
-    "serve": "^14.2.3"
+    "serve": "^14.2.3",
+    "copy-webpack-plugin": "^12.0.2",
+    "process": "^0.11.10"
   }
 }
