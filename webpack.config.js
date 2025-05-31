@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack'); // Add this line to import webpack
 
 module.exports = {
   entry: './src/index.js',
@@ -16,7 +17,6 @@ module.exports = {
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
-          // Babel configuration is handled by babel.config.js
         },
       },
       {
@@ -42,9 +42,16 @@ module.exports = {
       filename: 'index.html',
       inject: 'body',
     }),
+    // Add this section to define process.env.NODE_ENV and provide a global process
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'), // Default to production
+      'process': JSON.stringify({ env: {} }) // Provide a minimal mock for 'process' global
+    })
   ],
   resolve: {
     extensions: ['.js', '.jsx'],
+    // Optionally, add a fallback for 'process' module, though DefinePlugin is usually enough
+    // fallback: { "process": require.resolve("process/browser") }
   },
   devServer: {
     static: {
