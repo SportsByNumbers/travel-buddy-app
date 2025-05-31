@@ -1,18 +1,18 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack'); // Needed for DefinePlugin
-const CopyWebpackPlugin = require('copy-webpack-plugin'); // NEW: For copying public assets
+const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  // Set mode to 'production' for optimized output
-  mode: 'production', // Explicitly set mode (good practice)
+  // Explicitly set mode for clarity and proper optimizations
+  mode: 'production', // Ensure this is set to 'production' for deploy builds
 
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js',
     publicPath: '/',
-    clean: true, // Clean the output directory before emit
+    clean: true,
   },
   module: {
     rules: [
@@ -32,11 +32,10 @@ module.exports = {
         ],
       },
       {
-        // Rule for image assets (png, svg, jpg, jpeg, gif, ico)
         test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
-        type: 'asset/resource', // Webpack 5 asset module type
+        type: 'asset/resource',
         generator: {
-          filename: 'assets/[name][ext]' // Output images to an 'assets' folder in build
+          filename: 'assets/[name][ext]'
         }
       },
     ],
@@ -48,27 +47,34 @@ module.exports = {
       inject: 'body',
     }),
     // FIX for ReferenceError: process is not defined
-    // This defines process.env.NODE_ENV and provides a fallback for 'process' global.
+    // Define process.env.NODE_ENV and provide a minimal polyfill for 'process' global.
+    // This is a common and robust way to handle Node.js globals in browser builds.
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-      // The 'process' global often needs a polyfill if used directly by libraries
-      // We'll rely on the 'process' npm package for a more complete polyfill if needed.
-      // For now, only define NODE_ENV
+      // Provide a basic 'process' object if a library somehow tries to access it directly
+      'process': JSON.stringify({
+          env: { NODE_ENV: process.env.NODE_ENV || 'production' },
+          platform: 'browser', // Mimic browser environment
+          cwd: () => '/',      // Minimal cwd implementation
+          // Add other properties as needed if specific libraries complain
+      })
     }),
-    // NEW FIX for manifest.json 404: Copy static files from public folder to build
+    // FIX for manifest.json 404: Copy static files from public folder to build
     new CopyWebpackPlugin({
       patterns: [
         // Copy all files from 'public' to the root of 'build', except index.html (handled by HtmlWebpackPlugin)
+        // Make sure the path 'public' is relative to webpack.config.js
         { from: 'public', to: '.', globOptions: { ignore: ['**/index.html'] } }
       ]
     })
   ],
   resolve: {
     extensions: ['.js', '.jsx'],
-    // FIX for ReferenceError: process is not defined: Add fallback for 'process' module
-    // This requires 'process' npm package to be installed (npm install process)
+    // Add fallback for 'process' module if needed by deep dependencies.
+    // This requires 'process' npm package: npm install process
     fallback: { "process": require.resolve("process/browser") }
   },
+  // devServer configuration is typically for local development
   devServer: {
     static: {
       directory: path.join(__dirname, 'public'),
