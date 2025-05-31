@@ -1,7 +1,7 @@
 // mockApi.js
 
 // Simulate a database of users and their trips
-const users = {}; // email: { password, trips: [] }
+const users = {}; // email: { password, trips: [] } - This line MUST appear only ONCE
 
 // Simulate various travel data with IDs for itinerary tracking
 const mockTravelData = {
@@ -65,9 +65,6 @@ const fetchFlightPrices = async ({ originCity, destinationCity, departureDate, r
     }, 1500); // Simulate network delay
   });
 };
-
-// Simulate a database of users and their trips
-const users = {}; // email: { password, trips: [] }
 
 // Simulate user authentication
 const authenticateUser = async ({ email, password }) => {
