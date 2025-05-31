@@ -1,0 +1,24 @@
+# netlify.toml
+# This file configures Netlify's build process, redirects, and custom headers.
+
+[build]
+  command = "npm run build" # The command Netlify runs to build your site
+  publish = "build"         # The directory Netlify should deploy (your Webpack output)
+
+# Redirects: Crucial for Single Page Applications (SPAs)
+# This rule ensures that any path not found directly (e.g., /about)
+# is rewritten to /index.html, allowing your client-side React Router to handle it.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 # Use 200 for client-side routing (rewrite), not a true redirect
+
+# Custom Headers: Fixes for manifest.json and potential CORS issues
+# Ensures manifest.json is served with the correct MIME type
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    # Optional: If you still face CORS issues for manifest or other assets, you can add:
+    # Access-Control-Allow-Origin = "*"
+    # This is generally not needed for same-origin requests unless specifically enforced.
