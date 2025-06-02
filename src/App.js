@@ -4,8 +4,8 @@ import {
   DollarSign, CalendarDays, Search, XCircle, PlaneTakeoff, PlaneLanding, Users, LogIn, LogOut, Save, FolderOpen, ListChecks, PlusCircle, MinusCircle, Heart, Home, Lightbulb, Loader, Wallet, Compass, CheckCircle
 } from 'lucide-react';
 
-// Import mock API functions for simulation
-import { fetchTravelData, fetchFlightPrices, authenticateUser, registerUser, saveUserTrip, loadUserTrips } from './mockApi';
+// --- UPDATED: Import fetchBudgetEstimates from mockApi ---
+import { fetchTravelData, fetchFlightPrices, authenticateUser, registerUser, saveUserTrip, loadUserTrips, fetchBudgetEstimates } from './mockApi';
 
 // Transport options (fixed for this simulation) - can be used as base for AI knowledge
 const transportOptions = {
@@ -460,342 +460,307 @@ function App() {
       }
     };
 
-    const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API Key if deploying
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    // --- SWITCHED: Use mockApi.js for suggestions during local development ---
+    // Comment out the actual Gemini API call when testing locally with mock data
+    // const apiKey = "YOUR_GEMINI_API_KEY";
+    // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    // const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    // const result = await response.json();
 
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
-
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
-        const jsonString = result.candidates[0].content.parts[0].text;
-        const parsedJson = JSON.parse(jsonString);
-
-        // --- UPDATED: Set states with the new structured objects ---
-        setSuggestedActivities(parsedJson.activities || []);
-        setSuggestedFoodLocations(parsedJson.foodLocations || []);
-        setSuggestedThemeParks(parsedJson.themeParks || []);
-        setSuggestedTouristSpots(parsedJson.touristSpots || []);
-        setSuggestedTours(parsedJson.tours || []);
-        setSuggestedSportingEvents(parsedJson.sportingEvents || []);
-
-      } else {
-        setSuggestionError("Failed to get suggestions. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error generating suggestions:", error);
-      setSuggestionError("An error occurred while generating suggestions.");
-    } finally {
-      setIsGeneratingSuggestions(false);
-    }
-  };
-
-  const generateBudgetEstimates = async () => {
-    if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
-      setBudgetError("Please ensure countries/cities, duration, and number of people are set to generate budget estimates.");
-      return;
-    }
-
-    setIsGeneratingBudget(true);
-    setBudgetError('');
-
-    const destinationPrompt = countries.length > 0 && cities.length > 0
-      ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')}`
-      : countries.length > 0
-        ? `in the countries: ${countries.map(c => c.name).join(' and ')}`
-        : `in the cities: ${cities.join(', ')}`;
-
-    const homeLocationPrompt = homeCountry.name && homeCity
-      ? `starting from ${homeCity}, ${homeCountry.name}`
-      : homeCountry.name
-        ? `starting from ${homeCountry.name}`
-        : '';
-
-    const itineraryPrompt = [
-      selectedSuggestedActivities.length > 0 ? `activities: ${selectedSuggestedActivities.map(item => item.name).join(', ')}` : '', // Now items are objects
-      selectedSuggestedFoodLocations.length > 0 ? `food: ${selectedSuggestedFoodLocations.map(item => item.name).join(', ')}` : '',
-      selectedSuggestedThemeParks.length > 0 ? `theme parks: ${selectedSuggestedThemeParks.map(item => item.name).join(', ')}` : '',
-      selectedSuggestedTouristSpots.length > 0 ? `tourist spots: ${selectedSuggestedTouristSpots.map(item => item.name).join(', ')}` : '',
-      selectedSuggestedTours.length > 0 ? `tours: ${selectedSuggestedTours.map(item => item.name).join(', ')}` : '',
-      selectedSuggestedSportingEvents.length > 0 ? `sporting events: ${selectedSuggestedSportingEvents.map(item => item.name).join(', ')}` : ''
-    ].filter(Boolean).join('; ');
-
-    const transportOptionsPrompt = [
-      carRental ? 'car rental' : '',
-      shuttle ? 'shuttle' : '',
-      airportTransfers ? 'airport transfers' : '',
-      airportParking ? 'airport parking' : ''
-    ].filter(Boolean).join(', ');
-
-    // --- UPDATED PROMPT: Requesting more detailed budget breakdown ---
-    const prompt = `Estimate the following costs in USD for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
-    Based on typical online search results, provide specific (simulated, but realistic) details for:
-    - Flights: suggest a specific airline (e.g., United Airlines), a plausible route (e.g., SYD-NRT), a departure date and return date (relative to today and trip duration), and an estimated total flight cost for the specified number of people/party.
-    - Hotel: suggest a specific hotel name (e.g., Grand Hyatt Tokyo), a location (e.g., Shinjuku), a realistic cost per night, the total number of nights (based on duration), and an estimated total hotel cost for the specified number of people/party.
-    - Destination Transport: provide an estimated total cost for local transportation (e.g., public transport passes, taxi rides) for the specified number of people/party.
-    - Miscellaneous: provide a general estimated total cost for unexpected expenses or general shopping/souvenirs for the specified number of people/party.
-    - Daily Food Allowance (per person): provide separate daily estimates for Breakfast, Lunch, Dinner, and Snacks.
-
-    Consider these itinerary items for activity cost estimation: ${itineraryPrompt || 'general sightseeing'}.
-    Preferred hotel star rating: ${starRating || 'any'}.
-    Transport options to consider: ${transportOptionsPrompt || 'standard public transport'}.
-
-    Provide the response as a JSON object with keys: "flight", "hotel", "activityCost", "transportCost", "miscellaneousCost", "dailyFoodAllowance".
-    "flight" should be an object with: "airline", "route", "departure_date" (YYYY-MM-DD), "return_date" (YYYY-MM-DD), "estimated_cost_usd" (NUMBER).
-    "hotel" should be an object with: "name", "location", "cost_per_night_usd" (NUMBER), "total_nights" (NUMBER), "estimated_cost_usd" (NUMBER).
-    "activityCost" should be a NUMBER (AI's general activity cost estimate, separate from specific selected activities).
-    "transportCost" should be a NUMBER.
-    "miscellaneousCost" should be a NUMBER.
-    "dailyFoodAllowance" should be an object with: "breakfast_usd", "lunch_usd", "dinner_usd", "snacks_usd" (all NUMBERs).
-    Ensure all fields are present in the JSON response.
-    `;
-
-    let chatHistory = [];
-    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-    // --- UPDATED SCHEMA: Reflecting the new structured budget details ---
-    const payload = {
-      contents: chatHistory,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            "flight": { "type": "OBJECT", "properties": {
-                "airline": {"type": "STRING"},
-                "route": {"type": "STRING"},
-                "departure_date": {"type": "STRING"},
-                "return_date": {"type": "STRING"},
-                "estimated_cost_usd": {"type": "NUMBER"}
-            }},
-            "hotel": { "type": "OBJECT", "properties": {
-                "name": {"type": "STRING"},
-                "location": {"type": "STRING"},
-                "cost_per_night_usd": {"type": "NUMBER"},
-                "total_nights": {"type": "NUMBER"},
-                "estimated_cost_usd": {"type": "NUMBER"}
-            }},
-            "activityCost": { "type": "NUMBER" },
-            "transportCost": { "type": "NUMBER" },
-            "miscellaneousCost": { "type": "NUMBER" },
-            "dailyFoodAllowance": { "type": "OBJECT", "properties": {
-                "breakfast_usd": {"type": "NUMBER"},
-                "lunch_usd": {"type": "NUMBER"},
-                "dinner_usd": {"type": "NUMBER"},
-                "snacks_usd": {"type": "NUMBER"}
-            }}
-          },
-          "propertyOrdering": [
-            "flight", "hotel", "activityCost", "transportCost", "miscellaneousCost", "dailyFoodAllowance"
-          ]
-        }
-      }
-    };
-
-    const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API Key if deploying
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
-
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
-        const jsonString = result.candidates[0].content.parts[0].text;
-        const parsedJson = JSON.parse(jsonString);
-
-        // --- UPDATED: Set states with AI's detailed budget estimates ---
-        setEstimatedFlightCost(parsedJson.flight?.estimated_cost_usd || 0);
-        setAiFlightDetails(parsedJson.flight || null); // Store detailed flight info
-
-        setEstimatedHotelCost(parsedJson.hotel?.estimated_cost_usd || 0);
-        setAiHotelDetails(parsedJson.hotel || null); // Store detailed hotel info
-
-        setEstimatedActivityCost(parsedJson.activityCost || 0); // AI's general estimate for activities
-        setEstimatedTransportCost(parsedJson.transportCost || 0);
-        setEstimatedMiscellaneousCost(parsedJson.miscellaneousCost || 0); // Corrected key name
-
-        setBreakfastAllowance(parsedJson.dailyFoodAllowance?.breakfast_usd || 0);
-        setLunchAllowance(parsedJson.dailyFoodAllowance?.lunch_usd || 0);
-        setDinnerAllowance(parsedJson.dailyFoodAllowance?.dinner_usd || 0);
-        setSnacksAllowance(parsedJson.dailyFoodAllowance?.snacks_usd || 0);
-
-      } else {
-        setBudgetError("Failed to get budget estimates. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error generating budget estimates:", error);
-      setBudgetError("An error occurred while generating budget estimates.");
-    } finally {
-      setIsGeneratingBudget(false);
-    }
-  };
+    // Use the mock API function for suggestions
+    const result = await fetchTravelData(prompt); // fetchTravelData now returns data in Gemini API format
 
 
-  // --- MAIN TRAVEL PLAN CALCULATION (for final summary) ---
-  const calculateTravelPlan = () => {
-    // Combine selected suggested items (as manual input fields are removed for these)
-    // Note: These are now objects from AI, need to map to string names for summary display
-    const finalActivities = selectedSuggestedActivities.map(item => item.name).filter(Boolean).join(', ');
-    const finalFoodLocations = selectedSuggestedFoodLocations.map(item => item.name).filter(Boolean).join(', ');
-    const finalThemeParks = selectedSuggestedThemeParks.map(item => item.name).filter(Boolean).join(', ');
-    const finalTouristSpots = selectedSuggestedTouristSpots.map(item => item.name).filter(Boolean).join(', ');
-    const finalTours = selectedSuggestedTours.map(item => item.name).filter(Boolean).join(', ');
-    const finalSportingEvents = selectedSuggestedSportingEvents.map(item => item.name).filter(Boolean).join(', ');
+    if (result.candidates && result.candidates.length > 0 &&
+        result.candidates[0].content && result.candidates[0].content.parts &&
+        result.candidates[0].content.parts.length > 0) {
+      const jsonString = result.candidates[0].content.parts[0].text;
+      const parsedJson = JSON.parse(jsonString);
 
-    // Calculate total food allowance for the trip from daily allowances
-    const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
-    const totalFoodCost = totalDailyFoodAllowance * parseInt(duration); // This is total for the trip, not per person yet.
+      // --- UPDATED: Set states with the new structured objects ---
+      setSuggestedActivities(parsedJson.activities || []);
+      setSuggestedFoodLocations(parsedJson.foodLocations || []);
+      setSuggestedThemeParks(parsedJson.themeParks || []);
+      setSuggestedTouristSpots(parsedJson.touristSpots || []);
+      setSuggestedTours(parsedJson.tours || []);
+      setSuggestedSportingEvents(parsedJson.sportingEvents || []);
 
-    // =======================================================
-    // UPDATED: Calculate finalTotalCost using the new function with correct AI estimates
-    // =======================================================
-    const finalTotalCost = calculateTotalCost(
-      itineraryItems,
-      parseInt(duration),
-      parseFloat(estimatedFlightCost),
-      parseFloat(estimatedHotelCost),
-      parseFloat(estimatedTransportCost),
-      parseFloat(estimatedMiscellaneousCost),
-      parseFloat(breakfastAllowance),
-      parseFloat(lunchAllowance),
-      parseFloat(dinnerAllowance),
-      parseFloat(snacksAllowance),
-      parseInt(numberOfPeople),
-      isPerPerson
-    );
-
-    // Adjust the total food cost based on per person/per party basis for the summary display
-    const finalTotalFoodCost = isPerPerson ? totalFoodCost * parseInt(numberOfPeople) : totalFoodCost;
-
-    setTravelPlanSummary({
-      homeCountry,
-      homeCity,
-      countries, // Destination countries
-      cities,    // Destination cities
-      duration,
-      starRating,
-      activities: finalActivities,
-      sportingEvents: finalSportingEvents,
-      foodLocations: finalFoodLocations,
-      themeParks: finalThemeParks,
-      touristSpots: finalTouristSpots,
-      tours: finalTours, // Include tours in summary
-      isPerPerson,
-      numberOfPeople,
-      
-      // --- UPDATED: Pass AI's detailed flight/hotel info to summary ---
-      estimatedFlightCost, // Numerical value
-      aiFlightDetails,     // Detailed object
-      estimatedHotelCost,  // Numerical value
-      aiHotelDetails,      // Detailed object
-
-      estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
-      
-      totalEstimatedCost: finalTotalCost, // This is the sum of estimated costs including selected items, excluding food, and then adjusted by people if perPerson
-      breakfastAllowance,
-      lunchAllowance,
-      dinnerAllowance,
-      snacksAllowance,
-      totalDailyFoodAllowance,
-      totalFoodCost: finalTotalFoodCost, // This is the total food cost for the trip adjusted by people
-      carRental,
-      shuttle,
-      airportTransfers,
-      airportParking,
-      grandTotal: finalTotalCost, // grandTotal should already include all costs including food via calculateTotalCost
-      topicsOfInterest, // Include topics of interest in summary
-    });
-  };
-
-  // --- FLIGHT SEARCH HANDLER (separate from AI budget estimate now) ---
-  const handleFlightSearch = async () => {
-    setFlightLoading(true);
-    setFlightError('');
-    try {
-      const destCityForFlight = cities.length > 0 ? cities[0] : destinationCity;
-      const originCityForFlight = homeCity || originCity;
-
-      const cost = await fetchFlightPrices({
-        originCity: originCityForFlight,
-        destinationCity: destCityForFlight,
-        departureDate,
-        returnDate
-      });
-      setFlightCost(cost); // This sets the value for the *manual* flight search
-    } catch (error) {
-      console.error("Error fetching flight prices:", error);
-      setFlightError(error.message);
-      setFlightCost(0);
-    } finally {
-      setFlightLoading(false);
-    }
-  };
-
-  // --- ITINERARY ITEM ADD/REMOVE HANDLERS (for objects) ---
-  const handleAddToItinerary = (item) => {
-    // Assign a unique ID if item doesn't have one, essential for list keys
-    const itemWithId = { ...item, id: item.name + Math.random().toString(36).substr(2, 9) };
-    if (!itineraryItems.some(itineraryItem => itineraryItem.name === item.name)) { // Check by name for uniqueness
-      const updatedItinerary = [...itineraryItems, {
-        id: itemWithId.id,
-        name: itemWithId.name,
-        // Base cost for itinerary items comes from AI's simulated_estimated_cost_usd
-        baseCost: itemWithId.simulated_estimated_cost_usd || 0,
-        type: itemWithId.type || 'activity' // Assign a type for calculation
-      }];
-      setItineraryItems(updatedItinerary);
-
-      const durationDays = parseInt(duration) || 0;
-
-      // =======================================================
-      // UPDATED: Calculate totalEstimatedCost using the new function
-      // =======================================================
-      setTotalEstimatedCost(calculateTotalCost(
-        updatedItinerary, // Pass the updated itinerary here
-        durationDays,
-        estimatedFlightCost, // Use the state value
-        estimatedHotelCost,
-        estimatedTransportCost,
-        estimatedMiscellaneousCost,
-        breakfastAllowance,
-        lunchAllowance,
-        dinnerAllowance,
-        snacksAllowance,
-        numberOfPeople,
-        isPerPerson
-      ));
-
-      setSaveLoadMessage(`Added "${item.name}" to itinerary.`);
-      setTimeout(() => setSaveLoadMessage(''), 2000);
     } else {
-      setSaveLoadMessage(`"${item.name}" is already in your itinerary.`);
-      setTimeout(() => setSaveLoadMessage(''), 2000);
+      setSuggestionError("Failed to get suggestions. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error generating suggestions:", error);
+    setSuggestionError("An error occurred while generating suggestions.");
+  } finally {
+    setIsGeneratingSuggestions(false);
+  }
+};
+
+const generateBudgetEstimates = async () => {
+  if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
+    setBudgetError("Please ensure countries/cities, duration, and number of people are set to generate budget estimates.");
+    return;
+  }
+
+  setIsGeneratingBudget(true);
+  setBudgetError('');
+
+  const destinationPrompt = countries.length > 0 && cities.length > 0
+    ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')}`
+    : countries.length > 0
+      ? `in the countries: ${countries.map(c => c.name).join(' and ')}`
+      : `in the cities: ${cities.join(', ')}`;
+
+  const homeLocationPrompt = homeCountry.name && homeCity
+    ? `starting from ${homeCity}, ${homeCountry.name}`
+    : homeCountry.name
+      ? `starting from ${homeCountry.name}`
+      : '';
+
+  const itineraryPrompt = [
+    selectedSuggestedActivities.length > 0 ? `activities: ${selectedSuggestedActivities.map(item => item.name).join(', ')}` : '', // Now items are objects
+    selectedSuggestedFoodLocations.length > 0 ? `food: ${selectedSuggestedFoodLocations.map(item => item.name).join(', ')}` : '',
+    selectedSuggestedThemeParks.length > 0 ? `theme parks: ${selectedSuggestedThemeParks.map(item => item.name).join(', ')}` : '',
+    selectedSuggestedTouristSpots.length > 0 ? `tourist spots: ${selectedSuggestedTouristSpots.map(item => item.name).join(', ')}` : '',
+    selectedSuggestedTours.length > 0 ? `tours: ${selectedSuggestedTours.map(item => item.name).join(', ')}` : '',
+    selectedSuggestedSportingEvents.length > 0 ? `sporting events: ${selectedSuggestedSportingEvents.map(item => item.name).join(', ')}` : ''
+  ].filter(Boolean).join('; ');
+
+  const transportOptionsPrompt = [
+    carRental ? 'car rental' : '',
+    shuttle ? 'shuttle' : '',
+    airportTransfers ? 'airport transfers' : '',
+    airportParking ? 'airport parking' : ''
+  ].filter(Boolean).join(', ');
+
+  // --- UPDATED PROMPT: Requesting more detailed budget breakdown ---
+  const prompt = `Estimate the following costs in USD for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
+  Based on typical online search results, provide specific (simulated, but realistic) details for:
+  - Flights: suggest a specific airline (e.g., United Airlines), a plausible route (e.g., SYD-NRT), a departure date and return date (relative to today and trip duration), and an estimated total flight cost for the specified number of people/party.
+  - Hotel: suggest a specific hotel name (e.g., Grand Hyatt Tokyo), a location (e.g., Shinjuku), a realistic cost per night, the total number of nights (based on duration), and an estimated total hotel cost for the specified number of people/party.
+  - Destination Transport: provide an estimated total cost for local transportation (e.g., public transport passes, taxi rides) for the specified number of people/party.
+  - Miscellaneous: provide a general estimated total cost for unexpected expenses or general shopping/souvenirs for the specified number of people/party.
+  - Daily Food Allowance (per person): provide separate daily estimates for Breakfast, Lunch, Dinner, and Snacks.
+
+  Consider these itinerary items for activity cost estimation: ${itineraryPrompt || 'general sightseeing'}.
+  Preferred hotel star rating: ${starRating || 'any'}.
+  Transport options to consider: ${transportOptionsPrompt || 'standard public transport'}.
+
+  Provide the response as a JSON object with keys: "flight", "hotel", "activityCost", "transportCost", "miscellaneousCost", "dailyFoodAllowance".
+  "flight" should be an object with: "airline", "route", "departure_date" (YYYY-MM-DD), "return_date" (YYYY-MM-DD), "estimated_cost_usd" (NUMBER).
+  "hotel" should be an object with: "name", "location", "cost_per_night_usd" (NUMBER), "total_nights" (NUMBER), "estimated_cost_usd" (NUMBER).
+  "activityCost" should be a NUMBER (AI's general activity cost estimate, separate from specific selected activities).
+  "transportCost" should be a NUMBER.
+  "miscellaneousCost" should be a NUMBER.
+  "dailyFoodAllowance" should be an object with: "breakfast_usd", "lunch_usd", "dinner_usd", "snacks_usd" (all NUMBERs).
+  Ensure all fields are present in the JSON response.
+  `;
+
+  let chatHistory = [];
+  chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+  // --- UPDATED SCHEMA: Reflecting the new structured budget details ---
+  const payload = {
+    contents: chatHistory,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          "flight": { "type": "OBJECT", "properties": {
+              "airline": {"type": "STRING"},
+              "route": {"type": "STRING"},
+              "departure_date": {"type": "STRING"},
+              "return_date": {"type": "STRING"},
+              "estimated_cost_usd": {"type": "NUMBER"}
+          }},
+          "hotel": { "type": "OBJECT", "properties": {
+              "name": {"type": "STRING"},
+              "location": {"type": "STRING"},
+              "cost_per_night_usd": {"type": "NUMBER"},
+              "total_nights": {"type": "NUMBER"},
+              "estimated_cost_usd": {"type": "NUMBER"}
+          }},
+          "activityCost": { "type": "NUMBER" },
+          "transportCost": { "type": "NUMBER" },
+          "miscellaneousCost": { "type": "NUMBER" },
+          "dailyFoodAllowance": { "type": "OBJECT", "properties": {
+              "breakfast_usd": {"type": "NUMBER"},
+              "lunch_usd": {"type": "NUMBER"},
+              "dinner_usd": {"type": "NUMBER"},
+              "snacks_usd": {"type": "NUMBER"}
+          }}
+        },
+        "propertyOrdering": [
+          "flight", "hotel", "activityCost", "transportCost", "miscellaneousCost", "dailyFoodAllowance"
+        ]
+      }
     }
   };
 
-  const handleRemoveFromItinerary = (itemId) => {
-    const itemToRemove = itineraryItems.find(item => item.id === itemId);
-    if (!itemToRemove) return;
+  // --- SWITCHED: Use mockApi.js for budget estimates during local development ---
+  // Comment out the actual Gemini API call when testing locally with mock data
+  // const apiKey = "YOUR_GEMINI_API_KEY";
+  // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  // const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  // const result = await response.json();
 
-    const updatedItinerary = itineraryItems.filter(item => item.id !== itemId);
+  // Use the mock API function for budget estimates
+  const result = await fetchBudgetEstimates(prompt); // fetchBudgetEstimates now returns data in Gemini API format
+
+
+  if (result.candidates && result.candidates.length > 0 &&
+      result.candidates[0].content && result.candidates[0].content.parts &&
+      result.candidates[0].content.parts.length > 0) {
+    const jsonString = result.candidates[0].content.parts[0].text;
+    const parsedJson = JSON.parse(jsonString);
+
+    // --- UPDATED: Set states with AI's detailed budget estimates ---
+    setEstimatedFlightCost(parsedJson.flight?.estimated_cost_usd || 0);
+    setAiFlightDetails(parsedJson.flight || null); // Store detailed flight info
+
+    setEstimatedHotelCost(parsedJson.hotel?.estimated_cost_usd || 0);
+    setAiHotelDetails(parsedJson.hotel || null); // Store detailed hotel info
+
+    setEstimatedActivityCost(parsedJson.activityCost || 0); // AI's general estimate for activities
+    setEstimatedTransportCost(parsedJson.transportCost || 0);
+    setEstimatedMiscellaneousCost(parsedJson.miscellaneousCost || 0); // Corrected key name
+
+    setBreakfastAllowance(parsedJson.dailyFoodAllowance?.breakfast_usd || 0);
+    setLunchAllowance(parsedJson.dailyFoodAllowance?.lunch_usd || 0);
+    setDinnerAllowance(parsedJson.dailyFoodAllowance?.dinner_usd || 0);
+    setSnacksAllowance(parsedJson.dailyFoodAllowance?.snacks_usd || 0);
+
+  } else {
+    setBudgetError("Failed to get budget estimates. Please try again.");
+  }
+} catch (error) {
+  console.error("Error generating budget estimates:", error);
+  setBudgetError("An error occurred while generating budget estimates.");
+} finally {
+  setIsGeneratingBudget(false);
+}
+};
+
+
+// --- MAIN TRAVEL PLAN CALCULATION (for final summary) ---
+const calculateTravelPlan = () => {
+  // Combine selected suggested items (as manual input fields are removed for these)
+  // Note: These are now objects from AI, need to map to string names for summary display
+  const finalActivities = selectedSuggestedActivities.map(item => item.name).filter(Boolean).join(', ');
+  const finalFoodLocations = selectedSuggestedFoodLocations.map(item => item.name).filter(Boolean).join(', ');
+  const finalThemeParks = selectedSuggestedThemeParks.map(item => item.name).filter(Boolean).join(', ');
+  const finalTouristSpots = selectedSuggestedTouristSpots.map(item => item.name).filter(Boolean).join(', ');
+  const finalTours = selectedSuggestedTours.map(item => item.name).filter(Boolean).join(', ');
+  const finalSportingEvents = selectedSuggestedSportingEvents.map(item => item.name).filter(Boolean).join(', ');
+
+  // Calculate total food allowance for the trip from daily allowances
+  const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
+  const totalFoodCost = totalDailyFoodAllowance * parseInt(duration); // This is total for the trip, not per person yet.
+
+  // =======================================================
+  // UPDATED: Calculate finalTotalCost using the new function with correct AI estimates
+  // =======================================================
+  const finalTotalCost = calculateTotalCost(
+    itineraryItems,
+    parseInt(duration),
+    parseFloat(estimatedFlightCost),
+    parseFloat(estimatedHotelCost),
+    parseFloat(estimatedTransportCost),
+    parseFloat(estimatedMiscellaneousCost),
+    parseFloat(breakfastAllowance),
+    parseFloat(lunchAllowance),
+    parseFloat(dinnerAllowance),
+    parseFloat(snacksAllowance),
+    parseInt(numberOfPeople),
+    isPerPerson
+  );
+
+  // Adjust the total food cost based on per person/per party basis for the summary display
+  const finalTotalFoodCost = isPerPerson ? totalFoodCost * parseInt(numberOfPeople) : totalFoodCost;
+
+  setTravelPlanSummary({
+    homeCountry,
+    homeCity,
+    countries, // Destination countries
+    cities,    // Destination cities
+    duration,
+    starRating,
+    activities: finalActivities,
+    sportingEvents: finalSportingEvents,
+    foodLocations: finalFoodLocations,
+    themeParks: finalThemeParks,
+    touristSpots: finalTouristSpots,
+    tours: finalTours, // Include tours in summary
+    isPerPerson,
+    numberOfPeople,
+    
+    // --- UPDATED: Pass AI's detailed flight/hotel info to summary ---
+    estimatedFlightCost, // Numerical value
+    aiFlightDetails,     // Detailed object
+    estimatedHotelCost,  // Numerical value
+    aiHotelDetails,      // Detailed object
+
+    estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
+    
+    totalEstimatedCost: finalTotalCost, // This is the sum of estimated costs including selected items, excluding food, and then adjusted by people if perPerson
+    breakfastAllowance,
+    lunchAllowance,
+    dinnerAllowance,
+    snacksAllowance,
+    totalDailyFoodAllowance,
+    totalFoodCost: finalTotalFoodCost, // This is the total food cost for the trip adjusted by people
+    carRental,
+    shuttle,
+    airportTransfers,
+    airportParking,
+    grandTotal: finalTotalCost, // grandTotal should already include all costs including food via calculateTotalCost
+    topicsOfInterest, // Include topics of interest in summary
+  });
+};
+
+// --- FLIGHT SEARCH HANDLER (separate from AI budget estimate now) ---
+const handleFlightSearch = async () => {
+  setFlightLoading(true);
+  setFlightError('');
+  try {
+    const destCityForFlight = cities.length > 0 ? cities[0] : destinationCity;
+    const originCityForFlight = homeCity || originCity;
+
+    const cost = await fetchFlightPrices({
+      originCity: originCityForFlight,
+      destinationCity: destCityForFlight,
+      departureDate,
+      returnDate
+    });
+    setFlightCost(cost); // This sets the value for the *manual* flight search
+  } catch (error) {
+    console.error("Error fetching flight prices:", error);
+    setFlightError(error.message);
+    setFlightCost(0);
+  } finally {
+    setFlightLoading(false);
+  }
+};
+
+// --- ITINERARY ITEM ADD/REMOVE HANDLERS (for objects) ---
+const handleAddToItinerary = (item) => {
+  // Assign a unique ID if item doesn't have one, essential for list keys
+  const itemWithId = { ...item, id: item.name + Math.random().toString(36).substr(2, 9) };
+  if (!itineraryItems.some(itineraryItem => itineraryItem.name === item.name)) { // Check by name for uniqueness
+    const updatedItinerary = [...itineraryItems, {
+      id: itemWithId.id,
+      name: itemWithId.name,
+      // Base cost for itinerary items comes from AI's simulated_estimated_cost_usd
+      baseCost: itemWithId.simulated_estimated_cost_usd || 0,
+      type: itemWithId.type || 'activity' // Assign a type for calculation
+    }];
     setItineraryItems(updatedItinerary);
 
     const durationDays = parseInt(duration) || 0;
 
     // =======================================================
-    // UPDATED: Decrement total estimated cost using the new function
+    // UPDATED: Calculate totalEstimatedCost using the new function
     // =======================================================
     setTotalEstimatedCost(calculateTotalCost(
       updatedItinerary, // Pass the updated itinerary here
@@ -812,525 +777,559 @@ function App() {
       isPerPerson
     ));
 
-    setSaveLoadMessage('Item removed from itinerary.');
+    setSaveLoadMessage(`Added "${item.name}" to itinerary.`);
     setTimeout(() => setSaveLoadMessage(''), 2000);
-  };
+  } else {
+    setSaveLoadMessage(`"${item.name}" is already in your itinerary.`);
+    setTimeout(() => setSaveLoadMessage(''), 2000);
+  }
+};
+
+const handleRemoveFromItinerary = (itemId) => {
+  const itemToRemove = itineraryItems.find(item => item.id === itemId);
+  if (!itemToRemove) return;
+
+  const updatedItinerary = itineraryItems.filter(item => item.id !== itemId);
+  setItineraryItems(updatedItinerary);
+
+  const durationDays = parseInt(duration) || 0;
+
+  // =======================================================
+  // UPDATED: Decrement total estimated cost using the new function
+  // =======================================================
+  setTotalEstimatedCost(calculateTotalCost(
+    updatedItinerary, // Pass the updated itinerary here
+    durationDays,
+    estimatedFlightCost, // Use the state value
+    estimatedHotelCost,
+    estimatedTransportCost,
+    estimatedMiscellaneousCost,
+    breakfastAllowance,
+    lunchAllowance,
+    dinnerAllowance,
+    snacksAllowance,
+    numberOfPeople,
+    isPerPerson
+  ));
+
+  setSaveLoadMessage('Item removed from itinerary.');
+  setTimeout(() => setSaveLoadMessage(''), 2000);
+};
 
 
-  // --- MAIN SEARCH & CLEAR HANDLERS ---
-  const handleSearch = async () => {
-    setLoading(true);
-    setShowDisclaimer(false);
-    setTimeout(() => {
-        setLoading(false);
-    }, 500);
-  };
+// --- MAIN SEARCH & CLEAR HANDLERS ---
+const handleSearch = async () => {
+  setLoading(true);
+  setShowDisclaimer(false);
+  setTimeout(() => {
+      setLoading(false);
+  }, 500);
+};
 
-  const handleClear = () => {
-    // Clear all main input states
-    setCountries([]);
-    setNewCountry('');
-    setCities([]);
-    setNewCity('');
-    setDuration(1);
-    setStarRating('');
-    setHomeCountry({ name: '', flag: '' });
-    setNewHomeCountryInput('');
-    setHomeCity('');
-    setNewHomeCityInput('');
-    setTopicsOfInterest([]);
-    
-    setEstimatedFlightCost(0);
-    setAiFlightDetails(null); // Clear detailed AI flight info
-    setEstimatedHotelCost(0);
-    setAiHotelDetails(null);   // Clear detailed AI hotel info
-
-    setEstimatedActivityCost(0);
-    setEstimatedTransportCost(0);
-    setEstimatedMiscellaneousCost(0);
-    setBreakfastAllowance(0);
-    setLunchAllowance(0);
-    setDinnerAllowance(0);
-    setSnacksAllowance(0);
-    setCarRental(false);
-    setShuttle(false);
-    setAirportTransfers(false);
-    setAirportParking(false);
-    setOriginCity('');
-    setDestinationCity('');
-    setDepartureDate('');
-    setReturnDate('');
-    setFlightCost(0);
-    setFlightError('');
-    setBudgetError('');
-    setSuggestionError('');
-    setTravelPlanSummary(null);
-    setTotalEstimatedCost(0); // Clear the total estimated cost
-
-    // Clear AI suggestions and selections
-    setSuggestedActivities([]);
-    setSuggestedFoodLocations([]);
-    setSuggestedThemeParks([]);
-    setSuggestedTouristSpots([]);
-    setSuggestedTours([]);
-    setSuggestedSportingEvents([]);
-    setSelectedSuggestedActivities([]);
-    setSelectedSuggestedFoodLocations([]);
-    setSelectedSuggestedThemeParks([]);
-    setSelectedSuggestedTouristSpots([]);
-    setSelectedSuggestedTours([]);
-    setSelectedSuggestedSportingEvents([]);
-    setItineraryItems([]); // Clear combined itinerary
-
-    setLoading(false);
-    setShowDisclaimer(true);
-    setSaveLoadMessage('');
-    // Reset budget planning specifics
-    setIsPerPerson(true);
-    setNumberOfPeople(1);
-  };
-
-  // --- AUTHENTICATION & PERSISTENCE HANDLERS ---
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    try {
-      const user = await authenticateUser({ email: authEmail, password: authPassword });
-      setCurrentUser(user);
-      setIsLoggedIn(true);
-      setShowAuthModal(false);
-      await loadTripsForUser(user.email); // Load trips after successful login
-    } catch (error) {
-      setAuthError(error.message);
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    try {
-      const user = await registerUser({ email: authEmail, password: authPassword });
-      setCurrentUser(user);
-      setIsLoggedIn(true);
-      setShowAuthModal(false);
-    } catch (error) {
-      setAuthError(error.message);
-    }
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setCurrentUser(null);
-    setUserTrips([]); // Clear saved trips on logout
-    setAuthEmail('');
-    setAuthPassword('');
-    setSaveLoadMessage('');
-    handleClear(); // Also clear the current trip plan
-  };
-
-  const handleSaveTrip = async () => {
-    if (!currentUser) {
-      setSaveLoadMessage('Please log in to save your trip.');
-      return;
-    }
-    setSaveLoadMessage('Saving trip...');
-    try {
-      const tripToSave = {
-        name: `${cities.length > 0 ? cities[0] : 'Unnamed'} trip (${new Date().toLocaleDateString()})`, // Dynamic name
-        homeCountry, homeCity, countries, cities, duration, starRating,
-        topicsOfInterest,
-        selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-        selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
-        itineraryItems, // Save the actual itinerary items
-        isPerPerson, numberOfPeople,
-        estimatedFlightCost, aiFlightDetails, // Save detailed AI flight info
-        estimatedHotelCost, aiHotelDetails,   // Save detailed AI hotel info
-        estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
-        breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance,
-        carRental, shuttle, airportTransfers, airportParking,
-        originCity, destinationCity, departureDate, returnDate, flightCost, // Manual flight search details
-
-        // =======================================================
-        // UPDATED: totalEstimatedCost calculation for saving
-        // =======================================================
-        totalEstimatedCost: calculateTotalCost(
-          itineraryItems,
-          duration,
-          estimatedFlightCost,
-          estimatedHotelCost,
-          estimatedTransportCost,
-          estimatedMiscellaneousCost,
-          breakfastAllowance,
-          lunchAllowance,
-          dinnerAllowance,
-          snacksAllowance,
-          numberOfPeople,
-          isPerPerson
-        )
-      };
-      await saveUserTrip({ email: currentUser.email, tripData: tripToSave });
-      setSaveLoadMessage('Trip saved successfully!');
-      await loadTripsForUser(currentUser.email); // Refresh list of saved trips
-    } catch (error) {
-      setSaveLoadMessage(`Error saving trip: ${error.message}`);
-    }
-    setTimeout(() => setSaveLoadMessage(''), 3000);
-  };
-
-  const loadTripsForUser = async (email) => {
-    setLoadingUserTrips(true);
-    try {
-      const trips = await loadUserTrips({ email });
-      setUserTrips(trips);
-    } catch (error) {
-      console.error("Error loading user trips:", error);
-      setUserTrips([]);
-    } finally {
-      setLoadingUserTrips(false);
-    }
-  };
-
-  const handleLoadSpecificTrip = (trip) => {
-    // Restore all states from loaded trip
-    setHomeCountry(trip.homeCountry || { name: '', flag: '' });
-    setHomeCity(trip.homeCity || '');
-    setCountries(trip.countries || []);
-    setCities(trip.cities || []);
-    setDuration(trip.duration || 1);
-    setStarRating(trip.starRating || '');
-    setTopicsOfInterest(trip.topicsOfInterest || []);
-    
-    // --- UPDATED: Load selected items as objects ---
-    setSelectedSuggestedActivities(trip.selectedSuggestedActivities || []);
-    setSelectedSuggestedFoodLocations(trip.selectedSuggestedFoodLocations || []);
-    setSelectedSuggestedThemeParks(trip.selectedSuggestedThemeParks || []);
-    setSelectedSuggestedTouristSpots(trip.selectedSuggestedTouristSpots || []);
-    setSelectedSuggestedTours(trip.selectedSuggestedTours || []);
-    setSelectedSuggestedSportingEvents(trip.selectedSuggestedSportingEvents || []);
-    
-    setItineraryItems(trip.itineraryItems || []); // Restore the actual itinerary items
-
-    setIsPerPerson(trip.isPerPerson);
-    setNumberOfPeople(trip.numberOfPeople || 1);
-    
-    // --- UPDATED: Load detailed AI budget info ---
-    setEstimatedFlightCost(trip.estimatedFlightCost || 0);
-    setAiFlightDetails(trip.aiFlightDetails || null);
-    setEstimatedHotelCost(trip.estimatedHotelCost || 0);
-    setAiHotelDetails(trip.aiHotelDetails || null);
-
-    setEstimatedActivityCost(trip.estimatedActivityCost || 0);
-    setEstimatedTransportCost(trip.estimatedTransportCost || 0);
-    setEstimatedMiscellaneousCost(trip.estimatedMiscellaneousCost || 0);
-    setBreakfastAllowance(trip.breakfastAllowance || 0);
-    setLunchAllowance(trip.lunchAllowance || 0);
-    setDinnerAllowance(trip.dinnerAllowance || 0);
-    setSnacksAllowance(trip.snacksAllowance || 0);
-    setCarRental(trip.carRental || false);
-    setShuttle(trip.shuttle || false);
-    setAirportTransfers(trip.airportTransfers || false);
-    setAirportParking(trip.airportParking || false);
-    setOriginCity(trip.originCity || '');
-    setDestinationCity(trip.destinationCity || '');
-    setDepartureDate(trip.departureDate || '');
-    setReturnDate(trip.returnDate || '');
-    setFlightCost(trip.flightCost || 0);
-
-    // =======================================================
-    // UPDATED: Recalculate total cost to ensure consistency with restored values
-    // =======================================================
-    setTotalEstimatedCost(calculateTotalCost(
-      trip.itineraryItems || [], // Use loaded itinerary items
-      parseInt(trip.duration) || 0,
-      parseFloat(trip.estimatedFlightCost) || 0,
-      parseFloat(trip.estimatedHotelCost) || 0,
-      parseFloat(trip.estimatedTransportCost) || 0,
-      parseFloat(trip.estimatedMiscellaneousCost) || 0,
-      parseFloat(trip.breakfastAllowance) || 0,
-      parseFloat(trip.lunchAllowance) || 0,
-      parseFloat(trip.dinnerAllowance) || 0,
-      parseFloat(trip.snacksAllowance) || 0,
-      parseInt(trip.numberOfPeople) || 0,
-      trip.isPerPerson
-    ));
-
-    setSaveLoadMessage(`Trip "${trip.name}" loaded successfully!`);
-    setShowAuthModal(false);
-    setTimeout(() => setSaveLoadMessage(''), 3000);
-  };
-
-  // --- EFFECT: Recalculate total cost when relevant states change ---
-  useEffect(() => {
-    const durationDays = parseInt(duration) || 0;
-    // =======================================================
-    // UPDATED: Call calculateTotalCost for useEffect
-    // =======================================================
-    setTotalEstimatedCost(calculateTotalCost(
-      itineraryItems,
-      durationDays,
-      estimatedFlightCost, // Use AI's numerical estimate
-      estimatedHotelCost,  // Use AI's numerical estimate
-      estimatedTransportCost,
-      estimatedMiscellaneousCost,
-      breakfastAllowance,
-      lunchAllowance,
-      dinnerAllowance,
-      snacksAllowance,
-      numberOfPeople,
-      isPerPerson
-    ));
-  }, [duration, estimatedFlightCost, estimatedHotelCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost]); // Added relevant dependencies
-
-  // Calculate total budget for comparison
-  const durationDaysMatch = String(duration).match(/(\d+)/);
-  const durationDays = durationDaysMatch ? parseInt(durationDaysMatch[1], 10) : 0;
-
-  // The `userSetTotalBudget` represents the sum of the AI's initial cost estimates.
-  // This is what you compare `totalEstimatedCost` (which includes selected itinerary items) against.
-  const userSetTotalBudget = (estimatedFlightCost + estimatedHotelCost + estimatedActivityCost + estimatedTransportCost + estimatedMiscellaneousCost + (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance) * durationDays) * (isPerPerson ? numberOfPeople : 1);
-
-  const isOverBudget = totalEstimatedCost > userSetTotalBudget && userSetTotalBudget > 0;
-  const budgetDifference = Math.abs(totalEstimatedCost - userSetTotalBudget);
-  const totalCalculatedDailyFoodAllowance = (parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance));
-
-  // --- TAILWIND CSS CLASSES FOR CONSISTENT STYLING ---
-  const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
-  const sectionContainerClass = "mb-8 p-6 bg-white rounded-xl shadow-md";
-  const sectionTitleClass = "text-2xl font-bold text-indigo-700 mb-6 border-b-2 border-indigo-200 pb-3 flex items-center";
-  const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
-  const removeButtonClass = "ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out";
-  const tagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
-  const flagTagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
+const handleClear = () => {
+  // Clear all main input states
+  setCountries([]);
+  setNewCountry('');
+  setCities([]);
+  setNewCity('');
+  setDuration(1);
+  setStarRating('');
+  setHomeCountry({ name: '', flag: '' });
+  setNewHomeCountryInput('');
+  setHomeCity('');
+  setNewHomeCityInput('');
+  setTopicsOfInterest([]);
   
-  // --- UPDATED: Suggestion Tag Class now highlights based on item.name (unique identifier) ---
-  const suggestionTagClass = (item, selectedArray) =>
-    `px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition duration-200 ease-in-out ${
-      selectedArray.some(selectedItem => selectedItem.name === item.name) ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-    }`;
-  const suggestionListClass = "absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1";
-  const suggestionItemClass = "p-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-800";
+  setEstimatedFlightCost(0);
+  setAiFlightDetails(null); // Clear detailed AI flight info
+  setEstimatedHotelCost(0);
+  setAiHotelDetails(null);   // Clear detailed AI hotel info
+
+  setEstimatedActivityCost(0);
+  setEstimatedTransportCost(0);
+  setEstimatedMiscellaneousCost(0);
+  setBreakfastAllowance(0);
+  setLunchAllowance(0);
+  setDinnerAllowance(0);
+  setSnacksAllowance(0);
+  setCarRental(false);
+  setShuttle(false);
+  setAirportTransfers(false);
+  setAirportParking(false);
+  setOriginCity('');
+  setDestinationCity('');
+  setDepartureDate('');
+  setReturnDate('');
+  setFlightCost(0);
+  setFlightError('');
+  setBudgetError('');
+  setSuggestionError('');
+  setTravelPlanSummary(null);
+  setTotalEstimatedCost(0); // Clear the total estimated cost
+
+  // Clear AI suggestions and selections
+  setSuggestedActivities([]);
+  setSuggestedFoodLocations([]);
+  setSuggestedThemeParks([]);
+  setSuggestedTouristSpots([]);
+  setSuggestedTours([]);
+  setSuggestedSportingEvents([]);
+  setSelectedSuggestedActivities([]);
+  setSelectedSuggestedFoodLocations([]);
+  setSelectedSuggestedThemeParks([]);
+  setSelectedSuggestedTouristSpots([]);
+  setSelectedSuggestedTours([]);
+  setSelectedSuggestedSportingEvents([]);
+  setItineraryItems([]); // Clear combined itinerary
+
+  setLoading(false);
+  setShowDisclaimer(true);
+  setSaveLoadMessage('');
+  // Reset budget planning specifics
+  setIsPerPerson(true);
+  setNumberOfPeople(1);
+};
+
+// --- AUTHENTICATION & PERSISTENCE HANDLERS ---
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setAuthError('');
+  try {
+    const user = await authenticateUser({ email: authEmail, password: authPassword });
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    setShowAuthModal(false);
+    await loadTripsForUser(user.email); // Load trips after successful login
+  } catch (error) {
+    setAuthError(error.message);
+  }
+};
+
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setAuthError('');
+  try {
+    const user = await registerUser({ email: authEmail, password: authPassword });
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    setShowAuthModal(false);
+  } catch (error) {
+    setAuthError(error.message);
+  }
+};
+
+const handleLogout = () => {
+  setIsLoggedIn(false);
+  setCurrentUser(null);
+  setUserTrips([]); // Clear saved trips on logout
+  setAuthEmail('');
+  setAuthPassword('');
+  setSaveLoadMessage('');
+  handleClear(); // Also clear the current trip plan
+};
+
+const handleSaveTrip = async () => {
+  if (!currentUser) {
+    setSaveLoadMessage('Please log in to save your trip.');
+    return;
+  }
+  setSaveLoadMessage('Saving trip...');
+  try {
+    const tripToSave = {
+      name: `${cities.length > 0 ? cities[0] : 'Unnamed'} trip (${new Date().toLocaleDateString()})`, // Dynamic name
+      homeCountry, homeCity, countries, cities, duration, starRating,
+      topicsOfInterest,
+      selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
+      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
+      itineraryItems, // Save the actual itinerary items
+      isPerPerson, numberOfPeople,
+      estimatedFlightCost, aiFlightDetails, // Save detailed AI flight info
+      estimatedHotelCost, aiHotelDetails,   // Save detailed AI hotel info
+      estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
+      breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance,
+      carRental, shuttle, airportTransfers, airportParking,
+      originCity, destinationCity, departureDate, returnDate, flightCost, // Manual flight search details
+
+      // =======================================================
+      // UPDATED: totalEstimatedCost calculation for saving
+      // =======================================================
+      totalEstimatedCost: calculateTotalCost(
+        itineraryItems,
+        duration,
+        estimatedFlightCost,
+        estimatedHotelCost,
+        estimatedTransportCost,
+        estimatedMiscellaneousCost,
+        breakfastAllowance,
+        lunchAllowance,
+        dinnerAllowance,
+        snacksAllowance,
+        numberOfPeople,
+        isPerPerson
+      )
+    };
+    await saveUserTrip({ email: currentUser.email, tripData: tripToSave });
+    setSaveLoadMessage('Trip saved successfully!');
+    await loadTripsForUser(currentUser.email); // Refresh list of saved trips
+  } catch (error) {
+    setSaveLoadMessage(`Error saving trip: ${error.message}`);
+  }
+  setTimeout(() => setSaveLoadMessage(''), 3000);
+};
+
+const loadTripsForUser = async (email) => {
+  setLoadingUserTrips(true);
+  try {
+    const trips = await loadUserTrips({ email });
+    setUserTrips(trips);
+  } catch (error) {
+    console.error("Error loading user trips:", error);
+    setUserTrips([]);
+  } finally {
+    setLoadingUserTrips(false);
+  }
+};
+
+const handleLoadSpecificTrip = (trip) => {
+  // Restore all states from loaded trip
+  setHomeCountry(trip.homeCountry || { name: '', flag: '' });
+  setHomeCity(trip.homeCity || '');
+  setCountries(trip.countries || []);
+  setCities(trip.cities || []);
+  setDuration(trip.duration || 1);
+  setStarRating(trip.starRating || '');
+  setTopicsOfInterest(trip.topicsOfInterest || []);
+  
+  // --- UPDATED: Load selected items as objects ---
+  setSelectedSuggestedActivities(trip.selectedSuggestedActivities || []);
+  setSelectedSuggestedFoodLocations(trip.selectedSuggestedFoodLocations || []);
+  setSelectedSuggestedThemeParks(trip.selectedSuggestedThemeParks || []);
+  setSelectedSuggestedTouristSpots(trip.selectedSuggestedTouristSpots || []);
+  setSelectedSuggestedTours(trip.selectedSuggestedTours || []);
+  setSelectedSuggestedSportingEvents(trip.selectedSuggestedSportingEvents || []);
+  
+  setItineraryItems(trip.itineraryItems || []); // Restore the actual itinerary items
+
+  setIsPerPerson(trip.isPerPerson);
+  setNumberOfPeople(trip.numberOfPeople || 1);
+  
+  // --- UPDATED: Load detailed AI budget info ---
+  setEstimatedFlightCost(trip.estimatedFlightCost || 0);
+  setAiFlightDetails(trip.aiFlightDetails || null);
+  setEstimatedHotelCost(trip.estimatedHotelCost || 0);
+  setAiHotelDetails(trip.aiHotelDetails || null);
+
+  setEstimatedActivityCost(trip.estimatedActivityCost || 0);
+  setEstimatedTransportCost(trip.estimatedTransportCost || 0);
+  setEstimatedMiscellaneousCost(trip.estimatedMiscellaneousCost || 0);
+  setBreakfastAllowance(trip.breakfastAllowance || 0);
+  setLunchAllowance(trip.lunchAllowance || 0);
+  setDinnerAllowance(trip.dinnerAllowance || 0);
+  setSnacksAllowance(trip.snacksAllowance || 0);
+  setCarRental(trip.carRental || false);
+  setShuttle(trip.shuttle || false);
+  setAirportTransfers(trip.airportTransfers || false);
+  setAirportParking(trip.airportParking || false);
+  setOriginCity(trip.originCity || '');
+  setDestinationCity(trip.destinationCity || '');
+  setDepartureDate(trip.departureDate || '');
+  setReturnDate(trip.returnDate || '');
+  setFlightCost(trip.flightCost || 0);
+
+  // =======================================================
+  // UPDATED: Recalculate total cost to ensure consistency with restored values
+  // =======================================================
+  setTotalEstimatedCost(calculateTotalCost(
+    trip.itineraryItems || [], // Use loaded itinerary items
+    parseInt(trip.duration) || 0,
+    parseFloat(trip.estimatedFlightCost) || 0,
+    parseFloat(trip.estimatedHotelCost) || 0,
+    parseFloat(trip.estimatedTransportCost) || 0,
+    parseFloat(trip.estimatedMiscellaneousCost) || 0,
+    parseFloat(trip.breakfastAllowance) || 0,
+    parseFloat(trip.lunchAllowance) || 0,
+    parseFloat(trip.dinnerAllowance) || 0,
+    parseFloat(trip.snacksAllowance) || 0,
+    parseInt(trip.numberOfPeople) || 0,
+    trip.isPerPerson
+  ));
+
+  setSaveLoadMessage(`Trip "${trip.name}" loaded successfully!`);
+  setShowAuthModal(false);
+  setTimeout(() => setSaveLoadMessage(''), 3000);
+};
+
+// --- EFFECT: Recalculate total cost when relevant states change ---
+useEffect(() => {
+  const durationDays = parseInt(duration) || 0;
+  // =======================================================
+  // UPDATED: Call calculateTotalCost for useEffect
+  // =======================================================
+  setTotalEstimatedCost(calculateTotalCost(
+    itineraryItems,
+    durationDays,
+    estimatedFlightCost, // Use AI's numerical estimate
+    estimatedHotelCost,  // Use AI's numerical estimate
+    estimatedTransportCost,
+    estimatedMiscellaneousCost,
+    breakfastAllowance,
+    lunchAllowance,
+    dinnerAllowance,
+    snacksAllowance,
+    numberOfPeople,
+    isPerPerson
+  ));
+}, [duration, estimatedFlightCost, estimatedHotelCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost]); // Added relevant dependencies
+
+// Calculate total budget for comparison
+const durationDaysMatch = String(duration).match(/(\d+)/);
+const durationDays = durationDaysMatch ? parseInt(durationDaysMatch[1], 10) : 0;
+
+// The `userSetTotalBudget` represents the sum of the AI's initial cost estimates.
+// This is what you compare `totalEstimatedCost` (which includes selected itinerary items) against.
+const userSetTotalBudget = (estimatedFlightCost + estimatedHotelCost + estimatedActivityCost + estimatedTransportCost + estimatedMiscellaneousCost + (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance) * durationDays) * (isPerPerson ? numberOfPeople : 1);
+
+const isOverBudget = totalEstimatedCost > userSetTotalBudget && userSetTotalBudget > 0;
+const budgetDifference = Math.abs(totalEstimatedCost - userSetTotalBudget);
+const totalCalculatedDailyFoodAllowance = (parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance));
+
+// --- TAILWIND CSS CLASSES FOR CONSISTENT STYLING ---
+const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
+const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+const sectionContainerClass = "mb-8 p-6 bg-white rounded-xl shadow-md";
+const sectionTitleClass = "text-2xl font-bold text-indigo-700 mb-6 border-b-2 border-indigo-200 pb-3 flex items-center";
+const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
+const removeButtonClass = "ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out";
+const tagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
+const flagTagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
+
+// --- UPDATED: Suggestion Tag Class now highlights based on item.name (unique identifier) ---
+const suggestionTagClass = (item, selectedArray) =>
+  `px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition duration-200 ease-in-out ${
+    selectedArray.some(selectedItem => selectedItem.name === item.name) ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+  }`;
+const suggestionListClass = "absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1";
+const suggestionItemClass = "p-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-800";
 
 
-  const summarySectionClass = "mt-12 p-8 border-2 border-indigo-500 rounded-xl bg-indigo-50 shadow-xl";
-  const summaryTitleClass = "text-3xl font-bold text-indigo-800 mb-8 text-center";
-  const summarySubTitleClass = "text-xl font-semibold text-indigo-700 mb-3";
-  const summaryItemClass = "text-gray-700 mb-1";
-  const totalCostClass = "text-2xl font-bold text-indigo-800";
-  const grandTotalAmountClass = "text-green-700 text-3xl font-extrabold";
+const summarySectionClass = "mt-12 p-8 border-2 border-indigo-500 rounded-xl bg-indigo-50 shadow-xl";
+const summaryTitleClass = "text-3xl font-bold text-indigo-800 mb-8 text-center";
+const summarySubTitleClass = "text-xl font-semibold text-indigo-700 mb-3";
+const summaryItemClass = "text-gray-700 mb-1";
+const totalCostClass = "text-2xl font-bold text-indigo-800";
+const grandTotalAmountClass = "text-green-700 text-3xl font-extrabold";
 
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased">
-      <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl">
-        <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
-          <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
-          Travel Planner
-        </h1>
+return (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased">
+    <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl">
+      <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
+        <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
+        Travel Planner
+      </h1>
 
-        {/* --- AUTH/USER CONTROLS --- */}
-        <div className="flex justify-end mb-4 gap-2 max-w-4xl mx-auto">
-          {isLoggedIn ? (
-            <>
-              <span className="text-gray-600 font-medium self-center hidden sm:block">Welcome, {currentUser?.email}!</span>
-              <button
-                onClick={handleSaveTrip}
-                className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                <Save className="w-4 h-4 mr-2" /> Save Trip
-              </button>
-              <button
-                onClick={() => { setShowAuthModal(true); setIsRegistering(false); setAuthError(''); setAuthEmail(currentUser.email); loadTripsForUser(currentUser.email); }}
-                className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-              >
-                <FolderOpen className="w-4 h-4 mr-2" /> Load Trip
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                <LogOut className="w-4 h-4 mr-2" /> Logout
-              </button>
-            </>
-          ) : (
+      {/* --- AUTH/USER CONTROLS --- */}
+      <div className="flex justify-end mb-4 gap-2 max-w-4xl mx-auto">
+        {isLoggedIn ? (
+          <>
+            <span className="text-gray-600 font-medium self-center hidden sm:block">Welcome, {currentUser?.email}!</span>
             <button
-              onClick={() => { setShowAuthModal(true); setIsRegistering(false); setAuthError(''); }}
-              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              onClick={handleSaveTrip}
+              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
             >
-              <LogIn className="w-4 h-4 mr-2" /> Login / Register
+              <Save className="w-4 h-4 mr-2" /> Save Trip
             </button>
-          )}
+            <button
+              onClick={() => { setShowAuthModal(true); setIsRegistering(false); setAuthError(''); setAuthEmail(currentUser.email); loadTripsForUser(currentUser.email); }}
+              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              <FolderOpen className="w-4 h-4 mr-2" /> Load Trip
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <LogOut className="w-4 h-4 mr-2" /> Logout
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => { setShowAuthModal(true); setIsRegistering(false); setAuthError(''); }}
+            className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <LogIn className="w-4 h-4 mr-2" /> Login / Register
+          </button>
+        )}
+      </div>
+      {saveLoadMessage && (
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 rounded-md shadow-sm mb-4 max-w-4xl mx-auto text-center">
+          {saveLoadMessage}
         </div>
-        {saveLoadMessage && (
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 rounded-md shadow-sm mb-4 max-w-4xl mx-auto text-center">
-            {saveLoadMessage}
-          </div>
-        )}
+      )}
 
-        {/* --- DISCLAIMER --- */}
-        {showDisclaimer && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-sm mb-6 max-w-4xl mx-auto relative" role="alert">
-            <p className="font-bold">Important Note:</p>
-            <p className="text-sm">This app uses **simulated data and backend operations** (authentication, saving/loading trips, AI suggestions, budget estimates). In a real application, these would involve actual API calls to external services (like Skyscanner, Booking.com, dedicated AI APIs) and a backend database (like Firebase, MongoDB, PostgreSQL).</p>
-            <button
-              onClick={() => setShowDisclaimer(false)}
-              className="absolute top-2 right-2 text-yellow-700 hover:text-yellow-900"
-              aria-label="Close disclaimer"
-            >
-              <XCircle className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+      {/* --- DISCLAIMER --- */}
+      {showDisclaimer && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-sm mb-6 max-w-4xl mx-auto relative" role="alert">
+          <p className="font-bold">Important Note:</p>
+          <p className="text-sm">This app uses **simulated data and backend operations** (authentication, saving/loading trips, AI suggestions, budget estimates). In a real application, these would involve actual API calls to external services (like Skyscanner, Booking.com, dedicated AI APIs) and a backend database (like Firebase, MongoDB, PostgreSQL).</p>
+          <button
+            onClick={() => setShowDisclaimer(false)}
+            className="absolute top-2 right-2 text-yellow-700 hover:text-yellow-900"
+            aria-label="Close disclaimer"
+          >
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
-        {/* --- AUTHENTICATION MODAL --- */}
-        {showAuthModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-              <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
-                {isRegistering ? 'Register' : 'Login'}
-              </h2>
-              <form onSubmit={isRegistering ? handleRegister : handleLogin}>
-                <div className="mb-4">
-                  <label htmlFor="authEmail" className={labelClass}>Email</label>
-                  <input
-                    type="email"
-                    id="authEmail"
-                    className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="mb-6">
-                  <label htmlFor="authPassword" className={labelClass}>Password</label>
-                  <input
-                    type="password"
-                    id="authPassword"
-                    className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                {authError && <p className="text-red-600 text-sm mb-4 text-center">{authError}</p>}
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    {isRegistering ? 'Register' : 'Login'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAuthModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-              {/* Load Trips Section (only shown if logged in and not registering) */}
-              {isLoggedIn && !isRegistering && (
-                  <div className="mt-8 border-t pt-6 border-gray-200">
-                      <h3 className="text-xl font-bold text-blue-600 mb-4 text-center">Your Saved Trips</h3>
-                      {loadingUserTrips ? (
-                          <p className="text-center text-gray-500">Loading trips...</p>
-                      ) : userTrips.length > 0 ? (
-                          <ul className="space-y-3 max-h-60 overflow-y-auto">
-                              {userTrips.map((trip, index) => (
-                                  <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-md shadow-sm border border-gray-200">
-                                      <span className="font-medium text-gray-800">{trip.name || `Trip ${index + 1}`}</span>
-                                      <button
-                                          onClick={() => handleLoadSpecificTrip(trip)}
-                                          className="px-3 py-1 bg-indigo-500 text-white text-xs rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                      >
-                                          Load
-                                      </button>
-                                  </li>
-                              ))}
-                          </ul>
-                      ) : (
-                          <p className="text-center text-gray-500">No trips saved yet.</p>
-                      )}
-                      <button
-                          onClick={() => setShowAuthModal(false)}
-                          className="mt-6 w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                          Close
-                      </button>
-                  </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* --- HOME LOCATION SECTION --- */}
-        <div className={sectionContainerClass}>
-          <h2 className={sectionTitleClass}>
-            <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="relative"> {/* Added relative for dropdown positioning */}
-              <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
-              <div className="flex items-center">
+      {/* --- AUTHENTICATION MODAL --- */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
+              {isRegistering ? 'Register' : 'Login'}
+            </h2>
+            <form onSubmit={isRegistering ? handleRegister : handleLogin}>
+              <div className="mb-4">
+                <label htmlFor="authEmail" className={labelClass}>Email</label>
                 <input
-                  type="text"
-                  id="newHomeCountryInput"
-                  ref={homeCountryInputRef}
-                  value={newHomeCountryInput}
-                  onChange={handleHomeCountryInputChange}
-                  onBlur={() => setTimeout(() => setFilteredHomeCountrySuggestions([]), 100)} // Hide suggestions on blur
-                  placeholder="e.g., USA"
-                  className={`${inputClass} flex-grow`}
+                  type="email"
+                  id="authEmail"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  required
                 />
-                <button onClick={handleSetHomeCountry} className={`${buttonClass} ml-3`}>Set</button>
               </div>
-              {/* Country Suggestions Dropdown */}
-              {filteredHomeCountrySuggestions.length > 0 && (
-                <ul className={suggestionListClass}>
-                  {filteredHomeCountrySuggestions.map((country) => (
-                    <li
-                      key={country.name}
-                      onMouseDown={() => selectHomeCountrySuggestion(country)} // Use onMouseDown to prevent blur
-                      className={suggestionItemClass}
+              <div className="mb-6">
+                <label htmlFor="authPassword" className={labelClass}>Password</label>
+                <input
+                  type="password"
+                  id="authPassword"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {authError && <p className="text-red-600 text-sm mb-4 text-center">{authError}</p>}
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  {isRegistering ? 'Register' : 'Login'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+            {/* Load Trips Section (only shown if logged in and not registering) */}
+            {isLoggedIn && !isRegistering && (
+                <div className="mt-8 border-t pt-6 border-gray-200">
+                    <h3 className="text-xl font-bold text-blue-600 mb-4 text-center">Your Saved Trips</h3>
+                    {loadingUserTrips ? (
+                        <p className="text-center text-gray-500">Loading trips...</p>
+                    ) : userTrips.length > 0 ? (
+                        <ul className="space-y-3 max-h-60 overflow-y-auto">
+                            {userTrips.map((trip, index) => (
+                                <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-md shadow-sm border border-gray-200">
+                                    <span className="font-medium text-gray-800">{trip.name || `Trip ${index + 1}`}</span>
+                                    <button
+                                        onClick={() => handleLoadSpecificTrip(trip)}
+                                        className="px-3 py-1 bg-indigo-500 text-white text-xs rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        Load
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-center text-gray-500">No trips saved yet.</p>
+                    )}
+                    <button
+                        onClick={() => setShowAuthModal(false)}
+                        className="mt-6 w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                      {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
-                      {country.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {/* Display selected home country */}
-              {homeCountry.name && (
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <span className={flagTagClass}>
-                    {homeCountry.flag && <img src={homeCountry.flag} alt={`${homeCountry.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
-                    {homeCountry.name}
-                  </span>
+                        Close
+                    </button>
                 </div>
-              )}
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* --- HOME LOCATION SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="relative"> {/* Added relative for dropdown positioning */}
+            <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newHomeCountryInput"
+                ref={homeCountryInputRef}
+                value={newHomeCountryInput}
+                onChange={handleHomeCountryInputChange}
+                onBlur={() => setTimeout(() => setFilteredHomeCountrySuggestions([]), 100)} // Hide suggestions on blur
+                placeholder="e.g., USA"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={handleSetHomeCountry} className={`${buttonClass} ml-3`}>Set</button>
             </div>
-            <div>
-              <label htmlFor="newHomeCityInput" className={labelClass}>Home City:</label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  id="newHomeCityInput"
-                  value={newHomeCityInput}
-                  onChange={(e) => setNewHomeCityInput(e.target.value)}
-                  placeholder="e.g., New York"
-                  className={`${inputClass} flex-grow`}
-                />
-                <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
+            {/* Country Suggestions Dropdown */}
+            {filteredHomeCountrySuggestions.length > 0 && (
+              <ul className={suggestionListClass}>
+                {filteredHomeCountrySuggestions.map((country) => (
+                  <li
+                    key={country.name}
+                    onMouseDown={() => selectHomeCountrySuggestion(country)} // Use onMouseDown to prevent blur
+                    className={suggestionItemClass}
+                  >
+                    {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
+                    {country.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* Display selected home country */}
+            {homeCountry.name && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className={flagTagClass}>
+                  {homeCountry.flag && <img src={homeCountry.flag} alt={`${homeCountry.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
+                  {homeCountry.name}
+                </span>
               </div>
-              {homeCity && (
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <span className={tagClass}>
-                    {homeCity}
-                  </span>
-                </div>
-              )}
+            )}
+          </div>
+          <div>
+            <label htmlFor="newHomeCityInput" className={labelClass}>Home City:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newHomeCityInput"
+                value={newHomeCityInput}
+                onChange={(e) => setNewHomeCityInput(e.target.value)}
+                placeholder="e.g., New York"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
             </div>
+            {homeCity && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className={tagClass}>
+                  {homeCity}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
