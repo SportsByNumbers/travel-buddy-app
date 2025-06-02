@@ -7,7 +7,7 @@ import {
 // Import mock API functions for simulation
 import { fetchTravelData, fetchFlightPrices, authenticateUser, registerUser, saveUserTrip, loadUserTrips } from './mockApi';
 
-// Transport options (fixed for this simulation)
+// Transport options (fixed for this simulation) - can be used as base for AI knowledge
 const transportOptions = {
   carRental: { name: "Car Rental", costPerDay: 50, icon: <Car className="w-5 h-5 text-blue-500" /> },
   shuttle: { name: "Shuttle Service", costPerUse: 30, icon: <Bus className="w-5 h-5 text-blue-500" /> },
@@ -15,62 +15,61 @@ const transportOptions = {
   airportParking: { name: "Airport Parking", costPerDay: 25, icon: <ParkingSquare className="w-5 h-5 text-blue-500" /> },
 };
 
-// =======================================================
-// NEW/UPDATED: calculateTotalCost function definition
+// --- NEW/UPDATED: calculateTotalCost function definition ---
 // This function calculates the total estimated cost based on all relevant inputs.
-// =======================================================
 function calculateTotalCost(
-  itineraryItems,
-  duration,
-  estimatedFlightCost, // Changed from flightCost to estimatedFlightCost for clarity with state
-  numberOfPeople,
+  itineraryItems,        // User-selected specific items (activities, tours etc.)
+  duration,              // Trip duration in days
+  aiEstimatedFlightCost, // AI's general estimate for flights
+  aiEstimatedHotelCost,  // AI's general estimate for hotel
+  aiEstimatedTransportCost, // AI's general estimate for transport
+  aiEstimatedMiscellaneousCost, // AI's general estimate for miscellaneous
   breakfastAllowance,
   lunchAllowance,
   dinnerAllowance,
   snacksAllowance,
+  numberOfPeople,
   isPerPerson
 ) {
-  let itemsCost = 0;
+  // Sum cost from user-selected itinerary items (if they have a cost)
+  let specificItineraryItemsCost = 0;
   if (itineraryItems && itineraryItems.length > 0) {
-    itemsCost = itineraryItems.reduce((acc, item) => {
-      let itemCost = item.baseCost;
-      // Adjust cost for hotels if they are per night
-      if (item.type === 'hotel') {
+    specificItineraryItemsCost = itineraryItems.reduce((acc, item) => {
+      let itemCost = item.baseCost || 0; // Ensure item.baseCost exists and is a number
+      if (item.type === 'hotel') { // If hotels are added to itineraryItems, assume per night
         itemCost *= duration;
       }
       return acc + itemCost;
     }, 0);
   }
 
-  // Calculate total food cost for the trip
-  const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
+  // Calculate total food cost for the trip based on daily allowances
+  const totalDailyFoodAllowance = parseFloat(breakfastAllowance || 0) + parseFloat(lunchAllowance || 0) + parseFloat(dinnerAllowance || 0) + parseFloat(snacksAllowance || 0);
   let tripFoodCost = totalDailyFoodAllowance * duration;
   if (isPerPerson) {
     tripFoodCost *= numberOfPeople;
   }
 
-  // Sum up all estimated costs from state and calculated food/itinerary items
-  const totalEstimatedCostsExcludingFoodAndFlights =
-    parseFloat(estimatedHotelCost) +
-    parseFloat(estimatedActivityCost) +
-    parseFloat(estimatedTransportCost) +
-    parseFloat(estimatedMiscellaneousCost);
+  // Sum AI-generated general estimates (excluding items handled by specificItineraryItemsCost)
+  // Logic: The AI provides overall estimates. If the user picks specific activities/hotels,
+  // we want to use *those* specific costs if available, otherwise rely on AI's general estimate.
+  // For simplicity here, we're assuming specificItineraryItemsCost just *adds* to AI's general activity estimate.
+  // A more complex logic might involve deducting the AI's general activity estimate if enough specifics are chosen.
+  // For now, let's treat AI estimatedActivityCost as a 'buffer' or additional general spending.
 
-  // Consider `itemsCost` from `itineraryItems` as the "actual" cost for selected items
-  // and `estimatedActivityCost` from the AI as a general estimate for *other* activities.
-  // For simplicity, let's assume `itemsCost` is more granular, and sum it up.
-  // If `estimatedActivityCost` from AI is meant to cover *all* activities including selected ones,
-  // then we might need a more sophisticated logic here (e.g., override if item is selected).
-  // For now, let's sum them, assuming AI gives a general estimate and items are specific additions.
+  // NOTE: If the AI's estimatedFlightCost, estimatedHotelCost, etc., are already "per person" or "per party"
+  // based on the AI's prompt, then `numberOfPeople` should *not* be multiplied again for these AI estimates.
+  // Assuming the AI provides *total* estimates for the trip based on `numberOfPeople` and `isPerPerson` from prompt.
 
-  let finalTotal = itemsCost + estimatedFlightCost + totalEstimatedCostsExcludingFoodAndFlights + tripFoodCost;
+  const totalEstimatedCostsFromAI =
+    parseFloat(aiEstimatedFlightCost || 0) +
+    parseFloat(aiEstimatedHotelCost || 0) +
+    parseFloat(aiEstimatedTransportCost || 0) +
+    parseFloat(aiEstimatedMiscellaneousCost || 0);
+    // AI's estimatedActivityCost is deliberately excluded here if specificItineraryItemsCost is added directly below.
+    // If you want AI's activity estimate included: + parseFloat(aiEstimatedActivityCost || 0)
 
-  // The AI-generated 'estimatedFlightCost' and other estimated costs
-  // are already factored into `finalTotal` based on the AI's response.
-  // If `isPerPerson` affects these AI-generated costs, the AI itself should handle it.
-  // The `calculateTravelPlan` function already scales `totalEstimatedCost` (which is AI-driven)
-  // and `totalFoodCost` by `numberOfPeople`. This `calculateTotalCost` utility
-  // is primarily for dynamically updating the `totalEstimatedCost` state when itinerary items change.
+  let finalTotal = totalEstimatedCostsFromAI + specificItineraryItemsCost + tripFoodCost;
 
   return finalTotal;
 }
@@ -101,14 +100,19 @@ function App() {
   const [starRating, setStarRating] = useState(''); // Preferred hotel star rating
   const [topicsOfInterest, setTopicsOfInterest] = useState([]); // Selected topics for AI suggestions
   const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
+  
+  // --- UPDATED: Suggested items now store objects with details ---
   const [suggestedActivities, setSuggestedActivities] = useState([]); // AI-generated suggestions
   const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
   const [suggestedThemeParks, setSuggestedThemeParks] = useState([]);
   const [suggestedTouristSpots, setSuggestedTouristSpots] = useState([]);
   const [suggestedTours, setSuggestedTours] = useState([]);
   const [suggestedSportingEvents, setSuggestedSportingEvents] = useState([]);
+
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false); // Loading state for AI suggestions
   const [suggestionError, setSuggestionError] = useState(''); // Error for AI suggestions
+  
+  // --- UPDATED: Selected suggested items now store objects ---
   const [selectedSuggestedActivities, setSelectedSuggestedActivities] = useState([]); // User's selected suggestions
   const [selectedSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useState([]);
   const [selectedSuggestedThemeParks, setSelectedSuggestedThemeParks] = useState([]);
@@ -120,17 +124,22 @@ function App() {
   // --- BUDGET PLANNING STATES ---
   const [isPerPerson, setIsPerPerson] = useState(true); // Cost calculation basis (per person/party)
   const [numberOfPeople, setNumberOfPeople] = useState(1); // Number of people for calculations
+  
+  // --- UPDATED: AI Budget Estimates States (now more detailed) ---
   const [estimatedFlightCost, setEstimatedFlightCost] = useState(0);
+  const [aiFlightDetails, setAiFlightDetails] = useState(null); // NEW: To store AI's suggested flight details
+
   const [estimatedHotelCost, setEstimatedHotelCost] = useState(0);
-  const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
+  const [aiHotelDetails, setAiHotelDetails] = useState(null); // NEW: To store AI's suggested hotel details
+
+  const [estimatedActivityCost, setEstimatedActivityCost] = useState(0); // This will be the AI's general activity estimate
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false); // Loading state for AI budget
   const [budgetError, setBudgetError] = useState(''); // Error for AI budget
-  // =======================================================
-  // NEW: totalEstimatedCost state variable added
+  
+  // --- NEW: totalEstimatedCost state variable added ---
   // This state will hold the running total calculated by the useEffect and add/remove handlers.
-  // =======================================================
   const [totalEstimatedCost, setTotalEstimatedCost] = useState(0);
 
   // --- DAILY FOOD ALLOWANCE STATES ---
@@ -150,7 +159,7 @@ function App() {
   const [destinationCity, setDestinationCity] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
-  const [flightCost, setFlightCost] = useState(0);
+  const [flightCost, setFlightCost] = useState(0); // This is from the separate "Search Flights" button
   const [flightLoading, setFlightLoading] = useState(false);
   const [flightError, setFlightError] = useState('');
 
@@ -192,15 +201,12 @@ function App() {
   // --- HELPER FUNCTION: Fetch Country Flag ---
   const fetchCountryFlag = async (countryName) => {
     if (!countryName) return { name: '', flag: '' };
-    // Try to find in already fetched allCountries to avoid new API call if possible
     const foundCountry = allCountries.find(c => c.name.toLowerCase() === countryName.toLowerCase());
     if (foundCountry) return foundCountry;
 
-    // Fallback: If not found in allCountries, make a specific API call
     try {
       let response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fields=flags,name&fullText=true`);
       if (!response.ok) {
-        // Try partial match if exact match fails
         response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fields=flags,name`);
         if (!response.ok) {
           console.warn(`Could not find flag for country: ${countryName}`);
@@ -222,11 +228,11 @@ function App() {
   const handleHomeCountryInputChange = (e) => {
     const value = e.target.value;
     setNewHomeCountryInput(value);
-    if (value.length > 1) { // Start filtering after 1 character
+    if (value.length > 1) {
       setFilteredHomeCountrySuggestions(
         allCountries.filter(country =>
           country.name.toLowerCase().includes(value.toLowerCase())
-        ).slice(0, 10) // Limit to 10 suggestions
+        ).slice(0, 10)
       );
     } else {
       setFilteredHomeCountrySuggestions([]);
@@ -234,21 +240,21 @@ function App() {
   };
 
   const selectHomeCountrySuggestion = async (country) => {
-    setNewHomeCountryInput(country.name); // Set input text to selected country name
-    setHomeCountry(country); // Set home country state with selected country object
-    setFilteredHomeCountrySuggestions([]); // Clear suggestions
-    homeCountryInputRef.current.focus(); // Keep focus on input after selection
+    setNewHomeCountryInput(country.name);
+    setHomeCountry(country);
+    setFilteredHomeCountrySuggestions([]);
+    homeCountryInputRef.current.focus();
   };
 
   const handleSetHomeCountry = async () => {
     const trimmedHomeCountry = newHomeCountryInput.trim();
     if (trimmedHomeCountry !== '') {
       const countryData = await fetchCountryFlag(trimmedHomeCountry);
-      if (countryData.name) { // Only set if a valid country name was found/matched
+      if (countryData.name) {
         setHomeCountry(countryData);
       }
-      setNewHomeCountryInput(''); // Clear input after setting
-      setFilteredHomeCountrySuggestions([]); // Clear suggestions
+      setNewHomeCountryInput('');
+      setFilteredHomeCountrySuggestions([]);
     }
   };
 
@@ -264,12 +270,12 @@ function App() {
   const handleDestCountryInputChange = (e) => {
     const value = e.target.value;
     setNewCountry(value);
-    if (value.length > 1) { // Start filtering after 1 character
+    if (value.length > 1) {
       setFilteredDestCountrySuggestions(
         allCountries.filter(country =>
           country.name.toLowerCase().includes(value.toLowerCase()) &&
-          !countries.some(c => c.name.toLowerCase() === country.name.toLowerCase()) // Exclude already added countries
-        ).slice(0, 10) // Limit to 10 suggestions
+          !countries.some(c => c.name.toLowerCase() === country.name.toLowerCase())
+        ).slice(0, 10)
       );
     } else {
       setFilteredDestCountrySuggestions([]);
@@ -279,10 +285,10 @@ function App() {
   const selectDestCountrySuggestion = async (country) => {
     setNewCountry(country.name);
     if (!countries.some(c => c.name.toLowerCase() === country.name.toLowerCase())) {
-      setCountries([...countries, country]); // Add selected country object to destinations
+      setCountries([...countries, country]);
     }
-    setFilteredDestCountrySuggestions([]); // Clear suggestions
-    destCountryInputRef.current.focus(); // Keep focus on input after selection
+    setFilteredDestCountrySuggestions([]);
+    destCountryInputRef.current.focus();
   };
 
   const addCountry = async () => {
@@ -291,12 +297,12 @@ function App() {
       const existingCountry = countries.find(c => c.name.toLowerCase() === trimmedCountry.toLowerCase());
       if (!existingCountry) {
         const countryData = await fetchCountryFlag(trimmedCountry);
-        if (countryData.name) { // Only add if a valid country name was found/matched
+        if (countryData.name) {
           setCountries([...countries, countryData]);
         }
       }
-      setNewCountry(''); // Clear input after adding
-      setFilteredDestCountrySuggestions([]); // Clear suggestions
+      setNewCountry('');
+      setFilteredDestCountrySuggestions([]);
     }
   };
 
@@ -315,8 +321,9 @@ function App() {
     setCities(cities.filter(city => city !== cityToRemove));
   };
 
-  // --- ITINERARY & PREFERENCES HANDLERS ---
+  // --- UPDATED: ITINERARY & PREFERENCES HANDLERS (for objects) ---
   const toggleSuggestionSelection = (category, item) => {
+    // This item will now be an object from AI, not just a string name
     const setterMap = {
       activities: setSelectedSuggestedActivities,
       foodLocations: setSelectedSuggestedFoodLocations,
@@ -337,8 +344,11 @@ function App() {
     const currentSelections = currentSelectionsMap[category];
     const setter = setterMap[category];
 
-    if (currentSelections.includes(item)) {
-      setter(currentSelections.filter(selectedItem => selectedItem !== item));
+    // Use a unique identifier (like name or a generated ID if names aren't unique) for comparison
+    const isSelected = currentSelections.some(selectedItem => selectedItem.name === item.name);
+
+    if (isSelected) {
+      setter(currentSelections.filter(selectedItem => selectedItem.name !== item.name));
     } else {
       setter([...currentSelections, item]);
     }
@@ -353,7 +363,7 @@ function App() {
   };
 
 
-  // --- AI GENERATION FUNCTIONS ---
+  // --- UPDATED: AI GENERATION FUNCTIONS (Richer Prompts & Schemas) ---
   const generateSuggestions = async () => {
     if (countries.length === 0 && cities.length === 0) {
       setSuggestionError("Please select at least one country or city to get suggestions.");
@@ -388,11 +398,22 @@ function App() {
       ? `with a focus on topics such as: ${topicsOfInterest.join(', ')}`
       : '';
 
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
+    // --- UPDATED PROMPT: Requesting more structured details for suggestions ---
+    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} ${topicsPrompt}.
+    For each activity, tour, and sporting event, provide its "name", a brief "description" (2-3 sentences), a "simulated_estimated_cost_usd" (realistic number, e.g., 20-150), and a "simulated_booking_link" (e.g., "https://www.fakewebsite.com/book/activity").
+    For food locations, provide "name", "description", and a "simulated_price_range" (e.g., "$$", "$$$").
+    For theme parks and tourist spots, provide "name", "description", "location" (city/area), and "simulated_estimated_cost_usd" if applicable.
+    Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of objects.
+    Example for activities: { "name": "Hot Air Balloon Ride", "description": "Soar above the city at sunrise.", "simulated_estimated_cost_usd": 120, "simulated_booking_link": "https://balloonrides.com/book" }.
+    Example for food: { "name": "Sushi Heaven", "description": "Top-rated sushi experience.", "simulated_price_range": "$$$" }.
+    Example for theme park: { "name": "Fantasy Land", "description": "Magical rides and shows.", "location": "Orlando", "simulated_estimated_cost_usd": 100 }.
+    Ensure all fields are present in the JSON response.
+    `;
 
     let chatHistory = [];
     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
+    // --- UPDATED SCHEMA: Reflecting the new structured details for suggestions ---
     const payload = {
       contents: chatHistory,
       generationConfig: {
@@ -400,18 +421,58 @@ function App() {
         responseSchema: {
           type: "OBJECT",
           properties: {
-            "activities": { "type": "ARRAY", "items": { "type": "STRING" } },
-            "foodLocations": { "type": "ARRAY", "items": { "type": "STRING" } },
-            "themeParks": { "type": "ARRAY", "items": { "type": "STRING" } },
-            "touristSpots": { "type": "ARRAY", "items": { "type": "STRING" } },
-            "tours": { "type": "ARRAY", "items": { "type": "STRING" } },
-            "sportingEvents": { "type": "ARRAY", "items": { "type": "STRING" } }
+            "activities": { "type": "ARRAY", "items": {
+                "type": "OBJECT", "properties": {
+                    "name": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                    "simulated_estimated_cost_usd": {"type": "NUMBER"},
+                    "simulated_booking_link": {"type": "STRING"}
+                }
+            }},
+            "foodLocations": { "type": "ARRAY", "items": {
+                "type": "OBJECT", "properties": {
+                    "name": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                    "simulated_price_range": {"type": "STRING"}
+                }
+            }},
+            "themeParks": { "type": "ARRAY", "items": {
+                "type": "OBJECT", "properties": {
+                    "name": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                    "location": {"type": "STRING"},
+                    "simulated_estimated_cost_usd": {"type": "NUMBER"}
+                }
+            }},
+            "touristSpots": { "type": "ARRAY", "items": {
+                "type": "OBJECT", "properties": {
+                    "name": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                    "simulated_estimated_cost_usd": {"type": "NUMBER"} // Assuming some spots might have entrance fees
+                }
+            }},
+            "tours": { "type": "ARRAY", "items": {
+                "type": "OBJECT", "properties": {
+                    "name": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                    "simulated_estimated_cost_usd": {"type": "NUMBER"},
+                    "simulated_booking_link": {"type": "STRING"}
+                }
+            }},
+            "sportingEvents": { "type": "ARRAY", "items": {
+                "type": "OBJECT", "properties": {
+                    "name": {"type": "STRING"},
+                    "description": {"type": "STRING"},
+                    "simulated_estimated_cost_usd": {"type": "NUMBER"}
+                }
+            }}
           },
           "propertyOrdering": ["activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents"]
         }
       }
     };
 
+    // Use a placeholder for the API key if you're not deploying with a real one
     const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API Key if deploying
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -429,6 +490,7 @@ function App() {
         const jsonString = result.candidates[0].content.parts[0].text;
         const parsedJson = JSON.parse(jsonString);
 
+        // --- UPDATED: Set states with the new structured objects ---
         setSuggestedActivities(parsedJson.activities || []);
         setSuggestedFoodLocations(parsedJson.foodLocations || []);
         setSuggestedThemeParks(parsedJson.themeParks || []);
@@ -457,7 +519,7 @@ function App() {
     setBudgetError('');
 
     const destinationPrompt = countries.length > 0 && cities.length > 0
-      ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')})`
+      ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')}`
       : countries.length > 0
         ? `in the countries: ${countries.map(c => c.name).join(' and ')}`
         : `in the cities: ${cities.join(', ')}`;
@@ -469,12 +531,12 @@ function App() {
         : '';
 
     const itineraryPrompt = [
-      selectedSuggestedActivities.length > 0 ? `activities: ${selectedSuggestedActivities.join(', ')}` : '',
-      selectedSuggestedFoodLocations.length > 0 ? `food: ${selectedSuggestedFoodLocations.join(', ')}` : '',
-      selectedSuggestedThemeParks.length > 0 ? `theme parks: ${selectedSuggestedThemeParks.join(', ')}` : '',
-      selectedSuggestedTouristSpots.length > 0 ? `tourist spots: ${selectedSuggestedTouristSpots.join(', ')}` : '',
-      selectedSuggestedTours.length > 0 ? `tours: ${selectedSuggestedTours.join(', ')}` : '',
-      selectedSuggestedSportingEvents.length > 0 ? `sporting events: ${selectedSuggestedSportingEvents.join(', ')}` : ''
+      selectedSuggestedActivities.length > 0 ? `activities: ${selectedSuggestedActivities.map(item => item.name).join(', ')}` : '', // Now items are objects
+      selectedSuggestedFoodLocations.length > 0 ? `food: ${selectedSuggestedFoodLocations.map(item => item.name).join(', ')}` : '',
+      selectedSuggestedThemeParks.length > 0 ? `theme parks: ${selectedSuggestedThemeParks.map(item => item.name).join(', ')}` : '',
+      selectedSuggestedTouristSpots.length > 0 ? `tourist spots: ${selectedSuggestedTouristSpots.map(item => item.name).join(', ')}` : '',
+      selectedSuggestedTours.length > 0 ? `tours: ${selectedSuggestedTours.map(item => item.name).join(', ')}` : '',
+      selectedSuggestedSportingEvents.length > 0 ? `sporting events: ${selectedSuggestedSportingEvents.map(item => item.name).join(', ')}` : ''
     ].filter(Boolean).join('; ');
 
     const transportOptionsPrompt = [
@@ -484,15 +546,33 @@ function App() {
       airportParking ? 'airport parking' : ''
     ].filter(Boolean).join(', ');
 
+    // --- UPDATED PROMPT: Requesting more detailed budget breakdown ---
     const prompt = `Estimate the following costs in USD for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
-    Consider these itinerary items: ${itineraryPrompt || 'general sightseeing'}.
+    Based on typical online search results, provide specific (simulated, but realistic) details for:
+    - Flights: suggest a specific airline (e.g., United Airlines), a plausible route (e.g., SYD-NRT), a departure date and return date (relative to today and trip duration), and an estimated total flight cost.
+    - Hotel: suggest a specific hotel name (e.g., Grand Hyatt Tokyo), a location (e.g., Shinjuku), a realistic cost per night, the total number of nights (based on duration), and an estimated total hotel cost.
+    - Destination Transport: provide an estimated total cost for local transportation (e.g., public transport passes, taxi rides).
+    - Miscellaneous: provide a general estimated total cost for unexpected expenses or general shopping/souvenirs.
+    - Daily Food Allowance (per person): provide separate daily estimates for Breakfast, Lunch, Dinner, and Snacks.
+
+    Consider these itinerary items for activity cost estimation: ${itineraryPrompt || 'general sightseeing'}.
     Preferred hotel star rating: ${starRating || 'any'}.
-    Transport options: ${transportOptionsPrompt || 'standard public transport'}.
-    Provide the response as a JSON object with keys: "estimatedFlightCost", "estimatedHotelCost", "estimatedActivityCost", "estimatedTransportCost", "estimatedMiscellaneousCost", "breakfastAllowance", "lunchAllowance", "dinnerAllowance", "snacksAllowance". All values should be numbers.`;
+    Transport options to consider: ${transportOptionsPrompt || 'standard public transport'}.
+
+    Provide the response as a JSON object with keys: "flight", "hotel", "activityCost", "transportCost", "miscellaneousCost", "dailyFoodAllowance".
+    "flight" should be an object with: "airline", "route", "departure_date" (YYYY-MM-DD), "return_date" (YYYY-MM-DD), "estimated_cost_usd" (NUMBER).
+    "hotel" should be an object with: "name", "location", "cost_per_night_usd" (NUMBER), "total_nights" (NUMBER), "estimated_cost_usd" (NUMBER).
+    "activityCost" should be a NUMBER (AI's general activity cost estimate, separate from specific selected activities).
+    "transportCost" should be a NUMBER.
+    "miscellaneousCost" should be a NUMBER.
+    "dailyFoodAllowance" should be an object with: "breakfast_usd", "lunch_usd", "dinner_usd", "snacks_usd" (all NUMBERs).
+    Ensure all fields are present in the JSON response.
+    `;
 
     let chatHistory = [];
     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
+    // --- UPDATED SCHEMA: Reflecting the new structured budget details ---
     const payload = {
       contents: chatHistory,
       generationConfig: {
@@ -500,20 +580,32 @@ function App() {
         responseSchema: {
           type: "OBJECT",
           properties: {
-            "estimatedFlightCost": { "type": "NUMBER" },
-            "estimatedHotelCost": { "type": "NUMBER" },
-            "estimatedActivityCost": { "type": "NUMBER" },
-            "estimatedTransportCost": { "type": "NUMBER" },
-            "estimatedMiscellaneousCost": { "type": "NUMBER" },
-            "breakfastAllowance": { "type": "NUMBER" },
-            "lunchAllowance": { "type": "NUMBER" },
-            "dinnerAllowance": { "type": "NUMBER" },
-            "snacksAllowance": { "type": "NUMBER" }
+            "flight": { "type": "OBJECT", "properties": {
+                "airline": {"type": "STRING"},
+                "route": {"type": "STRING"},
+                "departure_date": {"type": "STRING"},
+                "return_date": {"type": "STRING"},
+                "estimated_cost_usd": {"type": "NUMBER"}
+            }},
+            "hotel": { "type": "OBJECT", "properties": {
+                "name": {"type": "STRING"},
+                "location": {"type": "STRING"},
+                "cost_per_night_usd": {"type": "NUMBER"},
+                "total_nights": {"type": "NUMBER"},
+                "estimated_cost_usd": {"type": "NUMBER"}
+            }},
+            "activityCost": { "type": "NUMBER" },
+            "transportCost": { "type": "NUMBER" },
+            "miscellaneousCost": { "type": "NUMBER" },
+            "dailyFoodAllowance": { "type": "OBJECT", "properties": {
+                "breakfast_usd": {"type": "NUMBER"},
+                "lunch_usd": {"type": "NUMBER"},
+                "dinner_usd": {"type": "NUMBER"},
+                "snacks_usd": {"type": "NUMBER"}
+            }}
           },
           "propertyOrdering": [
-            "estimatedFlightCost", "estimatedHotelCost", "estimatedActivityCost",
-            "estimatedTransportCost", "estimatedMiscellaneousCost",
-            "breakfastAllowance", "lunchAllowance", "dinnerAllowance", "snacksAllowance"
+            "flight", "hotel", "activityCost", "transportCost", "miscellaneousCost", "dailyFoodAllowance"
           ]
         }
       }
@@ -536,15 +628,21 @@ function App() {
         const jsonString = result.candidates[0].content.parts[0].text;
         const parsedJson = JSON.parse(jsonString);
 
-        setEstimatedFlightCost(parsedJson.estimatedFlightCost || 0);
-        setEstimatedHotelCost(parsedJson.estimatedHotelCost || 0);
-        setEstimatedActivityCost(parsedJson.estimatedActivityCost || 0);
-        setEstimatedTransportCost(parsedJson.estimatedTransportCost || 0);
-        setEstimatedMiscellaneousCost(parsedJson.estimatedMiscellaneousCost || 0);
-        setBreakfastAllowance(parsedJson.breakfastAllowance || 0);
-        setLunchAllowance(parsedJson.lunchAllowance || 0);
-        setDinnerAllowance(parsedJson.dinnerAllowance || 0);
-        setSnacksAllowance(parsedJson.snacksAllowance || 0);
+        // --- UPDATED: Set states with AI's detailed budget estimates ---
+        setEstimatedFlightCost(parsedJson.flight?.estimated_cost_usd || 0);
+        setAiFlightDetails(parsedJson.flight || null); // Store detailed flight info
+
+        setEstimatedHotelCost(parsedJson.hotel?.estimated_cost_usd || 0);
+        setAiHotelDetails(parsedJson.hotel || null); // Store detailed hotel info
+
+        setEstimatedActivityCost(parsedJson.activityCost || 0); // AI's general estimate for activities
+        setEstimatedTransportCost(parsedJson.transportCost || 0);
+        setEstimatedMiscellaneousCost(parsedJson.miscellaneousCost || 0); // Corrected key name
+
+        setBreakfastAllowance(parsedJson.dailyFoodAllowance?.breakfast_usd || 0);
+        setLunchAllowance(parsedJson.dailyFoodAllowance?.lunch_usd || 0);
+        setDinnerAllowance(parsedJson.dailyFoodAllowance?.dinner_usd || 0);
+        setSnacksAllowance(parsedJson.dailyFoodAllowance?.snacks_usd || 0);
 
       } else {
         setBudgetError("Failed to get budget estimates. Please try again.");
@@ -561,29 +659,33 @@ function App() {
   // --- MAIN TRAVEL PLAN CALCULATION (for final summary) ---
   const calculateTravelPlan = () => {
     // Combine selected suggested items (as manual input fields are removed for these)
-    const finalActivities = selectedSuggestedActivities.filter(Boolean).join(', ');
-    const finalFoodLocations = selectedSuggestedFoodLocations.filter(Boolean).join(', ');
-    const finalThemeParks = selectedSuggestedThemeParks.filter(Boolean).join(', ');
-    const finalTouristSpots = selectedSuggestedTouristSpots.filter(Boolean).join(', ');
-    const finalTours = selectedSuggestedTours.filter(Boolean).join(', ');
-    const finalSportingEvents = selectedSuggestedSportingEvents.filter(Boolean).join(', ');
+    // Note: These are now objects from AI, need to map to string names for summary display
+    const finalActivities = selectedSuggestedActivities.map(item => item.name).filter(Boolean).join(', ');
+    const finalFoodLocations = selectedSuggestedFoodLocations.map(item => item.name).filter(Boolean).join(', ');
+    const finalThemeParks = selectedSuggestedThemeParks.map(item => item.name).filter(Boolean).join(', ');
+    const finalTouristSpots = selectedSuggestedTouristSpots.map(item => item.name).filter(Boolean).join(', ');
+    const finalTours = selectedSuggestedTours.map(item => item.name).filter(Boolean).join(', ');
+    const finalSportingEvents = selectedSuggestedSportingEvents.map(item => item.name).filter(Boolean).join(', ');
 
-    // Calculate total food allowance per day
+    // Calculate total food allowance for the trip from daily allowances
     const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
     const totalFoodCost = totalDailyFoodAllowance * parseInt(duration); // This is total for the trip, not per person yet.
 
     // =======================================================
-    // UPDATED: Calculate finalTotalCost using the new function
+    // UPDATED: Calculate finalTotalCost using the new function with correct AI estimates
     // =======================================================
     const finalTotalCost = calculateTotalCost(
       itineraryItems,
       parseInt(duration),
       parseFloat(estimatedFlightCost),
-      parseInt(numberOfPeople),
+      parseFloat(estimatedHotelCost),
+      parseFloat(estimatedTransportCost),
+      parseFloat(estimatedMiscellaneousCost),
       parseFloat(breakfastAllowance),
       parseFloat(lunchAllowance),
       parseFloat(dinnerAllowance),
       parseFloat(snacksAllowance),
+      parseInt(numberOfPeople),
       isPerPerson
     );
 
@@ -605,11 +707,15 @@ function App() {
       tours: finalTours, // Include tours in summary
       isPerPerson,
       numberOfPeople,
-      estimatedFlightCost,
-      estimatedHotelCost,
-      estimatedActivityCost,
-      estimatedTransportCost,
-      estimatedMiscellaneousCost,
+      
+      // --- UPDATED: Pass AI's detailed flight/hotel info to summary ---
+      estimatedFlightCost, // Numerical value
+      aiFlightDetails,     // Detailed object
+      estimatedHotelCost,  // Numerical value
+      aiHotelDetails,      // Detailed object
+
+      estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
+      
       totalEstimatedCost: finalTotalCost, // This is the sum of estimated costs including selected items, excluding food, and then adjusted by people if perPerson
       breakfastAllowance,
       lunchAllowance,
@@ -621,17 +727,16 @@ function App() {
       shuttle,
       airportTransfers,
       airportParking,
-      grandTotal: finalTotalCost + finalTotalFoodCost, // Grand total including food
+      grandTotal: finalTotalCost, // grandTotal should already include all costs including food via calculateTotalCost
       topicsOfInterest, // Include topics of interest in summary
     });
   };
 
-  // --- FLIGHT SEARCH HANDLER ---
+  // --- FLIGHT SEARCH HANDLER (separate from AI budget estimate now) ---
   const handleFlightSearch = async () => {
     setFlightLoading(true);
     setFlightError('');
     try {
-      // Pass selected destination country/city to mock API if available
       const destCityForFlight = cities.length > 0 ? cities[0] : destinationCity;
       const originCityForFlight = homeCity || originCity;
 
@@ -641,7 +746,7 @@ function App() {
         departureDate,
         returnDate
       });
-      setFlightCost(cost);
+      setFlightCost(cost); // This sets the value for the *manual* flight search
     } catch (error) {
       console.error("Error fetching flight prices:", error);
       setFlightError(error.message);
@@ -651,10 +756,18 @@ function App() {
     }
   };
 
-  // --- ITINERARY ITEM ADD/REMOVE HANDLERS ---
+  // --- ITINERARY ITEM ADD/REMOVE HANDLERS (for objects) ---
   const handleAddToItinerary = (item) => {
-    if (!itineraryItems.some(itineraryItem => itineraryItem.id === item.id)) {
-      const updatedItinerary = [...itineraryItems, item]; // Create new array with added item
+    // Assign a unique ID if item doesn't have one, essential for list keys
+    const itemWithId = { ...item, id: item.name + Math.random().toString(36).substr(2, 9) };
+    if (!itineraryItems.some(itineraryItem => itineraryItem.name === item.name)) { // Check by name for uniqueness
+      const updatedItinerary = [...itineraryItems, {
+        id: itemWithId.id,
+        name: itemWithId.name,
+        // Base cost for itinerary items comes from AI's simulated_estimated_cost_usd
+        baseCost: itemWithId.simulated_estimated_cost_usd || 0,
+        type: itemWithId.type || 'activity' // Assign a type for calculation
+      }];
       setItineraryItems(updatedItinerary);
 
       const durationDays = parseInt(duration) || 0;
@@ -666,11 +779,14 @@ function App() {
         updatedItinerary, // Pass the updated itinerary here
         durationDays,
         estimatedFlightCost, // Use the state value
-        numberOfPeople,
+        estimatedHotelCost,
+        estimatedTransportCost,
+        estimatedMiscellaneousCost,
         breakfastAllowance,
         lunchAllowance,
         dinnerAllowance,
         snacksAllowance,
+        numberOfPeople,
         isPerPerson
       ));
 
@@ -698,11 +814,14 @@ function App() {
       updatedItinerary, // Pass the updated itinerary here
       durationDays,
       estimatedFlightCost, // Use the state value
-      numberOfPeople,
+      estimatedHotelCost,
+      estimatedTransportCost,
+      estimatedMiscellaneousCost,
       breakfastAllowance,
       lunchAllowance,
       dinnerAllowance,
       snacksAllowance,
+      numberOfPeople,
       isPerPerson
     ));
 
@@ -712,18 +831,9 @@ function App() {
 
 
   // --- MAIN SEARCH & CLEAR HANDLERS ---
-  // The 'handleSearch' is now essentially replaced by 'generateSuggestions' and 'generateBudgetEstimates'
-  // as the primary ways to populate the plan details.
-  // The 'Calculate Travel Plan' button serves as the final summary generator.
   const handleSearch = async () => {
-    // This function is retained for structure but its internal logic is now handled by
-    // generateSuggestions and generateBudgetEstimates buttons.
-    // It could be used to fetch an initial set of mock travel data if needed,
-    // but the AI suggestions provide a more dynamic approach.
     setLoading(true);
     setShowDisclaimer(false);
-    // Simulate initial data fetch or AI call if no suggestions/budget exists yet
-    // For now, it mostly just clears disclaimer and sets loading briefly
     setTimeout(() => {
         setLoading(false);
     }, 500);
@@ -742,8 +852,12 @@ function App() {
     setHomeCity('');
     setNewHomeCityInput('');
     setTopicsOfInterest([]);
+    
     setEstimatedFlightCost(0);
+    setAiFlightDetails(null); // Clear detailed AI flight info
     setEstimatedHotelCost(0);
+    setAiHotelDetails(null);   // Clear detailed AI hotel info
+
     setEstimatedActivityCost(0);
     setEstimatedTransportCost(0);
     setEstimatedMiscellaneousCost(0);
@@ -812,7 +926,6 @@ function App() {
       setCurrentUser(user);
       setIsLoggedIn(true);
       setShowAuthModal(false);
-      // No trips to load for a new user yet
     } catch (error) {
       setAuthError(error.message);
     }
@@ -835,9 +948,6 @@ function App() {
     }
     setSaveLoadMessage('Saving trip...');
     try {
-      // =======================================================
-      // UPDATED: totalEstimatedCost calculation for saving
-      // =======================================================
       const tripToSave = {
         name: `${cities.length > 0 ? cities[0] : 'Unnamed'} trip (${new Date().toLocaleDateString()})`, // Dynamic name
         homeCountry, homeCity, countries, cities, duration, starRating,
@@ -846,20 +956,28 @@ function App() {
         selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
         itineraryItems, // Save the actual itinerary items
         isPerPerson, numberOfPeople,
-        estimatedFlightCost, estimatedHotelCost, estimatedActivityCost,
-        estimatedTransportCost, estimatedMiscellaneousCost,
+        estimatedFlightCost, aiFlightDetails, // Save detailed AI flight info
+        estimatedHotelCost, aiHotelDetails,   // Save detailed AI hotel info
+        estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
         breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance,
         carRental, shuttle, airportTransfers, airportParking,
-        originCity, destinationCity, departureDate, returnDate, flightCost,
-        totalEstimatedCost: calculateTotalCost( // Calculate final cost on save
+        originCity, destinationCity, departureDate, returnDate, flightCost, // Manual flight search details
+
+        // =======================================================
+        // UPDATED: totalEstimatedCost calculation for saving
+        // =======================================================
+        totalEstimatedCost: calculateTotalCost(
           itineraryItems,
           duration,
-          estimatedFlightCost, // Use the state value
-          numberOfPeople,
+          estimatedFlightCost,
+          estimatedHotelCost,
+          estimatedTransportCost,
+          estimatedMiscellaneousCost,
           breakfastAllowance,
           lunchAllowance,
           dinnerAllowance,
           snacksAllowance,
+          numberOfPeople,
           isPerPerson
         )
       };
@@ -894,18 +1012,26 @@ function App() {
     setDuration(trip.duration || 1);
     setStarRating(trip.starRating || '');
     setTopicsOfInterest(trip.topicsOfInterest || []);
+    
+    // --- UPDATED: Load selected items as objects ---
     setSelectedSuggestedActivities(trip.selectedSuggestedActivities || []);
     setSelectedSuggestedFoodLocations(trip.selectedSuggestedFoodLocations || []);
-    setSelectedSuggestedThemeParks(trip.selectedThemeParks || []);
+    setSelectedSuggestedThemeParks(trip.selectedSuggestedThemeParks || []);
     setSelectedSuggestedTouristSpots(trip.selectedSuggestedTouristSpots || []);
     setSelectedSuggestedTours(trip.selectedSuggestedTours || []);
     setSelectedSuggestedSportingEvents(trip.selectedSuggestedSportingEvents || []);
+    
     setItineraryItems(trip.itineraryItems || []); // Restore the actual itinerary items
 
     setIsPerPerson(trip.isPerPerson);
     setNumberOfPeople(trip.numberOfPeople || 1);
+    
+    // --- UPDATED: Load detailed AI budget info ---
     setEstimatedFlightCost(trip.estimatedFlightCost || 0);
+    setAiFlightDetails(trip.aiFlightDetails || null);
     setEstimatedHotelCost(trip.estimatedHotelCost || 0);
+    setAiHotelDetails(trip.aiHotelDetails || null);
+
     setEstimatedActivityCost(trip.estimatedActivityCost || 0);
     setEstimatedTransportCost(trip.estimatedTransportCost || 0);
     setEstimatedMiscellaneousCost(trip.estimatedMiscellaneousCost || 0);
@@ -929,12 +1055,15 @@ function App() {
     setTotalEstimatedCost(calculateTotalCost(
       trip.itineraryItems || [], // Use loaded itinerary items
       parseInt(trip.duration) || 0,
-      parseFloat(trip.estimatedFlightCost) || 0, // Use loaded estimatedFlightCost
-      parseInt(trip.numberOfPeople) || 0,
+      parseFloat(trip.estimatedFlightCost) || 0,
+      parseFloat(trip.estimatedHotelCost) || 0,
+      parseFloat(trip.estimatedTransportCost) || 0,
+      parseFloat(trip.estimatedMiscellaneousCost) || 0,
       parseFloat(trip.breakfastAllowance) || 0,
       parseFloat(trip.lunchAllowance) || 0,
       parseFloat(trip.dinnerAllowance) || 0,
       parseFloat(trip.snacksAllowance) || 0,
+      parseInt(trip.numberOfPeople) || 0,
       trip.isPerPerson
     ));
 
@@ -952,27 +1081,25 @@ function App() {
     setTotalEstimatedCost(calculateTotalCost(
       itineraryItems,
       durationDays,
-      estimatedFlightCost, // Use estimatedFlightCost from AI/manual input
-      numberOfPeople,
+      estimatedFlightCost, // Use AI's numerical estimate
+      estimatedHotelCost,  // Use AI's numerical estimate
+      estimatedTransportCost,
+      estimatedMiscellaneousCost,
       breakfastAllowance,
       lunchAllowance,
       dinnerAllowance,
       snacksAllowance,
+      numberOfPeople,
       isPerPerson
     ));
-  }, [duration, estimatedFlightCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedHotelCost, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost]); // Added relevant dependencies
+  }, [duration, estimatedFlightCost, estimatedHotelCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost]); // Added relevant dependencies
 
   // Calculate total budget for comparison
   const durationDaysMatch = String(duration).match(/(\d+)/);
   const durationDays = durationDaysMatch ? parseInt(durationDaysMatch[1], 10) : 0;
 
-  // The totalBudget calculation here needs to reflect the final grandTotal logic if it's meant to be a user-set comparison point
-  // It seems `userSetTotalBudget` is the one you intend to compare against.
-  // totalBudget as defined here before was confusing, simplifying to ensure `userSetTotalBudget` is the comparison.
-  // No direct "userSetTotalBudget" input field, so it's summing the AI-estimated costs.
-  // The comparison below is against `totalEstimatedCost` (the one calculated by `calculateTotalCost`).
-  // Let's ensure this logic is sound: `userSetTotalBudget` is effectively the sum of AI estimations.
-
+  // The `userSetTotalBudget` represents the sum of the AI's initial cost estimates.
+  // This is what you compare `totalEstimatedCost` (which includes selected itinerary items) against.
   const userSetTotalBudget = (estimatedFlightCost + estimatedHotelCost + estimatedActivityCost + estimatedTransportCost + estimatedMiscellaneousCost + (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance) * durationDays) * (isPerPerson ? numberOfPeople : 1);
 
   const isOverBudget = totalEstimatedCost > userSetTotalBudget && userSetTotalBudget > 0;
@@ -988,9 +1115,11 @@ function App() {
   const removeButtonClass = "ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out";
   const tagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
   const flagTagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
-  const suggestionTagClass = (isSelected) =>
+  
+  // --- UPDATED: Suggestion Tag Class now highlights based on item.name (unique identifier) ---
+  const suggestionTagClass = (item, selectedArray) =>
     `px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition duration-200 ease-in-out ${
-      isSelected ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+      selectedArray.some(selectedItem => selectedItem.name === item.name) ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
     }`;
   const suggestionListClass = "absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1";
   const suggestionItemClass = "p-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-800";
@@ -1239,7 +1368,7 @@ function App() {
                 />
                 <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
               </div>
-              {/* Destination Country Suggestions Dropdown */}
+              {/* Country Suggestions Dropdown */}
               {filteredDestCountrySuggestions.length > 0 && (
                 <ul className={suggestionListClass}>
                   {filteredDestCountrySuggestions.map((country) => (
@@ -1364,109 +1493,140 @@ function App() {
             {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
           </div>
 
-          {/* Suggested Activities */}
+          {/* Suggested Activities --- UPDATED UI to show more details --- */}
           {suggestedActivities.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Activities:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedActivities.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedActivities.includes(item))}
+                  <div
+                    key={index} // Consider using item.name if guaranteed unique, otherwise use index for now
+                    className={suggestionTagClass(item, selectedSuggestedActivities)}
                     onClick={() => toggleSuggestionSelection('activities', item)}
                   >
-                    {item}
-                  </span>
+                    <div className="font-semibold text-base">{item.name}</div>
+                    <div className="text-sm text-gray-600">{item.description}</div>
+                    {item.simulated_estimated_cost_usd && (
+                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                    )}
+                    {item.simulated_booking_link && (
+                        <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Suggested Sporting Events */}
+          {/* Suggested Sporting Events --- UPDATED UI to show more details --- */}
           {suggestedSportingEvents.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Sporting Events:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedSportingEvents.map((item, index) => (
-                  <span
+                  <div
                     key={index}
-                    className={suggestionTagClass(selectedSuggestedSportingEvents.includes(item))}
+                    className={suggestionTagClass(item, selectedSuggestedSportingEvents)}
                     onClick={() => toggleSuggestionSelection('sportingEvents', item)}
                   >
-                    {item}
-                  </span>
+                    <div className="font-semibold text-base">{item.name}</div>
+                    <div className="text-sm text-gray-600">{item.description}</div>
+                    {item.simulated_estimated_cost_usd && (
+                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Suggested Food Locations */}
+          {/* Suggested Food Locations --- UPDATED UI to show more details --- */}
           {suggestedFoodLocations.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Food Locations:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedFoodLocations.map((item, index) => (
-                  <span
+                  <div
                     key={index}
-                    className={suggestionTagClass(selectedSuggestedFoodLocations.includes(item))}
+                    className={suggestionTagClass(item, selectedSuggestedFoodLocations)}
                     onClick={() => toggleSuggestionSelection('foodLocations', item)}
                   >
-                    {item}
-                  </span>
+                    <div className="font-semibold text-base">{item.name}</div>
+                    <div className="text-sm text-gray-600">{item.description}</div>
+                    {item.simulated_price_range && (
+                        <div className="text-sm text-gray-700">Price Range: {item.simulated_price_range}</div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Suggested Theme Parks */}
+          {/* Suggested Theme Parks --- UPDATED UI to show more details --- */}
           {suggestedThemeParks.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Theme Parks:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedThemeParks.map((item, index) => (
-                  <span
+                  <div
                     key={index}
-                    className={suggestionTagClass(selectedSuggestedThemeParks.includes(item))}
+                    className={suggestionTagClass(item, selectedSuggestedThemeParks)}
                     onClick={() => toggleSuggestionSelection('themeParks', item)}
                   >
-                    {item}
-                  </span>
+                    <div className="font-semibold text-base">{item.name}</div>
+                    <div className="text-sm text-gray-600">{item.description}</div>
+                    {item.location && <div className="text-sm text-gray-700">Location: {item.location}</div>}
+                    {item.simulated_estimated_cost_usd && (
+                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Suggested Tourist Spots */}
+          {/* Suggested Tourist Spots --- UPDATED UI to show more details --- */}
           {suggestedTouristSpots.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tourist Spots:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedTouristSpots.map((item, index) => (
-                  <span
+                  <div
                     key={index}
-                    className={suggestionTagClass(selectedSuggestedTouristSpots.includes(item))}
+                    className={suggestionTagClass(item, selectedSuggestedTouristSpots)}
                     onClick={() => toggleSuggestionSelection('touristSpots', item)}
                   >
-                    {item}
-                  </span>
+                    <div className="font-semibold text-base">{item.name}</div>
+                    <div className="text-sm text-gray-600">{item.description}</div>
+                    {item.simulated_estimated_cost_usd && (
+                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Suggested Tours */}
+          {/* Suggested Tours --- UPDATED UI to show more details --- */}
           {suggestedTours.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tours:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedTours.map((item, index) => (
-                  <span
+                  <div
                     key={index}
-                    className={suggestionTagClass(selectedSuggestedTours.includes(item))}
+                    className={suggestionTagClass(item, selectedSuggestedTours)}
                     onClick={() => toggleSuggestionSelection('tours', item)}
                   >
-                    {item}
-                  </span>
+                    <div className="font-semibold text-base">{item.name}</div>
+                    <div className="text-sm text-gray-600">{item.description}</div>
+                    {item.simulated_estimated_cost_usd && (
+                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                    )}
+                    {item.simulated_booking_link && (
+                        <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -1541,9 +1701,10 @@ function App() {
             {budgetError && <p className="text-red-500 text-sm mt-2">{budgetError}</p>}
           </div>
 
+          {/* --- UPDATED: Display AI's detailed flight/hotel info inputs --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="estimatedFlightCost" className={labelClass}>Estimated Flight Cost:</label>
+              <label htmlFor="estimatedFlightCost" className={labelClass}>AI Estimated Flight Cost:</label>
               <input
                 type="number"
                 id="estimatedFlightCost"
@@ -1551,10 +1712,18 @@ function App() {
                 onChange={(e) => setEstimatedFlightCost(parseFloat(e.target.value) || 0)}
                 min="0"
                 className={`${inputClass} w-full`}
+                readOnly={aiFlightDetails !== null} // Make read-only if AI provided details
               />
+              {aiFlightDetails && (
+                <div className="text-sm text-gray-600 mt-2">
+                  <p>Airline: {aiFlightDetails.airline}</p>
+                  <p>Route: {aiFlightDetails.route}</p>
+                  <p>Dates: {aiFlightDetails.departure_date} to {aiFlightDetails.return_date}</p>
+                </div>
+              )}
             </div>
             <div>
-              <label htmlFor="estimatedHotelCost" className={labelClass}>Estimated Hotel Cost:</label>
+              <label htmlFor="estimatedHotelCost" className={labelClass}>AI Estimated Hotel Cost:</label>
               <input
                 type="number"
                 id="estimatedHotelCost"
@@ -1562,10 +1731,19 @@ function App() {
                 onChange={(e) => setEstimatedHotelCost(parseFloat(e.target.value) || 0)}
                 min="0"
                 className={`${inputClass} w-full`}
+                readOnly={aiHotelDetails !== null} // Make read-only if AI provided details
               />
+              {aiHotelDetails && (
+                <div className="text-sm text-gray-600 mt-2">
+                  <p>Hotel: {aiHotelDetails.name}</p>
+                  <p>Location: {aiHotelDetails.location}</p>
+                  <p>Cost/Night: ${aiHotelDetails.cost_per_night_usd?.toFixed(2)} for {aiHotelDetails.total_nights} nights</p>
+                </div>
+              )}
             </div>
+            {/* These below are still general AI estimates, no detailed breakdown requested from AI yet */}
             <div>
-              <label htmlFor="estimatedActivityCost" className={labelClass}>Estimated Activity Cost:</label>
+              <label htmlFor="estimatedActivityCost" className={labelClass}>AI Estimated Activity Cost (General):</label>
               <input
                 type="number"
                 id="estimatedActivityCost"
@@ -1576,7 +1754,7 @@ function App() {
               />
             </div>
             <div>
-              <label htmlFor="estimatedTransportCost" className={labelClass}>Estimated Transport Cost:</label>
+              <label htmlFor="estimatedTransportCost" className={labelClass}>AI Estimated Transport Cost (Local):</label>
               <input
                 type="number"
                 id="estimatedTransportCost"
@@ -1587,7 +1765,7 @@ function App() {
               />
             </div>
             <div>
-              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost:</label>
+              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>AI Estimated Miscellaneous Cost:</label>
               <input
                 type="number"
                 id="estimatedMiscellaneousCost"
@@ -1841,7 +2019,7 @@ function App() {
                 <ul className="list-disc list-inside ml-6 text-gray-700">
                   {itineraryItems.map(item => (
                     <li key={item.id} className="mb-1">
-                      {item.name} (${item.baseCost.toLocaleString()}{item.type === 'hotel' ? ' / night' : ''})
+                      {item.name} (${item.baseCost.toFixed(2)}{item.type === 'hotel' ? ' / night' : ''})
                     </li>
                   ))}
                 </ul>
@@ -1859,12 +2037,23 @@ function App() {
               <h3 className={summarySubTitleClass}>Estimated Costs:</h3>
               <p className={summaryItemClass}><strong>Calculation Basis:</strong> {travelPlanSummary.isPerPerson ? `Per Person (${travelPlanSummary.numberOfPeople} people)` : 'Per Party'}</p>
               <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">${travelPlanSummary.estimatedFlightCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">${travelPlanSummary.estimatedHotelCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Activity Cost: <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Transport Cost: <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
+                {/* --- UPDATED: Display AI's detailed flight info in summary --- */}
+                <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">${travelPlanSummary.estimatedFlightCost.toFixed(2)}</span>
+                  {travelPlanSummary.aiFlightDetails && (
+                    <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiFlightDetails.airline}, {travelPlanSummary.aiFlightDetails.route} {travelPlanSummary.aiFlightDetails.departure_date} to {travelPlanSummary.aiFlightDetails.return_date})</span>
+                  )}
+                </li>
+                {/* --- UPDATED: Display AI's detailed hotel info in summary --- */}
+                <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">${travelPlanSummary.estimatedHotelCost.toFixed(2)}</span>
+                  {travelPlanSummary.aiHotelDetails && (
+                    <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiHotelDetails.name}, {travelPlanSummary.aiHotelDetails.location} @ ${travelPlanSummary.aiHotelDetails.cost_per_night_usd?.toFixed(2)}/night for {travelPlanSummary.aiHotelDetails.total_nights} nights)</span>
+                  )}
+                </li>
+                <li className="mb-1">Estimated Activity Cost (General): <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
+                <li className="mb-1">Estimated Transport Cost (Local): <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
                 <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${(travelPlanSummary.estimatedFlightCost + travelPlanSummary.estimatedHotelCost + travelPlanSummary.estimatedActivityCost + travelPlanSummary.estimatedTransportCost + travelPlanSummary.estimatedMiscellaneousCost).toFixed(2)}</span></li>
+                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food, from AI General Estimates): <span className="text-blue-700">${(travelPlanSummary.estimatedFlightCost + travelPlanSummary.estimatedHotelCost + travelPlanSummary.estimatedActivityCost + travelPlanSummary.estimatedTransportCost + travelPlanSummary.estimatedMiscellaneousCost).toFixed(2)}</span></li>
+                <li className="mt-1 text-lg font-bold text-indigo-800">Cost of Selected Itinerary Items: <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li> {/* This now reflects the specific items */}
               </ul>
             </div>
 
