@@ -1,88 +1,102 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
+const webpack = require('webpack'); // Keep this if you use webpack.DefinePlugin
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  // Explicitly set mode for clarity and proper optimizations
-  mode: 'production', // Ensure this is set to 'production' for deploy builds
+  // 1. RECOMMENDATION: Remove 'mode' from here.
+  //    It's better to define the mode via the command line in package.json scripts
+  //    (e.g., 'webpack serve --mode development' and 'webpack --mode production').
+  //    This makes the config reusable for both dev and prod.
+  // mode: 'production', // <--- REMOVE THIS LINE from the config file itself.
 
-  entry: './src/index.js',
+  entry: './src/index.js', // Your application's entry point (can be .jsx)
   output: {
-    path: path.resolve(__dirname, 'build'),
-    filename: 'bundle.js',
-    publicPath: '/',
-    clean: true,
+    path: path.resolve(__dirname, 'build'), // Output directory (where bundled files go)
+    filename: 'bundle.js', // Name of the main bundled JavaScript file
+    publicPath: '/', // Base URL for all assets. Crucial for SPA routing and asset loading.
+    clean: true, // Clean the output directory before each build
   },
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
+        test: /\.(js|jsx)$/, // Process .js and .jsx files
+        exclude: /node_modules/, // Don't process files in node_modules
         use: {
-          loader: 'babel-loader',
+          loader: 'babel-loader', // Use Babel for transpilation
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-react'], // Babel presets for environment and React
+          },
         },
       },
       {
-        test: /\.css$/,
+        test: /\.css$/, // Process .css files
         use: [
-          'style-loader',
-          'css-loader',
-          'postcss-loader'
+          'style-loader',   // Injects CSS into the DOM
+          'css-loader',     // Interprets @import and url() like import/require() and resolves them
+          'postcss-loader'  // Processes CSS with PostCSS (essential for Tailwind CSS)
         ],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
-        type: 'asset/resource',
+        test: /\.(png|svg|jpg|jpeg|gif|ico)$/i, // Handle image files
+        type: 'asset/resource', // Webpack 5's built-in asset module type
         generator: {
-          filename: 'assets/[name][ext]'
+          filename: 'assets/images/[name][ext]' // Output path for images within 'build' folder
         }
       },
+      // You might need a rule for fonts if you use custom fonts:
+      // {
+      //   test: /\.(woff|woff2|eot|ttf|otf)$/i,
+      //   type: 'asset/resource',
+      //   generator: {
+      //     filename: 'assets/fonts/[name][ext]'
+      //   }
+      // }
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html',
-      filename: 'index.html',
-      inject: 'body',
+      template: './public/index.html', // Path to your source HTML template
+      filename: 'index.html', // Output HTML file name
+      inject: 'body', // Inject bundled JS into the <body> tag
     }),
-    // FIX for ReferenceError: process is not defined
-    // Define process.env.NODE_ENV and provide a minimal polyfill for 'process' global.
-    // This is a common and robust way to handle Node.js globals in browser builds.
+    // FIX for ReferenceError: process is not defined and environment variables
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-      // Provide a basic 'process' object if a library somehow tries to access it directly
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'), // Default to 'development' if not set
+      // Provide a basic 'process' object polyfill for older libraries
       'process': JSON.stringify({
-          env: { NODE_ENV: process.env.NODE_ENV || 'production' },
-          platform: 'browser', // Mimic browser environment
-          cwd: () => '/',      // Minimal cwd implementation
-          // Add other properties as needed if specific libraries complain
+          env: { NODE_ENV: process.env.NODE_ENV || 'development' },
+          platform: 'browser',
+          cwd: () => '/',
       })
     }),
-    // FIX for manifest.json 404: Copy static files from public folder to build
+    // FIX for manifest.json 404: Copy static files from public folder to build output
     new CopyWebpackPlugin({
       patterns: [
-        // Copy all files from 'public' to the root of 'build', except index.html (handled by HtmlWebpackPlugin)
-        // Make sure the path 'public' is relative to webpack.config.js
+        // This copies everything from the 'public' directory (excluding index.html)
+        // to the root of your 'build' directory.
+        // This includes manifest.json, favicon.ico, logo192.png, logo512.png, etc.
         { from: 'public', to: '.', globOptions: { ignore: ['**/index.html'] } }
       ]
     })
   ],
   resolve: {
-    extensions: ['.js', '.jsx'],
-    // Add fallback for 'process' module if needed by deep dependencies.
-    // This requires 'process' npm package: npm install process
+    extensions: ['.js', '.jsx'], // Allows you to import JS/JSX files without specifying the extension
+    // Fallback for 'process' module, specifically for browser environments
+    // This requires the 'process' npm package (which you have in devDependencies)
     fallback: { "process": require.resolve("process/browser") }
   },
-  // devServer configuration is typically for local development
+  // devServer configuration for local development with `webpack serve`
   devServer: {
+    // 2. RECOMMENDATION: Point devServer.static to your *output* directory ('build')
+    //    to ensure it serves the bundled and copied assets consistently.
     static: {
-      directory: path.join(__dirname, 'public'),
+      directory: path.join(__dirname, 'build'), // Serve files from the 'build' directory
     },
-    compress: true,
-    port: 3000,
-    open: false,
-    historyApiFallback: true,
+    compress: true, // Enable gzip compression
+    port: 3000, // Port for the development server
+    open: false, // Don't automatically open the browser (controlled by 'package.json' script)
+    historyApiFallback: true, // Fall back to index.html for HTML5 History API routing
   },
-  target: 'web',
+  target: 'web', // Compile for a browser-like environment
 };
