@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Hotel, Activity, Utensils, Award, FerrisWheel, MapPin, Plane, Car, Bus, ParkingSquare,
-  DollarSign, CalendarDays, Search, XCircle, PlaneTakeoff, PlaneLanding, Users, LogIn, LogOut, Save, FolderOpen, ListChecks, PlusCircle, MinusCircle, Heart, Home, Lightbulb, Loader
+  DollarSign, CalendarDays, Search, XCircle, PlaneTakeoff, PlaneLanding, Users, LogIn, LogOut, Save, FolderOpen, ListChecks, PlusCircle, MinusCircle, Heart, Home, Lightbulb, Loader, Wallet, Compass, CheckCircle
 } from 'lucide-react';
 
 // Import mock API functions for simulation
@@ -14,6 +14,67 @@ const transportOptions = {
   airportTransfer: { name: "Airport Transfer", costPerUse: 70, icon: <Plane className="w-5 h-5 text-blue-500" /> },
   airportParking: { name: "Airport Parking", costPerDay: 25, icon: <ParkingSquare className="w-5 h-5 text-blue-500" /> },
 };
+
+// =======================================================
+// NEW/UPDATED: calculateTotalCost function definition
+// This function calculates the total estimated cost based on all relevant inputs.
+// =======================================================
+function calculateTotalCost(
+  itineraryItems,
+  duration,
+  estimatedFlightCost, // Changed from flightCost to estimatedFlightCost for clarity with state
+  numberOfPeople,
+  breakfastAllowance,
+  lunchAllowance,
+  dinnerAllowance,
+  snacksAllowance,
+  isPerPerson
+) {
+  let itemsCost = 0;
+  if (itineraryItems && itineraryItems.length > 0) {
+    itemsCost = itineraryItems.reduce((acc, item) => {
+      let itemCost = item.baseCost;
+      // Adjust cost for hotels if they are per night
+      if (item.type === 'hotel') {
+        itemCost *= duration;
+      }
+      return acc + itemCost;
+    }, 0);
+  }
+
+  // Calculate total food cost for the trip
+  const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
+  let tripFoodCost = totalDailyFoodAllowance * duration;
+  if (isPerPerson) {
+    tripFoodCost *= numberOfPeople;
+  }
+
+  // Sum up all estimated costs from state and calculated food/itinerary items
+  const totalEstimatedCostsExcludingFoodAndFlights =
+    parseFloat(estimatedHotelCost) +
+    parseFloat(estimatedActivityCost) +
+    parseFloat(estimatedTransportCost) +
+    parseFloat(estimatedMiscellaneousCost);
+
+  // Consider `itemsCost` from `itineraryItems` as the "actual" cost for selected items
+  // and `estimatedActivityCost` from the AI as a general estimate for *other* activities.
+  // For simplicity, let's assume `itemsCost` is more granular, and sum it up.
+  // If `estimatedActivityCost` from AI is meant to cover *all* activities including selected ones,
+  // then we might need a more sophisticated logic here (e.g., override if item is selected).
+  // For now, let's sum them, assuming AI gives a general estimate and items are specific additions.
+
+  let finalTotal = itemsCost + estimatedFlightCost + totalEstimatedCostsExcludingFoodAndFlights + tripFoodCost;
+
+  // The AI-generated 'estimatedFlightCost' and other estimated costs
+  // are already factored into `finalTotal` based on the AI's response.
+  // If `isPerPerson` affects these AI-generated costs, the AI itself should handle it.
+  // The `calculateTravelPlan` function already scales `totalEstimatedCost` (which is AI-driven)
+  // and `totalFoodCost` by `numberOfPeople`. This `calculateTotalCost` utility
+  // is primarily for dynamically updating the `totalEstimatedCost` state when itinerary items change.
+
+  return finalTotal;
+}
+
 
 function App() {
   // --- DESTINATION & DURATION STATES ---
@@ -66,6 +127,11 @@ function App() {
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false); // Loading state for AI budget
   const [budgetError, setBudgetError] = useState(''); // Error for AI budget
+  // =======================================================
+  // NEW: totalEstimatedCost state variable added
+  // This state will hold the running total calculated by the useEffect and add/remove handlers.
+  // =======================================================
+  const [totalEstimatedCost, setTotalEstimatedCost] = useState(0);
 
   // --- DAILY FOOD ALLOWANCE STATES ---
   const [breakfastAllowance, setBreakfastAllowance] = useState(0);
@@ -346,7 +412,7 @@ function App() {
       }
     };
 
-    const apiKey = ""; // IMPORTANT: Replace with your actual Gemini API Key if deploying
+    const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API Key if deploying
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -453,7 +519,7 @@ function App() {
       }
     };
 
-    const apiKey = ""; // IMPORTANT: Replace with your actual Gemini API Key if deploying
+    const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API Key if deploying
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -504,18 +570,24 @@ function App() {
 
     // Calculate total food allowance per day
     const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
-    const totalFoodCost = totalDailyFoodAllowance * parseInt(duration);
+    const totalFoodCost = totalDailyFoodAllowance * parseInt(duration); // This is total for the trip, not per person yet.
 
-    // Calculate total estimated costs
-    const totalEstimatedCost = 0
-      parseFloat(estimatedFlightCost) +
-      parseFloat(estimatedHotelCost) +
-      parseFloat(estimatedActivityCost) +
-      parseFloat(estimatedTransportCost) +
-      parseFloat(estimatedMiscellaneousCost);
+    // =======================================================
+    // UPDATED: Calculate finalTotalCost using the new function
+    // =======================================================
+    const finalTotalCost = calculateTotalCost(
+      itineraryItems,
+      parseInt(duration),
+      parseFloat(estimatedFlightCost),
+      parseInt(numberOfPeople),
+      parseFloat(breakfastAllowance),
+      parseFloat(lunchAllowance),
+      parseFloat(dinnerAllowance),
+      parseFloat(snacksAllowance),
+      isPerPerson
+    );
 
-    // Adjust costs based on per person/per party
-    const finalTotalCost = isPerPerson ? totalEstimatedCost * parseInt(numberOfPeople) : totalEstimatedCost;
+    // Adjust the total food cost based on per person/per party basis for the summary display
     const finalTotalFoodCost = isPerPerson ? totalFoodCost * parseInt(numberOfPeople) : totalFoodCost;
 
     setTravelPlanSummary({
@@ -538,13 +610,13 @@ function App() {
       estimatedActivityCost,
       estimatedTransportCost,
       estimatedMiscellaneousCost,
-      totalEstimatedCost: finalTotalCost, // This is the sum of estimated costs before food
+      totalEstimatedCost: finalTotalCost, // This is the sum of estimated costs including selected items, excluding food, and then adjusted by people if perPerson
       breakfastAllowance,
       lunchAllowance,
       dinnerAllowance,
       snacksAllowance,
       totalDailyFoodAllowance,
-      totalFoodCost: finalTotalFoodCost,
+      totalFoodCost: finalTotalFoodCost, // This is the total food cost for the trip adjusted by people
       carRental,
       shuttle,
       airportTransfers,
@@ -582,26 +654,25 @@ function App() {
   // --- ITINERARY ITEM ADD/REMOVE HANDLERS ---
   const handleAddToItinerary = (item) => {
     if (!itineraryItems.some(itineraryItem => itineraryItem.id === item.id)) {
-      setItineraryItems(prevItems => [...prevItems, item]);
-      // Update total estimated cost immediately
+      const updatedItinerary = [...itineraryItems, item]; // Create new array with added item
+      setItineraryItems(updatedItinerary);
+
       const durationDays = parseInt(duration) || 0;
-      const currentFlightCost = estimatedFlightCost; // Use current estimated flight cost
-      const currentPartySize = numberOfPeople;
-      const currentBreakfastCost = breakfastAllowance;
-      const currentLunchCost = lunchAllowance;
-      const currentDinnerCost = dinnerAllowance;
-      const currentSnacksCost = snacksAllowance;
-      const currentFoodAllowanceType = isPerPerson ? 'perPerson' : 'perParty';
-      
-      setTotalEstimatedCost(prevCost => {
-        let itemCost = item.baseCost;
-        if (item.type === 'hotel') {
-          itemCost = itemCost * durationDays; // Hotels are per night
-        } else if (item.type !== 'flight' && item.type !== 'food') { // Most other items are per person
-          itemCost = itemCost * currentPartySize;
-        }
-        return prevCost + itemCost; // Increment total cost by item cost
-      });
+
+      // =======================================================
+      // UPDATED: Calculate totalEstimatedCost using the new function
+      // =======================================================
+      setTotalEstimatedCost(calculateTotalCost(
+        updatedItinerary, // Pass the updated itinerary here
+        durationDays,
+        estimatedFlightCost, // Use the state value
+        numberOfPeople,
+        breakfastAllowance,
+        lunchAllowance,
+        dinnerAllowance,
+        snacksAllowance,
+        isPerPerson
+      ));
 
       setSaveLoadMessage(`Added "${item.name}" to itinerary.`);
       setTimeout(() => setSaveLoadMessage(''), 2000);
@@ -615,21 +686,25 @@ function App() {
     const itemToRemove = itineraryItems.find(item => item.id === itemId);
     if (!itemToRemove) return;
 
-    setItineraryItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    const updatedItinerary = itineraryItems.filter(item => item.id !== itemId);
+    setItineraryItems(updatedItinerary);
 
-    // Decrement total estimated cost immediately
     const durationDays = parseInt(duration) || 0;
-    const currentPartySize = numberOfPeople;
 
-    setTotalEstimatedCost(prevCost => {
-        let itemCost = itemToRemove.baseCost;
-        if (itemToRemove.type === 'hotel') {
-            itemCost = itemCost * durationDays;
-        } else if (itemToRemove.type !== 'flight' && itemToRemove.type !== 'food') {
-            itemCost = itemCost * currentPartySize;
-        }
-        return prevCost - itemCost;
-    });
+    // =======================================================
+    // UPDATED: Decrement total estimated cost using the new function
+    // =======================================================
+    setTotalEstimatedCost(calculateTotalCost(
+      updatedItinerary, // Pass the updated itinerary here
+      durationDays,
+      estimatedFlightCost, // Use the state value
+      numberOfPeople,
+      breakfastAllowance,
+      lunchAllowance,
+      dinnerAllowance,
+      snacksAllowance,
+      isPerPerson
+    ));
 
     setSaveLoadMessage('Item removed from itinerary.');
     setTimeout(() => setSaveLoadMessage(''), 2000);
@@ -689,6 +764,7 @@ function App() {
     setBudgetError('');
     setSuggestionError('');
     setTravelPlanSummary(null);
+    setTotalEstimatedCost(0); // Clear the total estimated cost
 
     // Clear AI suggestions and selections
     setSuggestedActivities([]);
@@ -759,6 +835,9 @@ function App() {
     }
     setSaveLoadMessage('Saving trip...');
     try {
+      // =======================================================
+      // UPDATED: totalEstimatedCost calculation for saving
+      // =======================================================
       const tripToSave = {
         name: `${cities.length > 0 ? cities[0] : 'Unnamed'} trip (${new Date().toLocaleDateString()})`, // Dynamic name
         homeCountry, homeCity, countries, cities, duration, starRating,
@@ -772,7 +851,17 @@ function App() {
         breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance,
         carRental, shuttle, airportTransfers, airportParking,
         originCity, destinationCity, departureDate, returnDate, flightCost,
-        totalEstimatedCost: calculateTotalCost(null, duration, flightCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson ? 'perPerson' : 'perParty', itineraryItems) // Calculate final cost on save
+        totalEstimatedCost: calculateTotalCost( // Calculate final cost on save
+          itineraryItems,
+          duration,
+          estimatedFlightCost, // Use the state value
+          numberOfPeople,
+          breakfastAllowance,
+          lunchAllowance,
+          dinnerAllowance,
+          snacksAllowance,
+          isPerPerson
+        )
       };
       await saveUserTrip({ email: currentUser.email, tripData: tripToSave });
       setSaveLoadMessage('Trip saved successfully!');
@@ -807,7 +896,7 @@ function App() {
     setTopicsOfInterest(trip.topicsOfInterest || []);
     setSelectedSuggestedActivities(trip.selectedSuggestedActivities || []);
     setSelectedSuggestedFoodLocations(trip.selectedSuggestedFoodLocations || []);
-    setSelectedSuggestedThemeParks(trip.selectedSuggestedThemeParks || []);
+    setSelectedSuggestedThemeParks(trip.selectedThemeParks || []);
     setSelectedSuggestedTouristSpots(trip.selectedSuggestedTouristSpots || []);
     setSelectedSuggestedTours(trip.selectedSuggestedTours || []);
     setSelectedSuggestedSportingEvents(trip.selectedSuggestedSportingEvents || []);
@@ -834,10 +923,20 @@ function App() {
     setReturnDate(trip.returnDate || '');
     setFlightCost(trip.flightCost || 0);
 
-    // Recalculate total cost to ensure consistency with restored values
-    const durationDays = parseInt(trip.duration) || 0;
-    const currentFoodAllowanceType = trip.isPerPerson ? 'perPerson' : 'perParty';
-    setTotalEstimatedCost(calculateTotalCost(null, durationDays, trip.flightCost, trip.numberOfPeople, trip.breakfastAllowance, trip.lunchAllowance, trip.dinnerAllowance, trip.snacksAllowance, currentFoodAllowanceType, trip.itineraryItems));
+    // =======================================================
+    // UPDATED: Recalculate total cost to ensure consistency with restored values
+    // =======================================================
+    setTotalEstimatedCost(calculateTotalCost(
+      trip.itineraryItems || [], // Use loaded itinerary items
+      parseInt(trip.duration) || 0,
+      parseFloat(trip.estimatedFlightCost) || 0, // Use loaded estimatedFlightCost
+      parseInt(trip.numberOfPeople) || 0,
+      parseFloat(trip.breakfastAllowance) || 0,
+      parseFloat(trip.lunchAllowance) || 0,
+      parseFloat(trip.dinnerAllowance) || 0,
+      parseFloat(trip.snacksAllowance) || 0,
+      trip.isPerPerson
+    ));
 
     setSaveLoadMessage(`Trip "${trip.name}" loaded successfully!`);
     setShowAuthModal(false);
@@ -847,26 +946,38 @@ function App() {
   // --- EFFECT: Recalculate total cost when relevant states change ---
   useEffect(() => {
     const durationDays = parseInt(duration) || 0;
-    const currentFoodAllowanceType = isPerPerson ? 'perPerson' : 'perParty';
-    // When itineraryItems are the source of truth for items, pass them directly
-    setTotalEstimatedCost(calculateTotalCost(null, durationDays, flightCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, currentFoodAllowanceType, itineraryItems));
-  }, [duration, flightCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems]);
+    // =======================================================
+    // UPDATED: Call calculateTotalCost for useEffect
+    // =======================================================
+    setTotalEstimatedCost(calculateTotalCost(
+      itineraryItems,
+      durationDays,
+      estimatedFlightCost, // Use estimatedFlightCost from AI/manual input
+      numberOfPeople,
+      breakfastAllowance,
+      lunchAllowance,
+      dinnerAllowance,
+      snacksAllowance,
+      isPerPerson
+    ));
+  }, [duration, estimatedFlightCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedHotelCost, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost]); // Added relevant dependencies
 
   // Calculate total budget for comparison
   const durationDaysMatch = String(duration).match(/(\d+)/);
   const durationDays = durationDaysMatch ? parseInt(durationDaysMatch[1], 10) : 0;
 
-  let totalBudget = (estimatedActivityCost + estimatedHotelCost + estimatedTransportCost + estimatedMiscellaneousCost); // These are estimates for items outside food
-  totalBudget += (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance); // Add daily food allowance
-  totalBudget *= (isPerPerson ? numberOfPeople : 1) * durationDays; // Multiply by people and duration
+  // The totalBudget calculation here needs to reflect the final grandTotal logic if it's meant to be a user-set comparison point
+  // It seems `userSetTotalBudget` is the one you intend to compare against.
+  // totalBudget as defined here before was confusing, simplifying to ensure `userSetTotalBudget` is the comparison.
+  // No direct "userSetTotalBudget" input field, so it's summing the AI-estimated costs.
+  // The comparison below is against `totalEstimatedCost` (the one calculated by `calculateTotalCost`).
+  // Let's ensure this logic is sound: `userSetTotalBudget` is effectively the sum of AI estimations.
 
-  // The actual user-set budget from the input field: dailyBudgetPerPerson
-  const userSetTotalBudget = (estimatedFlightCost + estimatedHotelCost + estimatedActivityCost + estimatedTransportCost + estimatedMiscellaneousCost + (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance) * duration) * (isPerPerson ? numberOfPeople : 1);
-
+  const userSetTotalBudget = (estimatedFlightCost + estimatedHotelCost + estimatedActivityCost + estimatedTransportCost + estimatedMiscellaneousCost + (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance) * durationDays) * (isPerPerson ? numberOfPeople : 1);
 
   const isOverBudget = totalEstimatedCost > userSetTotalBudget && userSetTotalBudget > 0;
   const budgetDifference = Math.abs(totalEstimatedCost - userSetTotalBudget);
-  const totalCalculatedDailyFoodAllowance = (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance);
+  const totalCalculatedDailyFoodAllowance = (parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance));
 
   // --- TAILWIND CSS CLASSES FOR CONSISTENT STYLING ---
   const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
@@ -1753,7 +1864,7 @@ function App() {
                 <li className="mb-1">Estimated Activity Cost: <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
                 <li className="mb-1">Estimated Transport Cost: <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
                 <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
+                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${(travelPlanSummary.estimatedFlightCost + travelPlanSummary.estimatedHotelCost + travelPlanSummary.estimatedActivityCost + travelPlanSummary.estimatedTransportCost + travelPlanSummary.estimatedMiscellaneousCost).toFixed(2)}</span></li>
               </ul>
             </div>
 
