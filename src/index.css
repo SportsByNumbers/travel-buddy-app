@@ -1,8 +1,27 @@
+/* src/index.css */
+
+/* Tailwind CSS directives - these are crucial for Tailwind to work. */
+/* They inject Tailwind's base styles, component classes, and utility classes. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Global styles for your application.
+  It's good practice to ensure your HTML, body, and root element
+  (where your React app mounts) take up full height, especially for
+  applications with flexible layouts.
+*/
 html, body, #root {
-  height: 100%;
-  margin: 0;
+  height: 100%; /* Ensures the elements fill the viewport height */
+  margin: 0;   /* Removes default browser margins */
+  padding: 0;  /* Removes default browser padding */
+}
+
+/* Optional: Add a default font or other basic global styles here. */
+/* For example, setting a font-family for consistency across the app. */
+body {
+  font-family: 'Inter', sans-serif; /* A modern, common choice. You might already have one. */
+  -webkit-font-smoothing: antialiased; /* Improves font rendering on macOS/iOS */
+  -moz-osx-font-smoothing: grayscale;  /* Improves font rendering on macOS/iOS */
 }
