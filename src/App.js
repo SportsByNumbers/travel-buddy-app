@@ -507,7 +507,7 @@ function App() {
     const totalFoodCost = totalDailyFoodAllowance * parseInt(duration);
 
     // Calculate total estimated costs
-    const totalEstimatedCost =
+    const totalEstimatedCost = 0
       parseFloat(estimatedFlightCost) +
       parseFloat(estimatedHotelCost) +
       parseFloat(estimatedActivityCost) +
