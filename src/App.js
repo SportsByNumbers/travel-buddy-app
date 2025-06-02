@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Hotel, Activity, Utensils, Award, FerrisWheel, MapPin, Plane, Car, Bus, ParkingSquare,
   DollarSign, CalendarDays, Search, XCircle, PlaneTakeoff, PlaneLanding, Users, LogIn, LogOut, Save, FolderOpen, ListChecks, PlusCircle, MinusCircle, Heart, Home, Lightbulb, Loader, Wallet, Compass, CheckCircle, User
-} from 'lucide-react'; // --- UPDATED: Added 'User' icon ---
+} from 'lucide-react';
 
-// Import mock API functions for simulation
+// --- UPDATED: Import fetchBudgetEstimates from mockApi ---
 import { fetchTravelData, fetchFlightPrices, authenticateUser, registerUser, saveUserTrip, loadUserTrips, fetchBudgetEstimates } from './mockApi';
 
 // Transport options (fixed for this simulation) - can be used as base for AI knowledge
@@ -22,43 +22,63 @@ const transportOptions = {
 function calculateTotalCost(
   itineraryItems,        // User-selected specific items (activities, tours etc.)
   duration,              // Trip duration in days
-  aiEstimatedFlightCost, // AI's general estimate for flights
-  aiEstimatedHotelCost,  // AI's general estimate for hotel
+  aiEstimatedFlightCost, // AI's numerical estimate for flights
+  aiEstimatedHotelCost,  // AI's numerical estimate for hotel
   aiEstimatedTransportCost, // AI's general estimate for transport
   aiEstimatedMiscellaneousCost, // AI's general estimate for miscellaneous
   breakfastAllowance,
   lunchAllowance,
   dinnerAllowance,
   snacksAllowance,
-  numberOfPeople,
-  isPerPerson
+  numberOfPeople,        // Party size
+  isPerPerson            // Per person or per party basis
 ) {
+  // Ensure all numerical inputs are treated as numbers, with a default of 0 if undefined/null
+  const numDuration = parseFloat(duration || 0);
+  const numAiEstimatedFlightCost = parseFloat(aiEstimatedFlightCost || 0);
+  const numAiEstimatedHotelCost = parseFloat(aiEstimatedHotelCost || 0);
+  const numAiEstimatedTransportCost = parseFloat(aiEstimatedTransportCost || 0);
+  const numAiEstimatedMiscellaneousCost = parseFloat(aiEstimatedMiscellaneousCost || 0);
+  const numBreakfastAllowance = parseFloat(breakfastAllowance || 0);
+  const numLunchAllowance = parseFloat(lunchAllowance || 0);
+  const numDinnerAllowance = parseFloat(dinnerAllowance || 0);
+  const numSnacksAllowance = parseFloat(snacksAllowance || 0);
+  const numNumberOfPeople = parseInt(numberOfPeople || 1); // Default to 1 person if not set
+
   // Sum cost from user-selected itinerary items (if they have a cost)
   let specificItineraryItemsCost = 0;
   if (itineraryItems && itineraryItems.length > 0) {
     specificItineraryItemsCost = itineraryItems.reduce((acc, item) => {
       let itemCost = item.baseCost || 0; // Ensure item.baseCost exists and is a number
       if (item.type === 'hotel') { // If hotels are added to itineraryItems, assume per night
-        itemCost *= duration;
+        itemCost *= numDuration; // Multiply hotel cost by duration
       }
+      // Assuming activity/tour costs are per person if isPerPerson is true, otherwise per party
+      // For selected items, we might need a separate logic or assume AI provides total per item.
+      // For now, let's keep it simple and assume baseCost is per item/party unless type is 'hotel'.
       return acc + itemCost;
     }, 0);
   }
 
   // Calculate total food cost for the trip based on daily allowances
-  const totalDailyFoodAllowance = parseFloat(breakfastAllowance || 0) + parseFloat(lunchAllowance || 0) + parseFloat(dinnerAllowance || 0) + parseFloat(snacksAllowance || 0);
-  let tripFoodCost = totalDailyFoodAllowance * duration;
+  const totalDailyFoodAllowance = numBreakfastAllowance + numLunchAllowance + numDinnerAllowance + numSnacksAllowance;
+  let tripFoodCost = totalDailyFoodAllowance * numDuration;
   if (isPerPerson) {
-    tripFoodCost *= numberOfPeople;
+    tripFoodCost *= numNumberOfPeople;
   }
 
   // Sum AI-generated general estimates (excluding items handled by specificItineraryItemsCost)
+  // The AI's estimatedActivityCost is intentionally excluded here as selected itinerary items cover activities.
+  // If you want AI's general activity estimate included: + parseFloat(aiEstimatedActivityCost || 0)
   const totalEstimatedCostsFromAI =
-    parseFloat(aiEstimatedFlightCost || 0) +
-    parseFloat(aiEstimatedHotelCost || 0) +
-    parseFloat(aiEstimatedTransportCost || 0) +
-    parseFloat(aiEstimatedMiscellaneousCost || 0);
+    numAiEstimatedFlightCost +
+    numAiEstimatedHotelCost +
+    numAiEstimatedTransportCost +
+    numAiEstimatedMiscellaneousCost;
 
+  // The final total is the sum of AI's general estimates, user-selected specific items, and total food cost.
+  // Note: The AI's flight/hotel/transport/misc estimates are assumed to be *total* trip costs based on the AI's prompt,
+  // so they are not multiplied by numberOfPeople here again.
   let finalTotal = totalEstimatedCostsFromAI + specificItineraryItemsCost + tripFoodCost;
 
   return finalTotal;
@@ -488,7 +508,7 @@ function App() {
     };
 
     // --- SWITCHED: Use mockApi.js for suggestions during local development ---
-    // Comment out the actual Gemini API call when testing locally with mock data
+    // If you want to use the REAL Gemini API, uncomment the lines below and provide your API Key
     // const apiKey = "YOUR_GEMINI_API_KEY";
     // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     // const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -626,7 +646,7 @@ const generateBudgetEstimates = async () => {
   };
 
   // --- SWITCHED: Use mockApi.js for budget estimates during local development ---
-  // Comment out the actual Gemini API call when testing locally with mock data
+  // If you want to use the REAL Gemini API, uncomment the lines below and provide your API Key
   // const apiKey = "YOUR_GEMINI_API_KEY";
   // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
   // const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -687,6 +707,7 @@ const calculateTravelPlan = () => {
 
   // =======================================================
   // UPDATED: Calculate finalTotalCost using the new function with correct AI estimates
+  // Ensure all numerical values are passed as numbers
   // =======================================================
   const finalTotalCost = calculateTotalCost(
     itineraryItems,
@@ -699,7 +720,7 @@ const calculateTravelPlan = () => {
     parseFloat(lunchAllowance),
     parseFloat(dinnerAllowance),
     parseFloat(snacksAllowance),
-    parseInt(numberOfPeople),
+    parseInt(numberOfPeople), // Pass derived numberOfPeople
     isPerPerson
   );
 
@@ -720,7 +741,8 @@ const calculateTravelPlan = () => {
     touristSpots: finalTouristSpots,
     tours: finalTours, // Include tours in summary
     isPerPerson,
-    numberOfPeople,
+    numberOfPeople, // Pass the derived numberOfPeople
+    partyMembers, // --- NEW: Pass partyMembers to summary ---
     
     // --- UPDATED: Pass AI's detailed flight/hotel info to summary ---
     estimatedFlightCost, // Numerical value
@@ -1085,6 +1107,7 @@ const handleLoadSpecificTrip = (trip) => {
     parseFloat(trip.dinnerAllowance) || 0,
     parseFloat(trip.snacksAllowance) || 0,
     // Use the loaded numberOfPeople for calculation
+    // Ensure this takes into account partyMembers length if that's the source of truth for numberOfPeople
     parseInt(trip.numberOfPeople) || (trip.partyMembers ? trip.partyMembers.length : 1),
     trip.isPerPerson
   ));
