@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Hotel, Activity, Utensils, Award, FerrisWheel, MapPin, Plane, Car, Bus, ParkingSquare,
-  DollarSign, CalendarDays, Search, XCircle, PlaneTakeoff, PlaneLanding, Users, LogIn, LogOut, Save, FolderOpen, ListChecks, PlusCircle, MinusCircle, Heart, Home, Lightbulb, Loader, Wallet, Compass, CheckCircle
-} from 'lucide-react';
+  DollarSign, CalendarDays, Search, XCircle, PlaneTakeoff, PlaneLanding, Users, LogIn, LogOut, Save, FolderOpen, ListChecks, PlusCircle, MinusCircle, Heart, Home, Lightbulb, Loader, Wallet, Compass, CheckCircle, User
+} from 'lucide-react'; // --- UPDATED: Added 'User' icon ---
 
-// --- UPDATED: Import fetchBudgetEstimates from mockApi ---
+// Import mock API functions for simulation
 import { fetchTravelData, fetchFlightPrices, authenticateUser, registerUser, saveUserTrip, loadUserTrips, fetchBudgetEstimates } from './mockApi';
 
 // Transport options (fixed for this simulation) - can be used as base for AI knowledge
@@ -15,8 +15,10 @@ const transportOptions = {
   airportParking: { name: "Airport Parking", costPerDay: 25, icon: <ParkingSquare className="w-5 h-5 text-blue-500" /> },
 };
 
-// --- NEW/UPDATED: calculateTotalCost function definition ---
+// =======================================================
+// NEW/UPDATED: calculateTotalCost function definition
 // This function calculates the total estimated cost based on all relevant inputs.
+// =======================================================
 function calculateTotalCost(
   itineraryItems,        // User-selected specific items (activities, tours etc.)
   duration,              // Trip duration in days
@@ -111,9 +113,7 @@ function App() {
 
   // --- BUDGET PLANNING STATES ---
   const [isPerPerson, setIsPerPerson] = useState(true); // Cost calculation basis (per person/party)
-  const [numberOfPeople, setNumberOfPeople] = useState(1); // Number of people for calculations
-  
-  // --- UPDATED: AI Budget Estimates States (now more detailed) ---
+  // const [numberOfPeople, setNumberOfPeople] = useState(1); // Derived from partyMembers.length
   const [estimatedFlightCost, setEstimatedFlightCost] = useState(0);
   const [aiFlightDetails, setAiFlightDetails] = useState(null); // NEW: To store AI's suggested flight details
 
@@ -167,6 +167,33 @@ function App() {
   const [userTrips, setUserTrips] = useState([]); // List of saved trips for current user
   const [saveLoadMessage, setSaveLoadMessage] = useState(''); // Feedback messages for save/load
   const [loadingUserTrips, setLoadingUserTrips] = useState(false); // Loading state for fetching user trips
+
+  // --- NEW: Party Size States ---
+  // Store party members as objects { id, age, gender }
+  const [partyMembers, setPartyMembers] = useState([{ id: 1, age: 30, gender: 'Prefer not to say' }]); // Start with 1 default member
+  const [newMemberAge, setNewMemberAge] = useState('');
+  const [newMemberGender, setNewMemberGender] = useState('Prefer not to say');
+
+  // Derived state: numberOfPeople is now calculated from partyMembers length
+  const numberOfPeople = partyMembers.length;
+
+  // --- Party Size Handlers ---
+  const handleAddMember = () => {
+    if (newMemberAge.trim() !== '' && parseInt(newMemberAge) > 0) {
+      setPartyMembers(prevMembers => [
+        ...prevMembers,
+        { id: prevMembers.length + 1, age: parseInt(newMemberAge), gender: newMemberGender }
+      ]);
+      setNewMemberAge('');
+      setNewMemberGender('Prefer not to say');
+    }
+  };
+
+  const handleRemoveMember = (idToRemove) => {
+    if (partyMembers.length > 1) { // Ensure at least one member remains
+      setPartyMembers(prevMembers => prevMembers.filter(member => member.id !== idToRemove));
+    }
+  };
 
 
   // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -882,12 +909,17 @@ const handleClear = () => {
   setSelectedSuggestedSportingEvents([]);
   setItineraryItems([]); // Clear combined itinerary
 
+  // --- NEW: Clear Party Size states ---
+  setPartyMembers([{ id: 1, age: 30, gender: 'Prefer not to say' }]); // Reset to 1 default member
+  setNewMemberAge('');
+  setNewMemberGender('Prefer not to say');
+
   setLoading(false);
   setShowDisclaimer(true);
   setSaveLoadMessage('');
   // Reset budget planning specifics
   setIsPerPerson(true);
-  setNumberOfPeople(1);
+  // numberOfPeople derived state will automatically update
 };
 
 // --- AUTHENTICATION & PERSISTENCE HANDLERS ---
@@ -942,7 +974,8 @@ const handleSaveTrip = async () => {
       selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
       selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
       itineraryItems, // Save the actual itinerary items
-      isPerPerson, numberOfPeople,
+      isPerPerson, numberOfPeople, // numberOfPeople is now a derived state
+      partyMembers, // --- NEW: Save party members ---
       estimatedFlightCost, aiFlightDetails, // Save detailed AI flight info
       estimatedHotelCost, aiHotelDetails,   // Save detailed AI hotel info
       estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
@@ -1011,8 +1044,9 @@ const handleLoadSpecificTrip = (trip) => {
   setItineraryItems(trip.itineraryItems || []); // Restore the actual itinerary items
 
   setIsPerPerson(trip.isPerPerson);
-  setNumberOfPeople(trip.numberOfPeople || 1);
-  
+  // numberOfPeople will be derived from partyMembers
+  setPartyMembers(trip.partyMembers || [{ id: 1, age: 30, gender: 'Prefer not to say' }]); // --- NEW: Load party members ---
+
   // --- UPDATED: Load detailed AI budget info ---
   setEstimatedFlightCost(trip.estimatedFlightCost || 0);
   setAiFlightDetails(trip.aiFlightDetails || null);
@@ -1050,7 +1084,8 @@ const handleLoadSpecificTrip = (trip) => {
     parseFloat(trip.lunchAllowance) || 0,
     parseFloat(trip.dinnerAllowance) || 0,
     parseFloat(trip.snacksAllowance) || 0,
-    parseInt(trip.numberOfPeople) || 0,
+    // Use the loaded numberOfPeople for calculation
+    parseInt(trip.numberOfPeople) || (trip.partyMembers ? trip.partyMembers.length : 1),
     trip.isPerPerson
   ));
 
@@ -1076,10 +1111,11 @@ useEffect(() => {
     lunchAllowance,
     dinnerAllowance,
     snacksAllowance,
-    numberOfPeople,
+    numberOfPeople, // numberOfPeople is now derived from partyMembers
     isPerPerson
   ));
-}, [duration, estimatedFlightCost, estimatedHotelCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost]); // Added relevant dependencies
+// --- UPDATED: Add partyMembers to dependencies ---
+}, [duration, estimatedFlightCost, estimatedHotelCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost, partyMembers]);
 
 // Calculate total budget for comparison
 const durationDaysMatch = String(duration).match(/(\d+)/);
@@ -1264,6 +1300,63 @@ return (
         </div>
       )}
 
+      {/* --- NEW SECTION: PARTY SIZE --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <User className="mr-3 text-indigo-600" size={28} /> Who's Traveling? (Party Size)
+        </h2>
+        <div className="mb-4">
+          <p className="text-lg font-semibold text-gray-800">Total Travelers: {numberOfPeople}</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div>
+            <label htmlFor="newMemberAge" className={labelClass}>Age:</label>
+            <input
+              type="number"
+              id="newMemberAge"
+              value={newMemberAge}
+              onChange={(e) => setNewMemberAge(e.target.value)}
+              placeholder="e.g., 30"
+              min="1"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="newMemberGender" className={labelClass}>Gender (Optional):</label>
+            <select
+              id="newMemberGender"
+              value={newMemberGender}
+              onChange={(e) => setNewMemberGender(e.target.value)}
+              className={`${inputClass} w-full`}
+            >
+              <option value="Prefer not to say">Prefer not to say</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button onClick={handleAddMember} className={`${buttonClass} w-full`}>Add Member</button>
+          </div>
+        </div>
+
+        {partyMembers.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Current Party:</h3>
+            <div className="flex flex-wrap gap-2">
+              {partyMembers.map((member) => (
+                <span key={member.id} className="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
+                  Age: {member.age} {member.gender !== 'Prefer not to say' && `(${member.gender})`}
+                  {partyMembers.length > 1 && ( // Allow removing only if more than one member
+                    <button onClick={() => handleRemoveMember(member.id)} className={removeButtonClass}>&times;</button>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* --- HOME LOCATION SECTION --- */}
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
@@ -1332,754 +1425,762 @@ return (
             )}
           </div>
         </div>
+      </div>
 
-        {/* --- TRAVEL DESTINATIONS & DURATION SECTION --- */}
-        <div className={sectionContainerClass}>
-          <h2 className={sectionTitleClass}>
-            <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="relative"> {/* Added relative for dropdown positioning */}
-              <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  id="newCountry"
-                  ref={destCountryInputRef}
-                  value={newCountry}
-                  onChange={handleDestCountryInputChange}
-                  onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)} // Hide suggestions on blur
-                  placeholder="e.g., Japan"
-                  className={`${inputClass} flex-grow`}
-                />
-                <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
-              </div>
-              {/* Country Suggestions Dropdown */}
-              {filteredDestCountrySuggestions.length > 0 && (
-                <ul className={suggestionListClass}>
-                  {filteredDestCountrySuggestions.map((country) => (
-                    <li
-                      key={country.name}
-                      onMouseDown={() => selectDestCountrySuggestion(country)} // Use onMouseDown to prevent blur
-                      className={suggestionItemClass}
-                    >
-                      {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
-                      {country.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {/* Display selected destination countries */}
-              <div className="mt-4 flex flex-wrap gap-3">
-                {countries.map((country) => (
-                  <span key={country.name} className={flagTagClass}>
-                    {country.flag && <img src={country.flag} alt={`${country.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
-                    {country.name}
-                    <button onClick={() => removeCountry(country)} className={removeButtonClass}>&times;</button>
-                  </span>
-                ))}
-              </div>
+      {/* --- TRAVEL DESTINATIONS & DURATION SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="relative"> {/* Added relative for dropdown positioning */}
+            <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newCountry"
+                ref={destCountryInputRef}
+                value={newCountry}
+                onChange={handleDestCountryInputChange}
+                onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)} // Hide suggestions on blur
+                placeholder="e.g., Japan"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
             </div>
-            <div>
-              <label htmlFor="newCity" className={labelClass}>Add Destination City:</label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  id="newCity"
-                  value={newCity}
-                  onChange={(e) => setNewCity(e.target.value)}
-                  placeholder="e.g., Tokyo"
-                  className={`${inputClass} flex-grow`}
-                />
-                <button onClick={addCity} className={`${buttonClass} ml-3`}>Add</button>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                {cities.map((city) => (
-                  <span key={city} className="bg-green-100 text-green-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
-                    {city}
-                    <button onClick={() => removeCity(city)} className={removeButtonClass}>&times;</button>
-                  </span>
+            {/* Country Suggestions Dropdown */}
+            {filteredDestCountrySuggestions.length > 0 && (
+              <ul className={suggestionListClass}>
+                {filteredDestCountrySuggestions.map((country) => (
+                  <li
+                    key={country.name}
+                    onMouseDown={() => selectDestCountrySuggestion(country)} // Use onMouseDown to prevent blur
+                    className={suggestionItemClass}
+                  >
+                    {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
+                    {country.name}
+                  </li>
                 ))}
-              </div>
+              </ul>
+            )}
+            {/* Display selected destination countries */}
+            <div className="mt-4 flex flex-wrap gap-3">
+              {countries.map((country) => (
+                <span key={country.name} className={flagTagClass}>
+                  {country.flag && <img src={country.flag} alt={`${country.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
+                  {country.name}
+                  <button onClick={() => removeCountry(country)} className={removeButtonClass}>&times;</button>
+                </span>
+              ))}
             </div>
           </div>
           <div>
-            <label htmlFor="duration" className={labelClass}>Duration of Stay (days):</label>
+            <label htmlFor="newCity" className={labelClass}>Add Destination City:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newCity"
+                value={newCity}
+                onChange={(e) => setNewCity(e.target.value)}
+                placeholder="e.g., Tokyo"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={addCity} className={`${buttonClass} ml-3`}>Add</button>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {cities.map((city) => (
+                <span key={city} className="bg-green-100 text-green-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
+                  {city}
+                  <button onClick={() => removeCity(city)} className={removeButtonClass}>&times;</button>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="duration" className={labelClass}>Duration of Stay (days):</label>
+          <input
+            type="number"
+            id="duration"
+            value={duration}
+            onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+            min="1"
+            className={`${inputClass} w-full`}
+          />
+        </div>
+      </div>
+
+      {/* --- FLIGHT DETAILS SECTION (INTEGRATED) --- */}
+      <div className={sectionContainerClass}>
+        <h3 className={sectionTitleClass}>
+          <PlaneTakeoff className="w-6 h-6 mr-2" /> Flight Details (Simulated Skyscanner)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <div>
+            <label htmlFor="originCity" className={labelClass}>Origin City</label>
             <input
-              type="number"
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
-              min="1"
-              className={`${inputClass} w-full`}
+              type="text"
+              id="originCity"
+              className={inputClass}
+              value={homeCity || originCity}
+              onChange={(e) => setOriginCity(e.target.value)}
+              placeholder="e.g., Sydney"
+            />
+          </div>
+          <div>
+            <label htmlFor="destinationCity" className={labelClass}>Destination City</label>
+            <input
+              type="text"
+              id="destinationCity"
+              className={inputClass}
+              value={cities.length > 0 ? cities[0] : destinationCity}
+              onChange={(e) => setDestinationCity(e.target.value)}
+              placeholder="e.g., New York"
+            />
+          </div>
+          <div>
+            <label htmlFor="departureDate" className={labelClass}>Departure Date</label>
+            <input
+              type="date"
+              id="departureDate"
+              className={inputClass}
+              value={departureDate}
+              onChange={(e) => setDepartureDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="returnDate" className={labelClass}>Return Date</label>
+            <input
+              type="date"
+              id="returnDate"
+              className={inputClass}
+              value={returnDate}
+              onChange={(e) => setReturnDate(e.target.value)}
             />
           </div>
         </div>
-
-        {/* --- ITINERARY & PREFERENCES SECTION --- */}
-        <div className={sectionContainerClass}>
-          <h2 className={sectionTitleClass}>
-            <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
-          </h2>
-          <p className="text-sm text-gray-600 mb-6">
-            Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
+        <button
+          onClick={handleFlightSearch}
+          className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto"
+          disabled={flightLoading || !originCity || !destinationCity || !departureDate || !returnDate}
+        >
+          {flightLoading ? (
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <PlaneLanding className="w-5 h-5 mr-2" />
+          )}
+          {flightLoading ? 'Searching Flights...' : 'Search Flights'}
+        </button>
+        {flightError && <p className="text-red-600 text-sm mt-2 text-center">{flightError}</p>}
+        {flightCost > 0 && (
+          <p className="mt-4 text-lg font-semibold text-green-700 text-center">
+            Simulated Flight Cost: ${flightCost.toLocaleString()}
           </p>
+        )}
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Hotel Star Rating */}
-            <div>
-              <label htmlFor="starRating" className={labelClass}>Preferred Hotel Star Rating:</label>
-              <select
-                id="starRating"
-                value={starRating}
-                onChange={(e) => setStarRating(e.target.value)}
-                className={`${inputClass} w-full`}
-              >
-                <option value="">Select a rating</option>
-                <option value="1">1 Star</option>
-                <option value="2">2 Star</option>
-                <option value="3">3 Star</option>
-                <option value="4">4 Star</option>
-                <option value="5">5 Star</option>
-              </select>
-            </div>
-            {/* Topics of Interest */}
-            <div className="md:col-span-2">
-              <label className={labelClass}>Topics of Interest:</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {availableTopics.map((topic, index) => (
-                  <label key={index} className="inline-flex items-center cursor-pointer bg-gray-100 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition duration-150 ease-in-out">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500"
-                      checked={topicsOfInterest.includes(topic)}
-                      onChange={() => handleTopicChange(topic)}
-                    />
-                    <span className="ml-2 text-gray-800 text-sm font-medium">{topic}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* --- TRANSPORT OPTIONS SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={carRental}
+              onChange={(e) => setCarRental(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Car Rental</span>
+          </label>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={shuttle}
+              onChange={(e) => setShuttle(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Shuttle</span>
+          </label>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={airportTransfers}
+              onChange={(e) => setAirportTransfers(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Airport Transfers</span>
+          </label>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={airportParking}
+              onChange={(e) => setAirportParking(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Airport Parking</span>
+          </label>
+        </div>
+      </div>
 
-          <div className="text-center mb-6">
-            <button
-              onClick={generateSuggestions}
-              className={buttonClass}
-              disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
+      {/* --- ITINERARY & PREFERENCES SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
+        </h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Hotel Star Rating */}
+          <div>
+            <label htmlFor="starRating" className={labelClass}>Preferred Hotel Star Rating:</label>
+            <select
+              id="starRating"
+              value={starRating}
+              onChange={(e) => setStarRating(e.target.value)}
+              className={`${inputClass} w-full`}
             >
-              {isGeneratingSuggestions ? (
-                <span className="flex items-center justify-center">
-                  <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
-                </span>
-              ) : (
-                'Generate Itinerary Suggestions'
-              )}
-            </button>
-            {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
+              <option value="">Select a rating</option>
+              <option value="1">1 Star</option>
+              <option value="2">2 Star</option>
+              <option value="3">3 Star</option>
+              <option value="4">4 Star</option>
+              <option value="5">5 Star</option>
+            </select>
           </div>
-
-          {/* Suggested Activities --- UPDATED UI to show more details --- */}
-          {suggestedActivities.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-3">Activities:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestedActivities.map((item, index) => (
-                  <div
-                    key={item.name + index} // Use name+index as a key for uniqueness if name is not always unique
-                    className={suggestionTagClass(item, selectedSuggestedActivities)}
-                    onClick={() => toggleSuggestionSelection('activities', item)}
-                  >
-                    <div className="font-semibold text-base">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    {item.simulated_estimated_cost_usd && (
-                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
-                    )}
-                    {item.simulated_booking_link && (
-                        <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Sporting Events --- UPDATED UI to show more details --- */}
-          {suggestedSportingEvents.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-3">Sporting Events:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestedSportingEvents.map((item, index) => (
-                  <div
-                    key={item.name + index}
-                    className={suggestionTagClass(item, selectedSuggestedSportingEvents)}
-                    onClick={() => toggleSuggestionSelection('sportingEvents', item)}
-                  >
-                    <div className="font-semibold text-base">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    {item.simulated_estimated_cost_usd && (
-                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Food Locations --- UPDATED UI to show more details --- */}
-          {suggestedFoodLocations.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-3">Food Locations:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestedFoodLocations.map((item, index) => (
-                  <div
-                    key={item.name + index}
-                    className={suggestionTagClass(item, selectedSuggestedFoodLocations)}
-                    onClick={() => toggleSuggestionSelection('foodLocations', item)}
-                  >
-                    <div className="font-semibold text-base">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    {item.simulated_price_range && (
-                        <div className="text-sm text-gray-700">Price Range: {item.simulated_price_range}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Theme Parks --- UPDATED UI to show more details --- */}
-          {suggestedThemeParks.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-3">Theme Parks:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestedThemeParks.map((item, index) => (
-                  <div
-                    key={item.name + index}
-                    className={suggestionTagClass(item, selectedSuggestedThemeParks)}
-                    onClick={() => toggleSuggestionSelection('themeParks', item)}
-                  >
-                    <div className="font-semibold text-base">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    {item.location && <div className="text-sm text-gray-700">Location: {item.location}</div>}
-                    {item.simulated_estimated_cost_usd && (
-                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Tourist Spots --- UPDATED UI to show more details --- */}
-          {suggestedTouristSpots.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tourist Spots:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestedTouristSpots.map((item, index) => (
-                  <div
-                    key={item.name + index}
-                    className={suggestionTagClass(item, selectedSuggestedTouristSpots)}
-                    onClick={() => toggleSuggestionSelection('touristSpots', item)}
-                  >
-                    <div className="font-semibold text-base">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    {item.simulated_estimated_cost_usd && (
-                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Tours --- UPDATED UI to show more details --- */}
-          {suggestedTours.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tours:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {suggestedTours.map((item, index) => (
-                  <div
-                    key={item.name + index}
-                    className={suggestionTagClass(item, selectedSuggestedTours)}
-                    onClick={() => toggleSuggestionSelection('tours', item)}
-                  >
-                    <div className="font-semibold text-base">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    {item.simulated_estimated_cost_usd && (
-                        <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
-                    )}
-                    {item.simulated_booking_link && (
-                        <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* --- BUDGET PLANNING SECTION --- */}
-        <div className={sectionContainerClass}>
-          <h2 className={sectionTitleClass}>
-            <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </h2>
-          <p className="text-sm text-gray-600 mb-6">
-            Generate AI-powered budget estimates based on your trip details, or manually enter your own.
-          </p>
-
-          <div className="mb-6">
-            <label className={labelClass}>Cost Calculation Basis:</label>
-            <div className="flex space-x-6">
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
-                  name="costBasis"
-                  value="perPerson"
-                  checked={isPerPerson}
-                  onChange={() => setIsPerPerson(true)}
-                />
-                <span className="ml-2 text-gray-800">Per Person</span>
-              </label>
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
-                  name="costBasis"
-                  value="perParty"
-                  checked={!isPerPerson}
-                  onChange={() => setIsPerPerson(false)}
-                />
-                <span className="ml-2 text-gray-800">Per Party</span>
-              </label>
-            </div>
-          </div>
-
-          {isPerPerson && (
-            <div className="mb-6">
-              <label htmlFor="numberOfPeople" className={labelClass}>Number of People:</label>
-              <input
-                type="number"
-                id="numberOfPeople"
-                value={numberOfPeople}
-                onChange={(e) => setNumberOfPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                min="1"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-          )}
-
-          <div className="text-center mb-6">
-            <button
-              onClick={generateBudgetEstimates}
-              className={buttonClass}
-              disabled={isGeneratingBudget || (countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1}
-            >
-              {isGeneratingBudget ? (
-                <span className="flex items-center justify-center">
-                  <Loader className="animate-spin mr-2" size={20} /> Generating Budget...
-                </span>
-              ) : (
-                'Generate Budget Estimates'
-              )}
-            </button>
-            {budgetError && <p className="text-red-500 text-sm mt-2">{budgetError}</p>}
-          </div>
-
-          {/* --- UPDATED: Display AI's detailed flight/hotel info inputs --- */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="estimatedFlightCost" className={labelClass}>AI Estimated Flight Cost:</label>
-              <input
-                type="number"
-                id="estimatedFlightCost"
-                value={estimatedFlightCost}
-                onChange={(e) => setEstimatedFlightCost(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-                readOnly={aiFlightDetails !== null} // Make read-only if AI provided details
-              />
-              {aiFlightDetails && (
-                <div className="text-sm text-gray-600 mt-2">
-                  <p>Airline: {aiFlightDetails.airline}</p>
-                  <p>Route: {aiFlightDetails.route}</p>
-                  <p>Dates: {aiFlightDetails.departure_date} to {aiFlightDetails.return_date}</p>
-                </div>
-              )}
-            </div>
-            <div>
-              <label htmlFor="estimatedHotelCost" className={labelClass}>AI Estimated Hotel Cost:</label>
-              <input
-                type="number"
-                id="estimatedHotelCost"
-                value={estimatedHotelCost}
-                onChange={(e) => setEstimatedHotelCost(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-                readOnly={aiHotelDetails !== null} // Make read-only if AI provided details
-              />
-              {aiHotelDetails && (
-                <div className="text-sm text-gray-600 mt-2">
-                  <p>Hotel: {aiHotelDetails.name}</p>
-                  <p>Location: {aiHotelDetails.location}</p>
-                  <p>Cost/Night: ${aiHotelDetails.cost_per_night_usd?.toFixed(2)} for {aiHotelDetails.total_nights} nights</p>
-                </div>
-              )}
-            </div>
-            {/* These below are still general AI estimates, no detailed breakdown requested from AI yet */}
-            <div>
-              <label htmlFor="estimatedActivityCost" className={labelClass}>AI Estimated Activity Cost (General):</label>
-              <input
-                type="number"
-                id="estimatedActivityCost"
-                value={estimatedActivityCost}
-                onChange={(e) => setEstimatedActivityCost(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-            <div>
-              <label htmlFor="estimatedTransportCost" className={labelClass}>AI Estimated Transport Cost (Local):</label>
-              <input
-                type="number"
-                id="estimatedTransportCost"
-                value={estimatedTransportCost}
-                onChange={(e) => setEstimatedTransportCost(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-            <div>
-              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>AI Estimated Miscellaneous Cost:</label>
-              <input
-                type="number"
-                id="estimatedMiscellaneousCost"
-                value={estimatedMiscellaneousCost}
-                onChange={(e) => setEstimatedMiscellaneousCost(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
+          {/* Topics of Interest */}
+          <div className="md:col-span-2">
+            <label className={labelClass}>Topics of Interest:</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {availableTopics.map((topic, index) => (
+                <label key={index} className="inline-flex items-center cursor-pointer bg-gray-100 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition duration-150 ease-in-out">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    checked={topicsOfInterest.includes(topic)}
+                    onChange={() => handleTopicChange(topic)}
+                  />
+                  <span className="ml-2 text-gray-800 text-sm font-medium">{topic}</span>
+                </label>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
-        <div className={sectionContainerClass}>
-          <h2 className={sectionTitleClass}>
-            <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
-              <input
-                type="number"
-                id="breakfastAllowance"
-                value={breakfastAllowance}
-                onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-            <div>
-              <label htmlFor="lunchAllowance" className={labelClass}>Lunch:</label>
-              <input
-                type="number"
-                id="lunchAllowance"
-                value={lunchAllowance}
-                onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-            <div>
-              <label htmlFor="dinnerAllowance" className={labelClass}>Dinner:</label>
-              <input
-                type="number"
-                id="dinnerAllowance"
-                value={dinnerAllowance}
-                onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-            <div>
-              <label htmlFor="snacksAllowance" className={labelClass}>Snacks:</label>
-              <input
-                type="number"
-                id="snacksAllowance"
-                value={snacksAllowance}
-                onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)}
-                min="0"
-                className={`${inputClass} w-full`}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* --- TRANSPORT OPTIONS SECTION --- */}
-        <div className={sectionContainerClass}>
-          <h2 className={sectionTitleClass}>
-            <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={carRental}
-                onChange={(e) => setCarRental(e.target.checked)}
-              />
-              <span className="ml-2 text-gray-800">Car Rental</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={shuttle}
-                onChange={(e) => setShuttle(e.target.checked)}
-              />
-              <span className="ml-2 text-gray-800">Shuttle</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={airportTransfers}
-                onChange={(e) => setAirportTransfers(e.target.checked)}
-              />
-              <span className="ml-2 text-gray-800">Airport Transfers</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={airportParking}
-                onChange={(e) => setAirportParking(e.target.checked)}
-              />
-              <span className="ml-2 text-gray-800">Airport Parking</span>
-            </label>
-          </div>
-        </div>
-
-        {/* --- FLIGHT DETAILS SECTION (INTEGRATED) --- */}
-        <div className={sectionContainerClass}>
-          <h3 className={sectionTitleClass}>
-            <PlaneTakeoff className="w-6 h-6 mr-2" /> Flight Details (Simulated Skyscanner)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div>
-              <label htmlFor="originCity" className={labelClass}>Origin City</label>
-              <input
-                type="text"
-                id="originCity"
-                className={inputClass}
-                value={homeCity || originCity}
-                onChange={(e) => setOriginCity(e.target.value)}
-                placeholder="e.g., Sydney"
-              />
-            </div>
-            <div>
-              <label htmlFor="destinationCity" className={labelClass}>Destination City</label>
-              <input
-                type="text"
-                id="destinationCity"
-                className={inputClass}
-                value={cities.length > 0 ? cities[0] : destinationCity}
-                onChange={(e) => setDestinationCity(e.target.value)}
-                placeholder="e.g., New York"
-              />
-            </div>
-            <div>
-              <label htmlFor="departureDate" className={labelClass}>Departure Date</label>
-              <input
-                type="date"
-                id="departureDate"
-                className={inputClass}
-                value={departureDate}
-                onChange={(e) => setDepartureDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="returnDate" className={labelClass}>Return Date</label>
-              <input
-                type="date"
-                id="returnDate"
-                className={inputClass}
-                value={returnDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-              />
-            </div>
-          </div>
+        <div className="text-center mb-6">
           <button
-            onClick={handleFlightSearch}
-            className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto"
-            disabled={flightLoading || !originCity || !destinationCity || !departureDate || !returnDate}
+            onClick={generateSuggestions}
+            className={buttonClass}
+            disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
           >
-            {flightLoading ? (
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+            {isGeneratingSuggestions ? (
+              <span className="flex items-center justify-center">
+                <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
+              </span>
             ) : (
-              <PlaneLanding className="w-5 h-5 mr-2" />
+              'Generate Itinerary Suggestions'
             )}
-            {flightLoading ? 'Searching Flights...' : 'Search Flights'}
           </button>
-          {flightError && <p className="text-red-600 text-sm mt-2 text-center">{flightError}</p>}
-          {flightCost > 0 && (
-            <p className="mt-4 text-lg font-semibold text-green-700 text-center">
-              Simulated Flight Cost: ${flightCost.toLocaleString()}
-            </p>
-          )}
+          {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
         </div>
 
-        {/* --- MAIN GENERATE & CLEAR BUTTONS --- */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          <button
-            onClick={calculateTravelPlan}
-            className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:scale-105"
-            disabled={loading}
-          >
-            <Search className="w-5 h-5 mr-2" /> Generate Travel Plan
-          </button>
-          <button
-            onClick={handleClear}
-            className="flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
-          >
-            <XCircle className="w-5 h-5 mr-2" /> Clear All
-          </button>
-        </div>
-
-        {/* --- TRAVEL PLAN SUMMARY SECTION --- */}
-        {travelPlanSummary && (
-          <div className={summarySectionClass}>
-            <h2 className={summaryTitleClass}>
-              <CheckCircle className="inline-block mr-3 text-indigo-700" size={32} /> Your Travel Plan Summary
-            </h2>
-
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
-              <p className={summaryItemClass}>
-                <strong>Home Location:</strong>{' '}
-                {travelPlanSummary.homeCity ? `${travelPlanSummary.homeCity}, ` : ''}
-                {travelPlanSummary.homeCountry.name || 'Not specified'}
-                {travelPlanSummary.homeCountry.flag && (
-                  <img src={travelPlanSummary.homeCountry.flag} alt={`${travelPlanSummary.homeCountry.name} flag`} className="w-6 h-4 ml-2 inline-block rounded-sm" />
-                )}
-              </p>
-              <p className={summaryItemClass}>
-                <strong>Destination Countries:</strong>{' '}
-                {travelPlanSummary.countries.length > 0 ? (
-                  <span>
-                    {travelPlanSummary.countries.map(c => (
-                      <span key={c.name} className="inline-flex items-center mr-2">
-                        {c.flag && <img src={c.flag} alt={`${c.name} flag`} className="w-6 h-4 mr-1 rounded-sm" />}
-                        {c.name}
-                      </span>
-                    ))}
-                  </span>
-                ) : 'Not specified'}
-              </p>
-              <p className={summaryItemClass}><strong>Destination Cities:</strong> {travelPlanSummary.cities.length > 0 ? travelPlanSummary.cities.join(', ') : 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Duration:</strong> {travelPlanSummary.duration} days</p>
-              <p className={summaryItemClass}><strong>Party Size:</strong> {travelPlanSummary.numberOfPeople} {travelPlanSummary.isPerPerson ? 'person(s)' : 'party'}</p>
-            </div>
-
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Preferences & Itinerary:</h3>
-              <p className={summaryItemClass}><strong>Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Activities:</strong> {travelPlanSummary.activities || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Food Locations:</strong> {travelPlanSummary.foodLocations || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Theme Parks:</strong> {travelPlanSummary.themeParks || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Tourist Spots:</strong> {travelPlanSummary.touristSpots || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Tours:</strong> {travelPlanSummary.tours || 'Not specified'}</p>
-            </div>
-
-            {/* Displaying actual itinerary items if added */}
-            {itineraryItems.length > 0 && (
-              <div className="mb-6 pb-4 border-b border-indigo-200">
-                <h3 className={summarySubTitleClass}>Selected Itinerary Items:</h3>
-                <ul className="list-disc list-inside ml-6 text-gray-700">
-                  {itineraryItems.map(item => (
-                    <li key={item.id} className="mb-1">
-                      {item.name} (${item.baseCost.toFixed(2)}{item.type === 'hotel' ? ' / night' : ''})
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {itineraryItems.length === 0 && (
-              <div className="mb-6 pb-4 border-b border-indigo-200">
-                  <h3 className={summarySubTitleClass}>Selected Itinerary Items:</h3>
-                  <p className="italic ml-6 text-gray-700">No specific items selected from suggestions.</p>
-              </div>
-            )}
-
-
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Estimated Costs:</h3>
-              <p className={summaryItemClass}><strong>Calculation Basis:</strong> {travelPlanSummary.isPerPerson ? `Per Person (${travelPlanSummary.numberOfPeople} people)` : 'Per Party'}</p>
-              <ul className="list-disc list-inside ml-6 text-gray-700">
-                {/* --- UPDATED: Display AI's detailed flight info in summary --- */}
-                <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">${travelPlanSummary.estimatedFlightCost.toFixed(2)}</span>
-                  {travelPlanSummary.aiFlightDetails && (
-                    <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiFlightDetails.airline}, {travelPlanSummary.aiFlightDetails.route} {travelPlanSummary.aiFlightDetails.departure_date} to {travelPlanSummary.aiFlightDetails.return_date})</span>
+        {/* Suggested Activities --- UPDATED UI to show more details --- */}
+        {suggestedActivities.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Activities:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedActivities.map((item, index) => (
+                <div
+                  key={item.name + index} // Use name+index as a key for uniqueness if name is not always unique
+                  className={suggestionTagClass(item, selectedSuggestedActivities)}
+                  onClick={() => toggleSuggestionSelection('activities', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
                   )}
-                </li>
-                {/* --- UPDATED: Display AI's detailed hotel info in summary --- */}
-                <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">${travelPlanSummary.estimatedHotelCost.toFixed(2)}</span>
-                  {travelPlanSummary.aiHotelDetails && (
-                    <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiHotelDetails.name}, {travelPlanSummary.aiHotelDetails.location} @ ${travelPlanSummary.aiHotelDetails.cost_per_night_usd?.toFixed(2)}/night for {travelPlanSummary.aiHotelDetails.total_nights} nights)</span>
+                  {item.simulated_booking_link && (
+                      <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
                   )}
-                </li>
-                <li className="mb-1">Estimated Activity Cost (General): <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Transport Cost (Local): <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
-                {/* totalEstimatedCost from state now includes selected itinerary items */}
-                <li className="mt-2 text-lg font-bold text-indigo-800">Total Trip Cost (AI estimates + selected items + food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
-              </ul>
+                </div>
+              ))}
             </div>
+          </div>
+        )}
 
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Food Allowances:</h3>
-              <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Daily Breakfast Allowance: <span className="font-semibold">${travelPlanSummary.breakfastAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Lunch Allowance: <span className="font-semibold">${travelPlanSummary.lunchAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Dinner Allowance: <span className="font-semibold">${travelPlanSummary.dinnerAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Snacks Allowance: <span className="font-semibold">${travelPlanSummary.snacksAllowance.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Total Daily Food Allowance: <span className="text-blue-700">${travelPlanSummary.totalDailyFoodAllowance.toFixed(2)}</span></li>
-                <li className="mt-1 text-lg font-bold text-indigo-800">Total Food Cost for Trip: <span className="text-blue-700">${travelPlanSummary.totalFoodCost.toFixed(2)}</span></li>
-              </ul>
+        {/* Suggested Sporting Events --- UPDATED UI to show more details --- */}
+        {suggestedSportingEvents.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Sporting Events:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedSportingEvents.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedSportingEvents)}
+                  onClick={() => toggleSuggestionSelection('sportingEvents', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
             </div>
+          </div>
+        )}
 
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Transport Options Selected:</h3>
-              <ul className="list-disc list-inside ml-6 text-gray-700">
-                {travelPlanSummary.carRental && <li>Car Rental</li>}
-                {travelPlanSummary.shuttle && <li>Shuttle</li>}
-                {travelPlanSummary.airportTransfers && <li>Airport Transfers</li>}
-                {travelPlanSummary.airportParking && <li>Airport Parking</li>}
-                {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking && <li>No specific transport options selected.</li>}
-              </ul>
+        {/* Suggested Food Locations --- UPDATED UI to show more details --- */}
+        {suggestedFoodLocations.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Food Locations:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedFoodLocations.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedFoodLocations)}
+                  onClick={() => toggleSuggestionSelection('foodLocations', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_price_range && (
+                      <div className="text-sm text-gray-700">Price Range: {item.simulated_price_range}</div>
+                  )}
+                </div>
+              ))}
             </div>
+          </div>
+        )}
 
-            <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
-              {/* Grand Total now directly uses the `totalEstimatedCost` which is the calculated sum of all components */}
-              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></h3>
-              {userSetTotalBudget > 0 && (
-                  <p className={`text-lg font-bold mt-2 ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
-                      AI Estimated Budget: ${userSetTotalBudget.toLocaleString()} (You are {isOverBudget ? 'OVER' : 'UNDER'} by ${budgetDifference.toLocaleString()})
-                  </p>
-              )}
+        {/* Suggested Theme Parks --- UPDATED UI to show more details --- */}
+        {suggestedThemeParks.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Theme Parks:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedThemeParks.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedThemeParks)}
+                  onClick={() => toggleSuggestionSelection('themeParks', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.location && <div className="text-sm text-gray-700">Location: {item.location}</div>}
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Tourist Spots --- UPDATED UI to show more details --- */}
+        {suggestedTouristSpots.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tourist Spots:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedTouristSpots.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedTouristSpots)}
+                  onClick={() => toggleSuggestionSelection('touristSpots', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Tours --- UPDATED UI to show more details --- */}
+        {suggestedTours.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tours:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedTours.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedTours)}
+                  onClick={() => toggleSuggestionSelection('tours', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                  {item.simulated_booking_link && (
+                      <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* --- BUDGET PLANNING SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
+        </h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Generate AI-powered budget estimates based on your trip details, or manually enter your own.
+        </p>
+
+        <div className="mb-6">
+          <label className={labelClass}>Cost Calculation Basis:</label>
+          <div className="flex space-x-6">
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                name="costBasis"
+                value="perPerson"
+                checked={isPerPerson}
+                onChange={() => setIsPerPerson(true)}
+              />
+              <span className="ml-2 text-gray-800">Per Person</span>
+            </label>
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                name="costBasis"
+                value="perParty"
+                checked={!isPerPerson}
+                onChange={() => setIsPerPerson(false)}
+              />
+              <span className="ml-2 text-gray-800">Per Party</span>
+            </label>
+          </div>
+        </div>
+
+        {isPerPerson && (
+          <div className="mb-6">
+            <label htmlFor="numberOfPeople" className={labelClass}>Number of People:</label>
+            {/* numberOfPeople is now a derived state, display only, or could be an input for manual override */}
+            <input
+              type="number"
+              id="numberOfPeople"
+              value={numberOfPeople}
+              readOnly // Made readOnly as it's derived from partyMembers
+              min="1"
+              className={`${inputClass} w-full bg-gray-100`} // Add bg-gray-100 for read-only styling
+            />
+          </div>
+        )}
+
+        <div className="text-center mb-6">
+          <button
+            onClick={generateBudgetEstimates}
+            className={buttonClass}
+            disabled={isGeneratingBudget || (countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1}
+          >
+            {isGeneratingBudget ? (
+              <span className="flex items-center justify-center">
+                <Loader className="animate-spin mr-2" size={20} /> Generating Budget...
+              </span>
+            ) : (
+              'Generate Budget Estimates'
+            )}
+          </button>
+          {budgetError && <p className="text-red-500 text-sm mt-2">{budgetError}</p>}
+        </div>
+
+        {/* --- UPDATED: Display AI's detailed flight/hotel info inputs --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="estimatedFlightCost" className={labelClass}>AI Estimated Flight Cost:</label>
+            <input
+              type="number"
+              id="estimatedFlightCost"
+              value={estimatedFlightCost}
+              onChange={(e) => setEstimatedFlightCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+              readOnly={aiFlightDetails !== null} // Make read-only if AI provided details
+            />
+            {aiFlightDetails && (
+              <div className="text-sm text-gray-600 mt-2">
+                <p>Airline: {aiFlightDetails.airline}</p>
+                <p>Route: {aiFlightDetails.route}</p>
+                <p>Dates: {aiFlightDetails.departure_date} to {aiFlightDetails.return_date}</p>
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="estimatedHotelCost" className={labelClass}>AI Estimated Hotel Cost:</label>
+            <input
+              type="number"
+              id="estimatedHotelCost"
+              value={estimatedHotelCost}
+              onChange={(e) => setEstimatedHotelCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+              readOnly={aiHotelDetails !== null} // Make read-only if AI provided details
+            />
+            {aiHotelDetails && (
+              <div className="text-sm text-gray-600 mt-2">
+                <p>Hotel: {aiHotelDetails.name}</p>
+                <p>Location: {aiHotelDetails.location}</p>
+                <p>Cost/Night: ${aiHotelDetails.cost_per_night_usd?.toFixed(2)} for {aiHotelDetails.total_nights} nights</p>
+              </div>
+            )}
+          </div>
+          {/* These below are still general AI estimates, no detailed breakdown requested from AI yet */}
+          <div>
+            <label htmlFor="estimatedActivityCost" className={labelClass}>AI Estimated Activity Cost (General):</label>
+            <input
+              type="number"
+              id="estimatedActivityCost"
+              value={estimatedActivityCost}
+              onChange={(e) => setEstimatedActivityCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="estimatedTransportCost" className={labelClass}>AI Estimated Transport Cost (Local):</label>
+            <input
+              type="number"
+              id="estimatedTransportCost"
+              value={estimatedTransportCost}
+              onChange={(e) => setEstimatedTransportCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>AI Estimated Miscellaneous Cost:</label>
+            <input
+              type="number"
+              id="estimatedMiscellaneousCost"
+              value={estimatedMiscellaneousCost}
+              onChange={(e) => setEstimatedMiscellaneousCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
+            <input
+              type="number"
+              id="breakfastAllowance"
+              value={breakfastAllowance}
+              onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="lunchAllowance" className={labelClass}>Lunch:</label>
+            <input
+              type="number"
+              id="lunchAllowance"
+              value={lunchAllowance}
+              onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="dinnerAllowance" className={labelClass}>Dinner:</label>
+            <input
+              type="number"
+              id="dinnerAllowance"
+              value={dinnerAllowance}
+              onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="snacksAllowance" className={labelClass}>Snacks:</label>
+            <input
+              type="number"
+              id="snacksAllowance"
+              value={snacksAllowance}
+              onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* --- MAIN GENERATE & CLEAR BUTTONS --- */}
+      <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+        <button
+          onClick={calculateTravelPlan}
+          className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:scale-105"
+          disabled={loading}
+        >
+          <Search className="w-5 h-5 mr-2" /> Generate Travel Plan
+        </button>
+        <button
+          onClick={handleClear}
+          className="flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
+        >
+          <XCircle className="w-5 h-5 mr-2" /> Clear All
+        </button>
+      </div>
+
+      {/* --- TRAVEL PLAN SUMMARY SECTION --- */}
+      {travelPlanSummary && (
+        <div className={summarySectionClass}>
+          <h2 className={summaryTitleClass}>
+            <CheckCircle className="inline-block mr-3 text-indigo-700" size={32} /> Your Travel Plan Summary
+          </h2>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
+            <p className={summaryItemClass}>
+              <strong>Home Location:</strong>{' '}
+              {travelPlanSummary.homeCity ? `${travelPlanSummary.homeCity}, ` : ''}
+              {travelPlanSummary.homeCountry.name || 'Not specified'}
+              {travelPlanSummary.homeCountry.flag && (
+                <img src={travelPlanSummary.homeCountry.flag} alt={`${travelPlanSummary.homeCountry.name} flag`} className="w-6 h-4 ml-2 inline-block rounded-sm" />
+              )}
+            </p>
+            <p className={summaryItemClass}>
+              <strong>Destination Countries:</strong>{' '}
+              {travelPlanSummary.countries.length > 0 ? (
+                <span>
+                  {travelPlanSummary.countries.map(c => (
+                    <span key={c.name} className="inline-flex items-center mr-2">
+                      {c.flag && <img src={c.flag} alt={`${c.name} flag`} className="w-6 h-4 mr-1 rounded-sm" />}
+                      {c.name}
+                    </span>
+                  ))}
+                </span>
+              ) : 'Not specified'}
+            </p>
+            <p className={summaryItemClass}><strong>Destination Cities:</strong> {travelPlanSummary.cities.length > 0 ? travelPlanSummary.cities.join(', ') : 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Duration:</strong> {travelPlanSummary.duration} days</p>
+            <p className={summaryItemClass}><strong>Party Size:</strong> {travelPlanSummary.numberOfPeople} {travelPlanSummary.isPerPerson ? 'person(s)' : 'party'}
+                {travelPlanSummary.partyMembers && travelPlanSummary.partyMembers.length > 0 && (
+                    <span className="ml-2 text-xs text-gray-500">
+                        ({travelPlanSummary.partyMembers.map(m => `Age: ${m.age}${m.gender !== 'Prefer not to say' ? ` (${m.gender})` : ''}`).join(', ')})
+                    </span>
+                )}
+            </p>
+          </div>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Preferences & Itinerary:</h3>
+            <p className={summaryItemClass}><strong>Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Activities:</strong> {travelPlanSummary.activities || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Food Locations:</strong> {travelPlanSummary.foodLocations || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Theme Parks:</strong> {travelPlanSummary.themeParks || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Tourist Spots:</strong> {travelPlanSummary.touristSpots || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Tours:</strong> {travelPlanSummary.tours || 'Not specified'}</p>
+          </div>
+
+          {/* Displaying actual itinerary items if added */}
+          {itineraryItems.length > 0 && (
+            <div className="mb-6 pb-4 border-b border-indigo-200">
+              <h3 className={summarySubTitleClass}>Selected Itinerary Items:</h3>
+              <ul className="list-disc list-inside ml-6 text-gray-700">
+                {itineraryItems.map(item => (
+                  <li key={item.id} className="mb-1">
+                    {item.name} (${item.baseCost.toFixed(2)}{item.type === 'hotel' ? ' / night' : ''})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {itineraryItems.length === 0 && (
+            <div className="mb-6 pb-4 border-b border-indigo-200">
+                <h3 className={summarySubTitleClass}>Selected Itinerary Items:</h3>
+                <p className="italic ml-6 text-gray-700">No specific items selected from suggestions.</p>
+            </div>
+          )}
+
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Estimated Costs:</h3>
+            <p className={summaryItemClass}><strong>Calculation Basis:</strong> {travelPlanSummary.isPerPerson ? `Per Person (${travelPlanSummary.numberOfPeople} people)` : 'Per Party'}</p>
+            <ul className="list-disc list-inside ml-6 text-gray-700">
+              {/* --- UPDATED: Display AI's detailed flight info in summary --- */}
+              <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">${travelPlanSummary.estimatedFlightCost.toFixed(2)}</span>
+                {travelPlanSummary.aiFlightDetails && (
+                  <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiFlightDetails.airline}, {travelPlanSummary.aiFlightDetails.route} {travelPlanSummary.aiFlightDetails.departure_date} to {travelPlanSummary.aiFlightDetails.return_date})</span>
+                )}
+              </li>
+              {/* --- UPDATED: Display AI's detailed hotel info in summary --- */}
+              <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">${travelPlanSummary.estimatedHotelCost.toFixed(2)}</span>
+                {travelPlanSummary.aiHotelDetails && (
+                  <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiHotelDetails.name}, {travelPlanSummary.aiHotelDetails.location} @ ${travelPlanSummary.aiHotelDetails.cost_per_night_usd?.toFixed(2)}/night for {travelPlanSummary.aiHotelDetails.total_nights} nights)</span>
+                )}
+              </li>
+              <li className="mb-1">Estimated Activity Cost (General): <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
+              <li className="mb-1">Estimated Transport Cost (Local): <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
+              <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
+              {/* totalEstimatedCost from state now includes selected itinerary items */}
+              <li className="mt-2 text-lg font-bold text-indigo-800">Total Trip Cost (AI estimates + selected items + food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
+            </ul>
+          </div>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Food Allowances:</h3>
+            <ul className="list-disc list-inside ml-6 text-gray-700">
+              <li className="mb-1">Daily Breakfast Allowance: <span className="font-semibold">${travelPlanSummary.breakfastAllowance.toFixed(2)}</span></li>
+              <li className="mb-1">Daily Lunch Allowance: <span className="font-semibold">${travelPlanSummary.lunchAllowance.toFixed(2)}</span></li>
+              <li className="mb-1">Daily Dinner Allowance: <span className="font-semibold">${travelPlanSummary.dinnerAllowance.toFixed(2)}</span></li>
+              <li className="mb-1">Daily Snacks Allowance: <span className="font-semibold">${travelPlanSummary.snacksAllowance.toFixed(2)}</span></li>
+              <li className="mt-2 text-lg font-bold text-indigo-800">Total Daily Food Allowance: <span className="text-blue-700">${travelPlanSummary.totalDailyFoodAllowance.toFixed(2)}</span></li>
+              <li className="mt-1 text-lg font-bold text-indigo-800">Total Food Cost for Trip: <span className="text-blue-700">${travelPlanSummary.totalFoodCost.toFixed(2)}</span></li>
+            </ul>
+          </div>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Transport Options Selected:</h3>
+            <ul className="list-disc list-inside ml-6 text-gray-700">
+              {travelPlanSummary.carRental && <li>Car Rental</li>}
+              {travelPlanSummary.shuttle && <li>Shuttle</li>}
+              {travelPlanSummary.airportTransfers && <li>Airport Transfers</li>}
+              {travelPlanSummary.airportParking && <li>Airport Parking</li>}
+              {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking && <li>No specific transport options selected.</li>}
+            </ul>
+          </div>
+
+          <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
+            {/* Grand Total now directly uses the `totalEstimatedCost` which is the calculated sum of all components */}
+            <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></h3>
+            {userSetTotalBudget > 0 && (
+                <p className={`text-lg font-bold mt-2 ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
+                    AI Estimated Budget: ${userSetTotalBudget.toLocaleString()} (You are {isOverBudget ? 'OVER' : 'UNDER'} by ${budgetDifference.toLocaleString()})
+                </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
 
 export default App;
