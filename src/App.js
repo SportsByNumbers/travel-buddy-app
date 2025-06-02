@@ -51,23 +51,11 @@ function calculateTotalCost(
   }
 
   // Sum AI-generated general estimates (excluding items handled by specificItineraryItemsCost)
-  // Logic: The AI provides overall estimates. If the user picks specific activities/hotels,
-  // we want to use *those* specific costs if available, otherwise rely on AI's general estimate.
-  // For simplicity here, we're assuming specificItineraryItemsCost just *adds* to AI's general activity estimate.
-  // A more complex logic might involve deducting the AI's general activity estimate if enough specifics are chosen.
-  // For now, let's treat AI estimatedActivityCost as a 'buffer' or additional general spending.
-
-  // NOTE: If the AI's estimatedFlightCost, estimatedHotelCost, etc., are already "per person" or "per party"
-  // based on the AI's prompt, then `numberOfPeople` should *not* be multiplied again for these AI estimates.
-  // Assuming the AI provides *total* estimates for the trip based on `numberOfPeople` and `isPerPerson` from prompt.
-
   const totalEstimatedCostsFromAI =
     parseFloat(aiEstimatedFlightCost || 0) +
     parseFloat(aiEstimatedHotelCost || 0) +
     parseFloat(aiEstimatedTransportCost || 0) +
     parseFloat(aiEstimatedMiscellaneousCost || 0);
-    // AI's estimatedActivityCost is deliberately excluded here if specificItineraryItemsCost is added directly below.
-    // If you want AI's activity estimate included: + parseFloat(aiEstimatedActivityCost || 0)
 
   let finalTotal = totalEstimatedCostsFromAI + specificItineraryItemsCost + tripFoodCost;
 
@@ -400,7 +388,7 @@ function App() {
 
     // --- UPDATED PROMPT: Requesting more structured details for suggestions ---
     const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} ${topicsPrompt}.
-    For each activity, tour, and sporting event, provide its "name", a brief "description" (2-3 sentences), a "simulated_estimated_cost_usd" (realistic number, e.g., 20-150), and a "simulated_booking_link" (e.g., "https://www.fakewebsite.com/book/activity").
+    For each activity, tour, and sporting event, provide its "name", a brief "description" (2-3 sentences), a simulated "estimated_cost_usd" (realistic number, e.g., 20-150), and a "simulated_booking_link" (e.g., "https://www.fakewebsite.com/book/activity").
     For food locations, provide "name", "description", and a "simulated_price_range" (e.g., "$$", "$$$").
     For theme parks and tourist spots, provide "name", "description", "location" (city/area), and "simulated_estimated_cost_usd" if applicable.
     Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of objects.
@@ -472,7 +460,6 @@ function App() {
       }
     };
 
-    // Use a placeholder for the API key if you're not deploying with a real one
     const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API Key if deploying
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -549,10 +536,10 @@ function App() {
     // --- UPDATED PROMPT: Requesting more detailed budget breakdown ---
     const prompt = `Estimate the following costs in USD for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
     Based on typical online search results, provide specific (simulated, but realistic) details for:
-    - Flights: suggest a specific airline (e.g., United Airlines), a plausible route (e.g., SYD-NRT), a departure date and return date (relative to today and trip duration), and an estimated total flight cost.
-    - Hotel: suggest a specific hotel name (e.g., Grand Hyatt Tokyo), a location (e.g., Shinjuku), a realistic cost per night, the total number of nights (based on duration), and an estimated total hotel cost.
-    - Destination Transport: provide an estimated total cost for local transportation (e.g., public transport passes, taxi rides).
-    - Miscellaneous: provide a general estimated total cost for unexpected expenses or general shopping/souvenirs.
+    - Flights: suggest a specific airline (e.g., United Airlines), a plausible route (e.g., SYD-NRT), a departure date and return date (relative to today and trip duration), and an estimated total flight cost for the specified number of people/party.
+    - Hotel: suggest a specific hotel name (e.g., Grand Hyatt Tokyo), a location (e.g., Shinjuku), a realistic cost per night, the total number of nights (based on duration), and an estimated total hotel cost for the specified number of people/party.
+    - Destination Transport: provide an estimated total cost for local transportation (e.g., public transport passes, taxi rides) for the specified number of people/party.
+    - Miscellaneous: provide a general estimated total cost for unexpected expenses or general shopping/souvenirs for the specified number of people/party.
     - Daily Food Allowance (per person): provide separate daily estimates for Breakfast, Lunch, Dinner, and Snacks.
 
     Consider these itinerary items for activity cost estimation: ${itineraryPrompt || 'general sightseeing'}.
@@ -1500,7 +1487,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedActivities.map((item, index) => (
                   <div
-                    key={index} // Consider using item.name if guaranteed unique, otherwise use index for now
+                    key={item.name + index} // Use name+index as a key for uniqueness if name is not always unique
                     className={suggestionTagClass(item, selectedSuggestedActivities)}
                     onClick={() => toggleSuggestionSelection('activities', item)}
                   >
@@ -1525,7 +1512,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedSportingEvents.map((item, index) => (
                   <div
-                    key={index}
+                    key={item.name + index}
                     className={suggestionTagClass(item, selectedSuggestedSportingEvents)}
                     onClick={() => toggleSuggestionSelection('sportingEvents', item)}
                   >
@@ -1547,7 +1534,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedFoodLocations.map((item, index) => (
                   <div
-                    key={index}
+                    key={item.name + index}
                     className={suggestionTagClass(item, selectedSuggestedFoodLocations)}
                     onClick={() => toggleSuggestionSelection('foodLocations', item)}
                   >
@@ -1569,7 +1556,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedThemeParks.map((item, index) => (
                   <div
-                    key={index}
+                    key={item.name + index}
                     className={suggestionTagClass(item, selectedSuggestedThemeParks)}
                     onClick={() => toggleSuggestionSelection('themeParks', item)}
                   >
@@ -1592,7 +1579,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedTouristSpots.map((item, index) => (
                   <div
-                    key={index}
+                    key={item.name + index}
                     className={suggestionTagClass(item, selectedSuggestedTouristSpots)}
                     onClick={() => toggleSuggestionSelection('touristSpots', item)}
                   >
@@ -1614,7 +1601,7 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {suggestedTours.map((item, index) => (
                   <div
-                    key={index}
+                    key={item.name + index}
                     className={suggestionTagClass(item, selectedSuggestedTours)}
                     onClick={() => toggleSuggestionSelection('tours', item)}
                   >
@@ -2052,8 +2039,8 @@ function App() {
                 <li className="mb-1">Estimated Activity Cost (General): <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
                 <li className="mb-1">Estimated Transport Cost (Local): <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
                 <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food, from AI General Estimates): <span className="text-blue-700">${(travelPlanSummary.estimatedFlightCost + travelPlanSummary.estimatedHotelCost + travelPlanSummary.estimatedActivityCost + travelPlanSummary.estimatedTransportCost + travelPlanSummary.estimatedMiscellaneousCost).toFixed(2)}</span></li>
-                <li className="mt-1 text-lg font-bold text-indigo-800">Cost of Selected Itinerary Items: <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li> {/* This now reflects the specific items */}
+                {/* totalEstimatedCost from state now includes selected itinerary items */}
+                <li className="mt-2 text-lg font-bold text-indigo-800">Total Trip Cost (AI estimates + selected items + food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
               </ul>
             </div>
 
@@ -2081,10 +2068,11 @@ function App() {
             </div>
 
             <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
-              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
+              {/* Grand Total now directly uses the `totalEstimatedCost` which is the calculated sum of all components */}
+              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></h3>
               {userSetTotalBudget > 0 && (
                   <p className={`text-lg font-bold mt-2 ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
-                      Budgeted: ${userSetTotalBudget.toLocaleString()} (You are {isOverBudget ? 'OVER' : 'UNDER'} by ${budgetDifference.toLocaleString()})
+                      AI Estimated Budget: ${userSetTotalBudget.toLocaleString()} (You are {isOverBudget ? 'OVER' : 'UNDER'} by ${budgetDifference.toLocaleString()})
                   </p>
               )}
             </div>
