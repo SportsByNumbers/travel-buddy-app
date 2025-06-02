@@ -3,52 +3,108 @@
 // Simulate a database of users and their trips
 const users = {}; // email: { password, trips: [] } - This line MUST appear only ONCE
 
-// Simulate various travel data with IDs for itinerary tracking
-const mockTravelData = {
-  hotels: [
-    { id: 'H1', name: "Grand Hyatt", description: "Luxury stay in city center", baseCost: 300, type: 'hotel', imageUrl: 'https://images.unsplash.com/photo-1571896349882-3320f78d6de4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'H2', name: "Boutique Hotel", description: "Charming and cozy, near attractions", baseCost: 150, type: 'hotel', imageUrl: 'https://images.unsplash.com/photo-1549448722-e6e737c0ffdc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'H3', name: "Budget Inn", description: "Clean and affordable, great for travelers", baseCost: 80, type: 'hotel', imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fa5fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-  ],
+// --- NEW/UPDATED: Mock data matching AI's generateSuggestions schema ---
+// This is what the AI is *supposed* to return for suggestions
+const mockAiSuggestionsResponse = {
   activities: [
-    { id: 'A1', name: "City Walking Tour", description: "Explore city landmarks on foot", baseCost: 30, type: 'activity', imageUrl: 'https://images.unsplash.com/photo-1533604068598-a3f295b9d3e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'A2', name: "Museum Visit", description: "Discover local art and history", baseCost: 20, type: 'activity', imageUrl: 'https://images.unsplash.com/photo-1563291071-f7614917637b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'A3', name: "Cooking Class", description: "Learn local cuisine", baseCost: 75, type: 'activity', imageUrl: 'https://images.unsplash.com/photo-1587840176884-250a581451e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-  ],
-  sportingEvents: [
-    { id: 'SE1', name: "Local Football Match", description: "Experience the local sports scene", baseCost: 40, type: 'sporting_event', imageUrl: 'https://images.unsplash.com/photo-1517466787929-f41099a85693?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'SE2', name: "Basketball Game", description: "High-energy professional basketball", baseCost: 60, type: 'sporting_event', imageUrl: 'https://images.unsplash.com/photo-1546519638-687f8723aedc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
+    { "name": "Tokyo Skytree Visit", "description": "Enjoy panoramic views of Tokyo from this iconic tower, an engineering marvel.", "simulated_estimated_cost_usd": 25, "simulated_booking_link": "https://www.skytreetickets.com/book" },
+    { "name": "Ghibli Museum Tour", "description": "Immerse yourself in the magical world of Studio Ghibli's beloved animations. Tickets are hard to get!", "simulated_estimated_cost_usd": 15, "simulated_booking_link": "https://www.ghibli-museum.jp/tickets" },
+    { "name": "Shibuya Crossing Experience", "description": "Witness the world's busiest intersection, a symbol of modern Tokyo.", "simulated_estimated_cost_usd": 0, "simulated_booking_link": "" },
+    { "name": "Asakusa Senso-ji Temple", "description": "Tokyo's oldest temple, a vibrant spiritual landmark with a bustling market street.", "simulated_estimated_cost_usd": 0, "simulated_booking_link": "" },
+    { "name": "Robot Restaurant Show", "description": "A bizarre, high-energy, and uniquely Japanese entertainment spectacle. Book early!", "simulated_estimated_cost_usd": 100, "simulated_booking_link": "https://www.robot-restaurant.com/reserve" }
   ],
   foodLocations: [
-    { id: 'F1', name: "Central Market", description: "Vibrant market with local street food", baseCost: 20, type: 'food', imageUrl: 'https://images.unsplash.com/photo-1533059885868-80f2d5901614?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'F2', name: "Fine Dining Restaurant", description: "Michelin-star experience", baseCost: 150, type: 'food', imageUrl: 'https://images.unsplash.com/photo-1555396273-367ba0ee6c14?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
+    { "name": "Tsukiji Outer Market", "description": "A bustling market known for fresh seafood and street food vendors.", "simulated_price_range": "$$" },
+    { "name": "Omoide Yokocho (Memory Lane)", "description": "A narrow alleyway filled with tiny, atmospheric izakaya bars serving yakitori.", "simulated_price_range": "$$" },
+    { "name": "Ramen Street (Tokyo Station)", "description": "Underground street dedicated to various famous ramen shops from across Japan.", "simulated_price_range": "$" }
   ],
   themeParks: [
-    { id: 'TP1', name: "Adventure Land", description: "Thrilling rides and family fun", baseCost: 90, type: 'theme_park', imageUrl: 'https://images.unsplash.com/photo-1600813083398-356885661214?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'TP2', name: "Fantasy World", description: "Magical experiences and parades", baseCost: 110, type: 'theme_park', imageUrl: 'https://images.unsplash.com/photo-1594954005991-88481350a4b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
+    { "name": "Tokyo Disneyland", "description": "The classic magical kingdom with beloved characters and enchanting rides.", "location": "Urayasu, Chiba", "simulated_estimated_cost_usd": 80 },
+    { "name": "Tokyo DisneySea", "description": "A unique Disney park with stunning nautical themes and elaborate attractions.", "location": "Urayasu, Chiba", "simulated_estimated_cost_usd": 85 }
   ],
   touristSpots: [
-    { id: 'TS1', name: "Historic Downtown", description: "Charming streets and old buildings", baseCost: 0, type: 'tourist_spot', imageUrl: 'https://images.unsplash.com/photo-1550974771-46487e41d8e1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
-    { id: 'TS2', name: "Botanical Gardens", description: "Lush greenery and peaceful walks", baseCost: 10, type: 'tourist_spot', imageUrl: 'https://images.unsplash.com/photo-1509379659092-23c317f25906?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1NzM4ODllfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.0.3&q=80&w=400' },
+    { "name": "Meiji Jingu Shrine", "description": "A tranquil oasis dedicated to Emperor Meiji and Empress Shoken, surrounded by a vast forest.", "simulated_estimated_cost_usd": 0 },
+    { "name": "Imperial Palace East Garden", "description": "The former site of Edo Castle's inner defense circles, now a beautiful public garden.", "simulated_estimated_cost_usd": 0 }
+  ],
+  tours: [
+    { "name": "Mount Fuji & Hakone Day Tour", "description": "A popular day trip combining scenic views of Mt. Fuji with the natural beauty of Hakone.", "simulated_estimated_cost_usd": 90, "simulated_booking_link": "https://www.faketravelsite.com/fuji-hakone-tour" },
+    { "name": "Tokyo Highlights Bus Tour", "description": "See major landmarks like Tokyo Tower, Imperial Palace, and Ginza from a comfortable bus.", "simulated_estimated_cost_usd": 60, "simulated_booking_link": "https://www.faketravelsite.com/tokyo-bus-tour" }
+  ],
+  sportingEvents: [
+    { "name": "Sumo Grand Tournament", "description": "Witness Japan's national sport in action during a tournament period.", "simulated_estimated_cost_usd": 60 },
+    { "name": "Baseball Game (Yomiuri Giants)", "description": "Experience the electric atmosphere of a Japanese professional baseball game.", "simulated_estimated_cost_usd": 40 }
   ]
 };
 
-// Simulate fetching travel data based on criteria
-const fetchTravelData = async ({ country, city, duration }) => {
+// --- NEW: Mock data matching AI's generateBudgetEstimates schema ---
+// This is what the AI is *supposed* to return for budget estimates
+const mockAiBudgetResponse = {
+  flight: {
+    "airline": "Japan Airlines (JAL)",
+    "route": "SYD-NRT",
+    "departure_date": "2025-10-05",
+    "return_date": "2025-10-12",
+    "estimated_cost_usd": 1200
+  },
+  hotel: {
+    "name": "Park Hyatt Tokyo",
+    "location": "Shinjuku",
+    "cost_per_night_usd": 350,
+    "total_nights": 7,
+    "estimated_cost_usd": 2450
+  },
+  activityCost: 500, // General estimate for unspecified activities / buffer
+  transportCost: 150, // Local transportation
+  miscellaneousCost: 200,
+  dailyFoodAllowance: {
+    "breakfast_usd": 20,
+    "lunch_usd": 40,
+    "dinner_usd": 60,
+    "snacks_usd": 10
+  }
+};
+
+
+// --- UPDATED: Simulate AI Suggestions (wraps mock data in Gemini-like response) ---
+export const fetchTravelData = async (options) => { // This function is called by generateSuggestions in App.js
+  console.log("Mock API: Simulating AI Suggestions for:", options);
   return new Promise(resolve => {
     setTimeout(() => {
-      // In a real app, this would filter actual data from a backend/API
-      // For simulation, we return a fixed set of items for the selected city/country
-      const results = {};
-      Object.keys(mockTravelData).forEach(category => {
-        results[category] = mockTravelData[category];
+      resolve({
+        candidates: [{
+          content: {
+            parts: [{
+              text: JSON.stringify(mockAiSuggestionsResponse) // Return the structured mock data as a string
+            }]
+          }
+        }]
       });
-      resolve(results);
-    }, 1000); // Simulate network delay
+    }, 1500); // Simulate network delay
   });
 };
 
-// Simulate fetching flight prices
+// --- NEW: Simulate AI Budget Estimates (wraps mock data in Gemini-like response) ---
+export const fetchBudgetEstimates = async (promptData) => { // This function will be called by generateBudgetEstimates in App.js
+    console.log("Mock API: Simulating AI Budget Estimates for:", promptData);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve({
+                candidates: [{
+                    content: {
+                        parts: [{
+                            text: JSON.stringify(mockAiBudgetResponse) // Return the structured mock budget data as a string
+                        }]
+                    }
+                }]
+            });
+        }, 1800); // Simulate network delay
+    });
+};
+
+
+// --- Remaining mock functions (Authentication, Save/Load, Manual Flight Search) ---
+
+// Simulate fetching flight prices (for the manual search button in App.js)
 const fetchFlightPrices = async ({ originCity, destinationCity, departureDate, returnDate }) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -57,9 +113,9 @@ const fetchFlightPrices = async ({ originCity, destinationCity, departureDate, r
         return;
       }
       // Simulate price range
-      const basePrice = 200;
-      const variation = Math.floor(Math.random() * 300) - 100; // -100 to 200
-      const finalPrice = Math.max(50, basePrice + variation); // Min price 50
+      const basePrice = 800; // Starting a higher base price for flights
+      const variation = Math.floor(Math.random() * 600) - 300; // -300 to 300
+      const finalPrice = Math.max(200, basePrice + variation); // Min price 200
 
       resolve(finalPrice);
     }, 1500); // Simulate network delay
@@ -98,8 +154,7 @@ const saveUserTrip = async ({ email, tripData }) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (users[email]) {
-        // Simple deep copy to prevent direct mutation of saved data
-        users[email].trips.push(JSON.parse(JSON.stringify(tripData)));
+        users[email].trips.push(JSON.parse(JSON.stringify(tripData))); // Deep copy
         resolve({ success: true, message: "Trip saved!" });
       } else {
         reject(new Error("User not found."));
@@ -113,8 +168,7 @@ const loadUserTrips = async ({ email }) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (users[email]) {
-        // Simple deep copy to prevent direct mutation of loaded data
-        resolve(JSON.parse(JSON.stringify(users[email].trips)));
+        resolve(JSON.parse(JSON.stringify(users[email].trips))); // Deep copy
       } else {
         reject(new Error("User not found or no trips saved."));
       }
@@ -122,4 +176,12 @@ const loadUserTrips = async ({ email }) => {
   });
 };
 
-export { fetchTravelData, fetchFlightPrices, authenticateUser, registerUser, saveUserTrip, loadUserTrips };
+export {
+    fetchTravelData,
+    fetchFlightPrices,
+    authenticateUser,
+    registerUser,
+    saveUserTrip,
+    loadUserTrips,
+    fetchBudgetEstimates // --- NEW: Export the new mock function ---
+};
