@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 // Re-organized and verified lucide-react imports for clarity
 import { MapPin, Compass, Wallet, Car, Home, User, PlaneTakeoff, PlaneLanding, XCircle, Search, CheckCircle, Utensils, Loader, LogIn, LogOut, FolderOpen, Save } from 'lucide-react';
 // Import mock API functions - ensure these are correctly exported from your mockApi.js
-// NOTE: We are NOT using fetchTravelData or fetchBudgetEstimates directly here for AI calls in this diagnostic version.
-// Their mock data content is still relevant in mockApi.js, but App.js will bypass them for this test.
-import { fetchFlightPrices, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi';
+import { fetchFlightPrices, fetchTravelData, fetchBudgetEstimates, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi';
 import './index.css';
 
 // --- AVAILABLE TOPICS OF INTEREST (for checkboxes) ---
@@ -1467,7 +1465,7 @@ return (
 
         <div className="text-center mb-6">
           <button
-            // onClick={generateSuggestions} // Commented out for diagnostic build
+            // --- REMOVED: onClick={generateSuggestions} ---
             className={buttonClass}
             disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
           >
