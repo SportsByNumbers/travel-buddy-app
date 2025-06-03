@@ -432,8 +432,7 @@ function App() {
   } finally {
     setIsGeneratingSuggestions(false);
   }
-}; // NO SEMICOLON (Letting ASI handle it correctly, as it should for function declarations like this)
-
+}; // NO SEMICOLON (Letting ASI handle it correctly for `const fn = () => {};` syntax)
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
@@ -579,7 +578,7 @@ const generateBudgetEstimates = async () => {
 } finally {
   setIsGeneratingBudget(false);
 }
-}; // Removed semicolon after finally block to test ASI again.
+}; // NO SEMICOLON (Letting ASI handle it correctly for `const fn = () => {};` syntax)
 
 
 // --- MAIN TRAVEL PLAN CALCULATION (for final summary) ---
@@ -886,7 +885,7 @@ const handleSaveTrip = async () => {
       homeCountry, homeCity, countries, cities, duration, starRating,
       topicsOfInterest,
       selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-      selectedSuggestedTouristSpots, selectedSuggestedTours, // No duplicate selectedSuggestedTours
+      selectedSuggestedTouristSpots, selectedSuggestedTours, // No duplicate 'selectedSuggestedTours'
       itineraryItems, // Save the actual itinerary items
       isPerPerson, numberOfPeople, // numberOfPeople is now a derived state
       partyMembers, // --- NEW: Save party members ---
