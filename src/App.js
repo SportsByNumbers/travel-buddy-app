@@ -434,6 +434,7 @@ function App() {
   }
 }; // NO SEMICOLON (Letting ASI handle it correctly for `const fn = () => {};` syntax)
 
+
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
     setBudgetError("Please ensure countries/cities, duration, and number of people are set to generate budget estimates.");
@@ -885,7 +886,7 @@ const handleSaveTrip = async () => {
       homeCountry, homeCity, countries, cities, duration, starRating,
       topicsOfInterest,
       selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-      selectedSuggestedTouristSpots, selectedSuggestedTours, // No duplicate 'selectedSuggestedTours'
+      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents, // FIXED: Removed duplicate 'selectedSuggestedTours'
       itineraryItems, // Save the actual itinerary items
       isPerPerson, numberOfPeople, // numberOfPeople is now a derived state
       partyMembers, // --- NEW: Save party members ---
