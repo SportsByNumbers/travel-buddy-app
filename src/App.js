@@ -289,25 +289,42 @@ function App() {
     }
   };
 
-  // --- DIAGNOSTIC: generateSuggestions (TEMPORARILY SIMPLIFIED) ---
-  // This function is now a simple synchronous stub to bypass potential Babel parsing issues.
-  // If the build passes with this, the problem is in the original complex body.
-  const generateSuggestions = () => {
+  // --- DIAGNOSTIC: generateSuggestions (TEMPORARILY SIMPLIFIED & IIAFE WRAPPED) ---
+  // This function is now a simple synchronous stub wrapped in an IIAFE to test Babel parsing.
+  const generateSuggestions = async () => { // Keep async for consistent API signature for later reintroduction
     console.log("generateSuggestions is temporarily bypassed for build testing.");
-    setSuggestionError(""); // Reset error
-    setIsGeneratingSuggestions(false); // Stop loading state
-    // Reset suggested activities to empty to reflect no actual generation
-    setSuggestedActivities([]);
-    setSuggestedFoodLocations([]);
-    setSuggestedThemeParks([]);
-    setSuggestedTouristSpots([]);
-    setSuggestedTours([]);
-    setSuggestedSportingEvents([]);
-    // Return a basic mock response structure to prevent runtime errors if any part of the UI
-    // tries to access properties of the AI response that would otherwise be undefined.
-    // This is a minimal structure matching the AI schema for suggestions.
-    return { candidates: [{ content: { parts: [{ text: JSON.stringify({ activities: [], foodLocations: [], themeParks: [], touristSpots: [], tours: [], sportingEvents: [] }) }] } }] };
-  };
+    setSuggestionError("");
+    setIsGeneratingSuggestions(true); // Set true temporarily to trigger Loader, then immediately false
+
+    // Explicitly wrap the core logic in an IIAFE to isolate parsing
+    await (async () => { // Ensure this is async to use await inside
+        try {
+            // Simulate processing with a mock response (or fetch from mockApi if you choose)
+            const mockResponse = { candidates: [{ content: { parts: [{ text: JSON.stringify({ activities: [], foodLocations: [], themeParks: [], touristSpots: [], tours: [], sportingEvents: [] }) }] } }] };
+            
+            // Simulating parsing a response (even if it's from a local mock)
+            const jsonString = mockResponse.candidates[0].content.parts[0].text;
+            const parsedJson = JSON.parse(jsonString);
+
+            // Simulate setting states
+            setSuggestedActivities(parsedJson.activities || []);
+            setSuggestedFoodLocations(parsedJson.foodLocations || []);
+            setSuggestedThemeParks(parsedJson.themeParks || []);
+            setSuggestedTouristSpots(parsedJson.touristSpots || []);
+            setSuggestedTours(parsedJson.tours || []);
+            setSuggestedSportingEvents(parsedJson.sportingEvents || []);
+
+        } catch (error) {
+            console.error("Error generating suggestions (IIAFE minimal):", error);
+            setSuggestionError("A minimal error occurred while generating suggestions.");
+        } finally {
+            // This finally block belongs to the inner IIAFE
+        }
+    })(); // Immediately invoke the async function
+
+    // This finally block belongs to the outer generateSuggestions function
+    setIsGeneratingSuggestions(false);
+  }; // NO SEMICOLON (Letting ASI handle it correctly for `const fn = () => {};` syntax)
 
 
 const generateBudgetEstimates = async () => {
