@@ -291,28 +291,33 @@ function App() {
 
   // --- UPDATED: AI GENERATION FUNCTIONS (Richer Prompts & Schemas) ---
   const generateSuggestions = async () => {
-    if (countries.length === 0 && cities.length === 0) {
-      setSuggestionError("Please select at least one country or city to get suggestions.");
-      return;
+    setSuggestionError(""); // Keep this for reset
+    setIsGeneratingSuggestions(true); // Keep this for loading state
+
+    try {
+        // REMOVE ALL CODE HERE TEMPORARILY.
+        // Just add a dummy line.
+        console.log("Simulating API call success for suggestions.");
+        // Example of a minimal mock structure if needed:
+        const result = { candidates: [{ content: { parts: [{ text: JSON.stringify({ activities: [], foodLocations: [], themeParks: [], touristSpots: [], tours: [], sportingEvents: [] }) }] } }] };
+        // Simulate processing
+        const jsonString = result.candidates[0].content.parts[0].text;
+        const parsedJson = JSON.parse(jsonString);
+        // Simulate setting states:
+        setSuggestedActivities(parsedJson.activities || []);
+        setSuggestedFoodLocations(parsedJson.foodLocations || []);
+        setSuggestedThemeParks(parsedJson.themeParks || []);
+        setSuggestedTouristSpots(parsedJson.touristSpots || []);
+        setSuggestedTours(parsedJson.tours || []);
+        setSuggestedSportingEvents(parsedJson.sportingEvents || []);
+
+    } catch (error) {
+        console.error("Error generating suggestions (minimal):", error);
+        setSuggestionError("A minimal error occurred while generating suggestions.");
+    } finally {
+        setIsGeneratingSuggestions(false);
     }
-
-    setIsGeneratingSuggestions(true);
-    setSuggestionError('');
-
-    // Clear previous suggestions and selections
-    setSuggestedActivities([]);
-    setSuggestedFoodLocations([]);
-    setSuggestedThemeParks([]);
-    setSuggestedTouristSpots([]);
-    setSuggestedTours([]);
-    setSuggestedSportingEvents([]);
-    setSelectedSuggestedActivities([]);
-    setSelectedSuggestedFoodLocations([]);
-    setSelectedSuggestedThemeParks([]);
-    setSelectedSuggestedTouristSpots([]);
-    setSelectedSuggestedTours([]);
-    setSelectedSuggestedSportingEvents([]);
-
+}; // NO SEMICOLON
 
     const destinationPrompt = countries.length > 0 && cities.length > 0
       ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
