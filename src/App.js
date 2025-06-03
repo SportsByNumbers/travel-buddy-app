@@ -64,7 +64,7 @@ function App() {
   const [cities, setCities] = useState([]);
   const [newCity, setNewCity] = useState('');
   const [duration, setDuration] = useState(1);
-  const [starRating, setStarRating] = useState([]); // Changed to array for consistency with topics
+  const [starRating, setStarRating] = useState(''); // Changed to array for consistency with topics
   const [topicsOfInterest, setTopicsOfInterest] = useState([]);
   const [suggestedActivities, setSuggestedActivities] = useState([]);
   const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
@@ -432,7 +432,8 @@ function App() {
   } finally {
     setIsGeneratingSuggestions(false);
   }
-}; // REMOVED SEMICOLON (Letting ASI handle it as it normally should)
+}; // Removed semicolon after finally block to test ASI again.
+
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
@@ -885,7 +886,7 @@ const handleSaveTrip = async () => {
       homeCountry, homeCity, countries, cities, duration, starRating,
       topicsOfInterest,
       selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedTours, // DUPLICATE 'selectedSuggestedTours' here, was in previous code, fixed now below
+      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents, // FIXED: Removed duplicate 'selectedSuggestedTours'
       itineraryItems, // Save the actual itinerary items
       isPerPerson, numberOfPeople, // numberOfPeople is now a derived state
       partyMembers, // --- NEW: Save party members ---
