@@ -64,7 +64,7 @@ function App() {
   const [cities, setCities] = useState([]);
   const [newCity, setNewCity] = useState('');
   const [duration, setDuration] = useState(1);
-  const [starRating, setStarRating] = useState('');
+  const [starRating, setStarRating] = useState([]); // Changed to array for consistency with topics
   const [topicsOfInterest, setTopicsOfInterest] = useState([]);
   const [suggestedActivities, setSuggestedActivities] = useState([]);
   const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
@@ -325,13 +325,13 @@ function App() {
       : '';
 
     // --- UPDATED PROMPT: Requesting more structured details for suggestions ---
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} <span class="math-inline">\{topicsPrompt\}\.
-For each activity, tour, and sporting event, provide its "name", a brief "description" \(2\-3 sentences\), a simulated "estimated\_cost\_usd" \(realistic number, e\.g\., 20\-150\), and a "simulated\_booking\_link" \(e\.g\., "https\://www\.fakewebsite\.com/book/activity"\)\.
-For food locations, provide "name", "description", and a "simulated\_price\_range" \(e\.g\., "</span><span class="math-inline">", "</span><span class="math-block">"\)\.
-For theme parks and tourist spots, provide "name", "description", "location" \(city/area\), and "simulated\_estimated\_cost\_usd" if applicable\.
-Provide the response as a JSON object with keys\: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents"\. Each key's value should be an array of objects\.
-Example for activities\: \{ "name"\: "Hot Air Balloon Ride", "description"\: "Soar above the city at sunrise\.", "simulated\_estimated\_cost\_usd"\: 120, "simulated\_booking\_link"\: "https\://balloonrides\.com/book" \}\.
-Example for food\: \{ "name"\: "Sushi Heaven", "description"\: "Top\-rated sushi experience\.", "simulated\_price\_range"\: "</span>$" }.
+    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} ${topicsPrompt}.
+    For each activity, tour, and sporting event, provide its "name", a brief "description" (2-3 sentences), a simulated "estimated_cost_usd" (realistic number, e.g., 20-150), and a "simulated_booking_link" (e.g., "https://www.fakewebsite.com/book/activity").
+    For food locations, provide "name", "description", and a "simulated_price_range" (e.g., "$$", "$$$").
+    For theme parks and tourist spots, provide "name", "description", "location" (city/area), and "simulated_estimated_cost_usd" if applicable.
+    Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of objects.
+    Example for activities: { "name": "Hot Air Balloon Ride", "description": "Soar above the city at sunrise.", "simulated_estimated_cost_usd": 120, "simulated_booking_link": "https://balloonrides.com/book" }.
+    Example for food: { "name": "Sushi Heaven", "description": "Top-rated sushi experience.", "simulated_price_range": "$$$" }.
     Example for theme park: { "name": "Fantasy Land", "description": "Magical rides and shows.", "location": "Orlando", "simulated_estimated_cost_usd": 100 }.
     Ensure all fields are present in the JSON response.
     `;
@@ -432,8 +432,7 @@ Example for food\: \{ "name"\: "Sushi Heaven", "description"\: "Top\-rated sushi
   } finally {
     setIsGeneratingSuggestions(false);
   }
-}; // Removed semicolon after finally block to test ASI again.
-
+}; // REMOVED SEMICOLON (Letting ASI handle it as it normally should)
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
@@ -578,7 +577,8 @@ const generateBudgetEstimates = async () => {
   setBudgetError("An error occurred while generating budget estimates.");
 } finally {
   setIsGeneratingBudget(false);
-}; // <--- ADDED SEMICOLON HERE
+}
+}; // Removed semicolon after finally block to test ASI again.
 
 
 // --- MAIN TRAVEL PLAN CALCULATION (for final summary) ---
@@ -881,11 +881,11 @@ const handleSaveTrip = async () => {
   setSaveLoadMessage('Saving trip...');
   try {
     const tripToSave = {
-      name: `<span class="math-inline">\{cities\.length \> 0 ? cities\[0\] \: 'Unnamed'\} trip \(</span>{new Date().toLocaleDateString()})`, // Dynamic name
+      name: `${cities.length > 0 ? cities[0] : 'Unnamed'} trip (${new Date().toLocaleDateString()})`, // Dynamic name
       homeCountry, homeCity, countries, cities, duration, starRating,
       topicsOfInterest,
       selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedTours, // Duplicate 'selectedSuggestedTours'
+      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedTours, // DUPLICATE 'selectedSuggestedTours' here, was in previous code, fixed now below
       itineraryItems, // Save the actual itinerary items
       isPerPerson, numberOfPeople, // numberOfPeople is now a derived state
       partyMembers, // --- NEW: Save party members ---
@@ -1994,7 +1994,7 @@ return (
             <p className={summaryItemClass}><strong>Party Size:</strong> {travelPlanSummary.numberOfPeople} {travelPlanSummary.isPerPerson ? 'person(s)' : 'party'}
                 {travelPlanSummary.partyMembers && travelPlanSummary.partyMembers.length > 0 && (
                     <span className="ml-2 text-xs text-gray-500">
-                        ({travelPlanSummary.partyMembers.map(m => `Age: <span class="math-inline">\{m\.age\}</span>{m.gender !== 'Prefer not to say' ? ` (${m.gender})` : ''}`).join(', ')})
+                        ({travelPlanSummary.partyMembers.map(m => `Age: ${m.age}${m.gender !== 'Prefer not to say' ? ` (${m.gender})` : ''}`).join(', ')})
                     </span>
                 )}
             </p>
