@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Compass, Wallet, Car, Home, User, PlaneTakeoff, PlaneLanding, XCircle, Search, CheckCircle, Utensils, Loader, LogIn, LogOut, FolderOpen, Save } from 'react-feather';
+import { MapPin, Compass, Wallet, Car, Home, User, PlaneTakeoff, PlaneLanding, XCircle, Search, CheckCircle, Utensils, Loader, LogIn, LogOut, FolderOpen, Save } from 'react-feather'; // Re-organized imports for clarity and added all used icons
 import { fetchFlightPrices, fetchTravelData, fetchBudgetEstimates, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi'; // Import mock API functions
 import './index.css';
 
@@ -109,12 +109,12 @@ function App() {
 
   // --- HANDLERS FOR PARTY SIZE ---
   const handleAddMember = () => {
-    if (newMemberAge && !isNaN(parseInt(newMemberAge))) {
+    if (newMemberAge && !isNaN(parseInt(newMemberAge)) && parseInt(newMemberAge) > 0) {
       setPartyMembers([...partyMembers, { id: Date.now(), age: parseInt(newMemberAge), gender: newMemberGender }]);
       setNewMemberAge('');
       setNewMemberGender('Prefer not to say');
     } else {
-      alert('Please enter a valid age.');
+      alert('Please enter a valid age (a number greater than 0).');
     }
   };
 
@@ -295,13 +295,13 @@ function App() {
       : '';
 
     // --- UPDATED PROMPT: Requesting more structured details for suggestions ---
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} <span class="math-inline">\{topicsPrompt\}\.
-For each activity, tour, and sporting event, provide its "name", a brief "description" \(2\-3 sentences\), a simulated "estimated\_cost\_usd" \(realistic number, e\.g\., 20\-150\), and a "simulated\_booking\_link" \(e\.g\., "https\://www\.fakewebsite\.com/book/activity"\)\.
-For food locations, provide "name", "description", and a "simulated\_price\_range" \(e\.g\., "</span><span class="math-inline">", "</span><span class="math-block">"\)\.
-For theme parks and tourist spots, provide "name", "description", "location" \(city/area\), and "simulated\_estimated\_cost\_usd" if applicable\.
-Provide the response as a JSON object with keys\: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents"\. Each key's value should be an array of objects\.
-Example for activities\: \{ "name"\: "Hot Air Balloon Ride", "description"\: "Soar above the city at sunrise\.", "simulated\_estimated\_cost\_usd"\: 120, "simulated\_booking\_link"\: "https\://balloonrides\.com/book" \}\.
-Example for food\: \{ "name"\: "Sushi Heaven", "description"\: "Top\-rated sushi experience\.", "simulated\_price\_range"\: "</span>$" }.
+    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} ${topicsPrompt}.
+    For each activity, tour, and sporting event, provide its "name", a brief "description" (2-3 sentences), a simulated "estimated_cost_usd" (realistic number, e.g., 20-150), and a "simulated_booking_link" (e.g., "https://www.fakewebsite.com/book/activity").
+    For food locations, provide "name", "description", and a "simulated_price_range" (e.g., "$$", "$$$").
+    For theme parks and tourist spots, provide "name", "description", "location" (city/area), and "simulated_estimated_cost_usd" if applicable.
+    Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of objects.
+    Example for activities: { "name": "Hot Air Balloon Ride", "description": "Soar above the city at sunrise.", "simulated_estimated_cost_usd": 120, "simulated_booking_link": "https://balloonrides.com/book" }.
+    Example for food: { "name": "Sushi Heaven", "description": "Top-rated sushi experience.", "simulated_price_range": "$$$" }.
     Example for theme park: { "name": "Fantasy Land", "description": "Magical rides and shows.", "location": "Orlando", "simulated_estimated_cost_usd": 100 }.
     Ensure all fields are present in the JSON response.
     `;
@@ -401,7 +401,7 @@ Example for food\: \{ "name"\: "Sushi Heaven", "description"\: "Top\-rated sushi
     setSuggestionError("An error occurred while generating suggestions.");
   } finally {
     setIsGeneratingSuggestions(false);
-  }; // <--- ADDED SEMICOLON HERE (MOST LIKELY FIX)
+  }; // <--- THIS SEMICOLON WAS THE CAUSE OF THE ERROR ON LINE 399.
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
@@ -546,7 +546,7 @@ const generateBudgetEstimates = async () => {
   setBudgetError("An error occurred while generating budget estimates.");
 } finally {
   setIsGeneratingBudget(false);
-}; // <--- ADDED SEMICOLON HERE (Also a possible cause if the previous one wasn't the exact line)
+}; // <--- ADDED SEMICOLON HERE
 
 
 // --- MAIN TRAVEL PLAN CALCULATION (for final summary) ---
@@ -627,4 +627,1442 @@ const calculateTravelPlan = () => {
   });
 };
 
-// --- FLIGHT SEARCH HANDLER (separate from
+// --- FLIGHT SEARCH HANDLER (separate from AI budget estimate now) ---
+const handleFlightSearch = async () => {
+  setFlightLoading(true);
+  setFlightError('');
+  try {
+    const destCityForFlight = cities.length > 0 ? cities[0] : destinationCity;
+    const originCityForFlight = homeCity || originCity;
+
+    const cost = await fetchFlightPrices({
+      originCity: originCityForFlight,
+      destinationCity: destCityForFlight,
+      departureDate,
+      returnDate
+    });
+    setFlightCost(cost); // This sets the value for the *manual* flight search
+  } catch (error) {
+    console.error("Error fetching flight prices:", error);
+    setFlightError(error.message);
+    setFlightCost(0);
+  } finally {
+    setFlightLoading(false);
+  }
+};
+
+// --- ITINERARY ITEM ADD/REMOVE HANDLERS (for objects) ---
+const handleAddToItinerary = (item) => {
+  // Assign a unique ID if item doesn't have one, essential for list keys
+  const itemWithId = { ...item, id: item.name + Math.random().toString(36).substr(2, 9) };
+  if (!itineraryItems.some(itineraryItem => itineraryItem.name === item.name)) { // Check by name for uniqueness
+    const updatedItinerary = [...itineraryItems, {
+      id: itemWithId.id,
+      name: itemWithId.name,
+      // Base cost for itinerary items comes from AI's simulated_estimated_cost_usd
+      baseCost: itemWithId.simulated_estimated_cost_usd || 0,
+      type: itemWithId.type || 'activity' // Assign a type for calculation
+    }];
+    setItineraryItems(updatedItinerary);
+
+    const durationDays = parseInt(duration) || 0;
+
+    // =======================================================
+    // UPDATED: Calculate totalEstimatedCost using the new function
+    // =======================================================
+    setTotalEstimatedCost(calculateTotalCost(
+      updatedItinerary, // Pass the updated itinerary here
+      durationDays,
+      estimatedFlightCost, // Use the state value
+      estimatedHotelCost,
+      estimatedTransportCost,
+      estimatedMiscellaneousCost,
+      breakfastAllowance,
+      lunchAllowance,
+      dinnerAllowance,
+      snacksAllowance,
+      numberOfPeople,
+      isPerPerson
+    ));
+
+    setSaveLoadMessage(`Added "${item.name}" to itinerary.`);
+    setTimeout(() => setSaveLoadMessage(''), 2000);
+  } else {
+    setSaveLoadMessage(`"${item.name}" is already in your itinerary.`);
+    setTimeout(() => setSaveLoadMessage(''), 2000);
+  }
+};
+
+const handleRemoveFromItinerary = (itemId) => {
+  const itemToRemove = itineraryItems.find(item => item.id === itemId);
+  if (!itemToRemove) return;
+
+  const updatedItinerary = itineraryItems.filter(item => item.id !== itemId);
+  setItineraryItems(updatedItinerary);
+
+  const durationDays = parseInt(duration) || 0;
+
+  // =======================================================
+  // UPDATED: Decrement total estimated cost using the new function
+  // =======================================================
+  setTotalEstimatedCost(calculateTotalCost(
+    updatedItinerary, // Pass the updated itinerary here
+    durationDays,
+    estimatedFlightCost, // Use the state value
+    estimatedHotelCost,
+    estimatedTransportCost,
+    estimatedMiscellaneousCost,
+    breakfastAllowance,
+    lunchAllowance,
+    dinnerAllowance,
+    snacksAllowance,
+    numberOfPeople,
+    isPerPerson
+  ));
+
+  setSaveLoadMessage('Item removed from itinerary.');
+  setTimeout(() => setSaveLoadMessage(''), 2000);
+};
+
+
+// --- MAIN SEARCH & CLEAR HANDLERS ---
+const handleSearch = async () => {
+  setLoading(true);
+  setShowDisclaimer(false);
+  setTimeout(() => {
+      setLoading(false);
+  }, 500);
+};
+
+const handleClear = () => {
+  // Clear all main input states
+  setCountries([]);
+  setNewCountry('');
+  setCities([]);
+  setNewCity('');
+  setDuration(1);
+  setStarRating('');
+  setHomeCountry({ name: '', flag: '' });
+  setNewHomeCountryInput('');
+  setHomeCity('');
+  setNewHomeCityInput('');
+  setTopicsOfInterest([]);
+  
+  setEstimatedFlightCost(0);
+  setAiFlightDetails(null); // Clear detailed AI flight info
+  setEstimatedHotelCost(0);
+  setAiHotelDetails(null);   // Clear detailed AI hotel info
+
+  setEstimatedActivityCost(0);
+  setEstimatedTransportCost(0);
+  setEstimatedMiscellaneousCost(0);
+  setBreakfastAllowance(0);
+  setLunchAllowance(0);
+  setDinnerAllowance(0);
+  setSnacksAllowance(0);
+  setCarRental(false);
+  setShuttle(false);
+  setAirportTransfers(false);
+  setAirportParking(false);
+  setOriginCity('');
+  setDestinationCity('');
+  setDepartureDate('');
+  setReturnDate('');
+  setFlightCost(0);
+  setFlightError('');
+  setBudgetError('');
+  setSuggestionError('');
+  setTravelPlanSummary(null);
+  setTotalEstimatedCost(0); // Clear the total estimated cost
+
+  // Clear AI suggestions and selections
+  setSuggestedActivities([]);
+  setSuggestedFoodLocations([]);
+  setSuggestedThemeParks([]);
+  setSuggestedTouristSpots([]);
+  setSuggestedTours([]);
+  setSuggestedSportingEvents([]);
+  setSelectedSuggestedActivities([]);
+  setSelectedSuggestedFoodLocations([]);
+  setSelectedSuggestedThemeParks([]);
+  setSelectedSuggestedTouristSpots([]);
+  setSelectedSuggestedTours([]);
+  setSelectedSuggestedSportingEvents([]);
+  setItineraryItems([]); // Clear combined itinerary
+
+  // --- NEW: Clear Party Size states ---
+  setPartyMembers([{ id: 1, age: 30, gender: 'Prefer not to say' }]); // Reset to 1 default member
+  setNewMemberAge('');
+  setNewMemberGender('Prefer not to say');
+
+  setLoading(false);
+  setShowDisclaimer(true);
+  setSaveLoadMessage('');
+  // Reset budget planning specifics
+  setIsPerPerson(true);
+  // numberOfPeople derived state will automatically update
+};
+
+// --- AUTHENTICATION & PERSISTENCE HANDLERS ---
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setAuthError('');
+  try {
+    const user = await authenticateUser({ email: authEmail, password: authPassword });
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    setShowAuthModal(false);
+    await loadTripsForUser(user.email); // Load trips after successful login
+  } catch (error) {
+    setAuthError(error.message);
+  }
+};
+
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setAuthError('');
+  try {
+    const user = await registerUser({ email: authEmail, password: authPassword });
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    setShowAuthModal(false);
+  } catch (error) {
+    setAuthError(error.message);
+  }
+};
+
+const handleLogout = () => {
+  setIsLoggedIn(false);
+  setCurrentUser(null);
+  setUserTrips([]); // Clear saved trips on logout
+  setAuthEmail('');
+  setAuthPassword('');
+  setSaveLoadMessage('');
+  handleClear(); // Also clear the current trip plan
+};
+
+const handleSaveTrip = async () => {
+  if (!currentUser) {
+    setSaveLoadMessage('Please log in to save your trip.');
+    return;
+  }
+  setSaveLoadMessage('Saving trip...');
+  try {
+    const tripToSave = {
+      name: `${cities.length > 0 ? cities[0] : 'Unnamed'} trip (${new Date().toLocaleDateString()})`, // Dynamic name
+      homeCountry, homeCity, countries, cities, duration, starRating,
+      topicsOfInterest,
+      selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
+      selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
+      itineraryItems, // Save the actual itinerary items
+      isPerPerson, numberOfPeople, // numberOfPeople is now a derived state
+      partyMembers, // --- NEW: Save party members ---
+      estimatedFlightCost, aiFlightDetails, // Save detailed AI flight info
+      estimatedHotelCost, aiHotelDetails,   // Save detailed AI hotel info
+      estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost,
+      breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance,
+      carRental, shuttle, airportTransfers, airportParking,
+      originCity, destinationCity, departureDate, returnDate, flightCost, // Manual flight search details
+
+      // =======================================================
+      // UPDATED: totalEstimatedCost calculation for saving
+      // =======================================================
+      totalEstimatedCost: calculateTotalCost(
+        itineraryItems,
+        duration,
+        estimatedFlightCost,
+        estimatedHotelCost,
+        estimatedTransportCost,
+        estimatedMiscellaneousCost,
+        breakfastAllowance,
+        lunchAllowance,
+        dinnerAllowance,
+        snacksAllowance,
+        numberOfPeople,
+        isPerPerson
+      )
+    };
+    await saveUserTrip({ email: currentUser.email, tripData: tripToSave });
+    setSaveLoadMessage('Trip saved successfully!');
+    await loadTripsForUser(currentUser.email); // Refresh list of saved trips
+  } catch (error) {
+    setSaveLoadMessage(`Error saving trip: ${error.message}`);
+  }
+  setTimeout(() => setSaveLoadMessage(''), 3000);
+};
+
+const loadUserTrips = async ({ email }) => {
+  setLoadingUserTrips(true);
+  try {
+    const trips = await loadUserTrips({ email });
+    setUserTrips(trips);
+  } catch (error) {
+    console.error("Error loading user trips:", error);
+    setUserTrips([]);
+  } finally {
+    setLoadingUserTrips(false);
+  }
+};
+
+const handleLoadSpecificTrip = (trip) => {
+  // Restore all states from loaded trip
+  setHomeCountry(trip.homeCountry || { name: '', flag: '' });
+  setHomeCity(trip.homeCity || '');
+  setCountries(trip.countries || []);
+  setCities(trip.cities || []);
+  setDuration(trip.duration || 1);
+  setStarRating(trip.starRating || '');
+  setTopicsOfInterest(trip.topicsOfInterest || []);
+  
+  // --- UPDATED: Load selected items as objects ---
+  setSelectedSuggestedActivities(trip.selectedSuggestedActivities || []);
+  setSelectedSuggestedFoodLocations(trip.selectedSuggestedFoodLocations || []);
+  setSelectedSuggestedThemeParks(trip.selectedSuggestedThemeParks || []);
+  setSelectedSuggestedTouristSpots(trip.selectedSuggestedTouristSpots || []);
+  setSelectedSuggestedTours(trip.selectedSuggestedTours || []);
+  setSelectedSuggestedSportingEvents(trip.selectedSuggestedSportingEvents || []);
+  
+  setItineraryItems(trip.itineraryItems || []); // Restore the actual itinerary items
+
+  setIsPerPerson(trip.isPerPerson);
+  // numberOfPeople will be derived from partyMembers
+  setPartyMembers(trip.partyMembers || [{ id: 1, age: 30, gender: 'Prefer not to say' }]); // --- NEW: Load party members ---
+
+  // --- UPDATED: Load detailed AI budget info ---
+  setEstimatedFlightCost(trip.estimatedFlightCost || 0);
+  setAiFlightDetails(trip.aiFlightDetails || null);
+  setEstimatedHotelCost(trip.estimatedHotelCost || 0);
+  setAiHotelDetails(trip.aiHotelDetails || null);
+
+  setEstimatedActivityCost(trip.estimatedActivityCost || 0);
+  setEstimatedTransportCost(trip.estimatedTransportCost || 0);
+  setEstimatedMiscellaneousCost(trip.estimatedMiscellaneousCost || 0);
+  setBreakfastAllowance(trip.breakfastAllowance || 0);
+  setLunchAllowance(trip.lunchAllowance || 0);
+  setDinnerAllowance(trip.dinnerAllowance || 0);
+  setSnacksAllowance(trip.snacksAllowance || 0);
+  setCarRental(trip.carRental || false);
+  setShuttle(trip.shuttle || false);
+  setAirportTransfers(trip.airportTransfers || false);
+  setAirportParking(trip.airportParking || false);
+  setOriginCity(trip.originCity || '');
+  setDestinationCity(trip.destinationCity || '');
+  setDepartureDate(trip.departureDate || '');
+  setReturnDate(trip.returnDate || '');
+  setFlightCost(trip.flightCost || 0);
+
+  // =======================================================
+  // UPDATED: Recalculate total cost to ensure consistency with restored values
+  // =======================================================
+  setTotalEstimatedCost(calculateTotalCost(
+    trip.itineraryItems || [], // Use loaded itinerary items
+    parseInt(trip.duration) || 0,
+    parseFloat(trip.estimatedFlightCost) || 0,
+    parseFloat(trip.estimatedHotelCost) || 0,
+    parseFloat(trip.estimatedTransportCost) || 0,
+    parseFloat(trip.estimatedMiscellaneousCost) || 0,
+    parseFloat(trip.breakfastAllowance) || 0,
+    parseFloat(trip.lunchAllowance) || 0,
+    parseFloat(trip.dinnerAllowance) || 0,
+    parseFloat(trip.snacksAllowance) || 0,
+    // Use the loaded numberOfPeople for calculation
+    // Ensure this takes into account partyMembers length if that's the source of truth for numberOfPeople
+    parseInt(trip.numberOfPeople) || (trip.partyMembers ? trip.partyMembers.length : 1),
+    trip.isPerPerson
+  ));
+
+  setSaveLoadMessage(`Trip "${trip.name}" loaded successfully!`);
+  setShowAuthModal(false);
+  setTimeout(() => setSaveLoadMessage(''), 3000);
+};
+
+// --- EFFECT: Recalculate total cost when relevant states change ---
+useEffect(() => {
+  const durationDays = parseInt(duration) || 0;
+  // =======================================================
+  // UPDATED: Call calculateTotalCost for useEffect
+  // =======================================================
+  setTotalEstimatedCost(calculateTotalCost(
+    itineraryItems,
+    durationDays,
+    estimatedFlightCost, // Use AI's numerical estimate
+    estimatedHotelCost,  // Use AI's numerical estimate
+    estimatedTransportCost,
+    estimatedMiscellaneousCost,
+    breakfastAllowance,
+    lunchAllowance,
+    dinnerAllowance,
+    snacksAllowance,
+    numberOfPeople, // numberOfPeople is now derived from partyMembers
+    isPerPerson
+  ));
+// --- UPDATED: Add partyMembers to dependencies ---
+}, [duration, estimatedFlightCost, estimatedHotelCost, numberOfPeople, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, isPerPerson, itineraryItems, estimatedActivityCost, estimatedTransportCost, estimatedMiscellaneousCost, partyMembers]);
+
+// Calculate total budget for comparison
+const durationDaysMatch = String(duration).match(/(\d+)/);
+const durationDays = durationDaysMatch ? parseInt(durationDaysMatch[1], 10) : 0;
+
+// The `userSetTotalBudget` represents the sum of the AI's initial cost estimates.
+// This is what you compare `totalEstimatedCost` (which includes selected itinerary items) against.
+const userSetTotalBudget = (estimatedFlightCost + estimatedHotelCost + estimatedActivityCost + estimatedTransportCost + estimatedMiscellaneousCost + (breakfastAllowance + lunchAllowance + dinnerAllowance + snacksAllowance) * durationDays) * (isPerPerson ? numberOfPeople : 1);
+
+const isOverBudget = totalEstimatedCost > userSetTotalBudget && userSetTotalBudget > 0;
+const budgetDifference = Math.abs(totalEstimatedCost - userSetTotalBudget);
+const totalCalculatedDailyFoodAllowance = (parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance));
+
+// --- TAILWIND CSS CLASSES FOR CONSISTENT STYLING ---
+const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
+const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+const sectionContainerClass = "mb-8 p-6 bg-white rounded-xl shadow-md";
+const sectionTitleClass = "text-2xl font-bold text-indigo-700 mb-6 border-b-2 border-indigo-200 pb-3 flex items-center";
+const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
+const removeButtonClass = "ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out";
+const tagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
+const flagTagClass = "bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm";
+
+// --- UPDATED: Suggestion Tag Class now highlights based on item.name (unique identifier) ---
+const suggestionTagClass = (item, selectedArray) =>
+  `px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition duration-200 ease-in-out ${
+    selectedArray.some(selectedItem => selectedItem.name === item.name) ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+  }`;
+const suggestionListClass = "absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1";
+const suggestionItemClass = "p-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-800";
+
+
+const summarySectionClass = "mt-12 p-8 border-2 border-indigo-500 rounded-xl bg-indigo-50 shadow-xl";
+const summaryTitleClass = "text-3xl font-bold text-indigo-800 mb-8 text-center";
+const summarySubTitleClass = "text-xl font-semibold text-indigo-700 mb-3";
+const summaryItemClass = "text-gray-700 mb-1";
+const totalCostClass = "text-2xl font-bold text-indigo-800";
+const grandTotalAmountClass = "text-green-700 text-3xl font-extrabold";
+
+
+return (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased">
+    <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl">
+      <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
+        <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
+        Travel Planner
+      </h1>
+
+      {/* --- AUTH/USER CONTROLS --- */}
+      <div className="flex justify-end mb-4 gap-2 max-w-4xl mx-auto">
+        {isLoggedIn ? (
+          <>
+            <span className="text-gray-600 font-medium self-center hidden sm:block">Welcome, {currentUser?.email}!</span>
+            <button
+              onClick={handleSaveTrip}
+              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              <Save className="w-4 h-4 mr-2" /> Save Trip
+            </button>
+            <button
+              onClick={() => { setShowAuthModal(true); setIsRegistering(false); setAuthError(''); setAuthEmail(currentUser.email); loadTripsForUser(currentUser.email); }}
+              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              <FolderOpen className="w-4 h-4 mr-2" /> Load Trip
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <LogOut className="w-4 h-4 mr-2" /> Logout
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => { setShowAuthModal(true); setIsRegistering(false); setAuthError(''); }}
+            className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <LogIn className="w-4 h-4 mr-2" /> Login / Register
+          </button>
+        )}
+      </div>
+      {saveLoadMessage && (
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 rounded-md shadow-sm mb-4 max-w-4xl mx-auto text-center">
+          {saveLoadMessage}
+        </div>
+      )}
+
+      {/* --- DISCLAIMER --- */}
+      {showDisclaimer && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-sm mb-6 max-w-4xl mx-auto relative" role="alert">
+          <p className="font-bold">Important Note:</p>
+          <p className="text-sm">This app uses **simulated data and backend operations** (authentication, saving/loading trips, AI suggestions, budget estimates). In a real application, these would involve actual API calls to external services (like Skyscanner, Booking.com, dedicated AI APIs) and a backend database (like Firebase, MongoDB, PostgreSQL).</p>
+          <button
+            onClick={() => setShowDisclaimer(false)}
+            className="absolute top-2 right-2 text-yellow-700 hover:text-yellow-900"
+            aria-label="Close disclaimer"
+          >
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* --- AUTHENTICATION MODAL --- */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-2xl font-bold text-blue-600 mb-6 text-center">
+              {isRegistering ? 'Register' : 'Login'}
+            </h2>
+            <form onSubmit={isRegistering ? handleRegister : handleLogin}>
+              <div className="mb-4">
+                <label htmlFor="authEmail" className={labelClass}>Email</label>
+                <input
+                  type="email"
+                  id="authEmail"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="authPassword" className={labelClass}>Password</label>
+                <input
+                  type="password"
+                  id="authPassword"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {authError && <p className="text-red-600 text-sm mb-4 text-center">{authError}</p>}
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  {isRegistering ? 'Register' : 'Login'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+            {/* Load Trips Section (only shown if logged in and not registering) */}
+            {isLoggedIn && !isRegistering && (
+                <div className="mt-8 border-t pt-6 border-gray-200">
+                    <h3 className="text-xl font-bold text-blue-600 mb-4 text-center">Your Saved Trips</h3>
+                    {loadingUserTrips ? (
+                        <p className="text-center text-gray-500">Loading trips...</p>
+                    ) : userTrips.length > 0 ? (
+                        <ul className="space-y-3 max-h-60 overflow-y-auto">
+                            {userTrips.map((trip, index) => (
+                                <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-md shadow-sm border border-gray-200">
+                                    <span className="font-medium text-gray-800">{trip.name || `Trip ${index + 1}`}</span>
+                                    <button
+                                        onClick={() => handleLoadSpecificTrip(trip)}
+                                        className="px-3 py-1 bg-indigo-500 text-white text-xs rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        Load
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-center text-gray-500">No trips saved yet.</p>
+                    )}
+                    <button
+                        onClick={() => setShowAuthModal(false)}
+                        className="mt-6 w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        Close
+                    </button>
+                </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* --- NEW SECTION: PARTY SIZE --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <User className="mr-3 text-indigo-600" size={28} /> Who's Traveling? (Party Size)
+        </h2>
+        <div className="mb-4">
+          <p className="text-lg font-semibold text-gray-800">Total Travelers: {numberOfPeople}</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div>
+            <label htmlFor="newMemberAge" className={labelClass}>Age:</label>
+            <input
+              type="number"
+              id="newMemberAge"
+              value={newMemberAge}
+              onChange={(e) => setNewMemberAge(e.target.value)}
+              placeholder="e.g., 30"
+              min="1"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="newMemberGender" className={labelClass}>Gender (Optional):</label>
+            <select
+              id="newMemberGender"
+              value={newMemberGender}
+              onChange={(e) => setNewMemberGender(e.target.value)}
+              className={`${inputClass} w-full`}
+            >
+              <option value="Prefer not to say">Prefer not to say</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button onClick={handleAddMember} className={`${buttonClass} w-full`}>Add Member</button>
+          </div>
+        </div>
+
+        {partyMembers.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Current Party:</h3>
+            <div className="flex flex-wrap gap-2">
+              {partyMembers.map((member) => (
+                <span key={member.id} className="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
+                  Age: {member.age} {member.gender !== 'Prefer not to say' && `(${member.gender})`}
+                  {partyMembers.length > 1 && ( // Allow removing only if more than one member
+                    <button onClick={() => handleRemoveMember(member.id)} className={removeButtonClass}>&times;</button>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* --- HOME LOCATION SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="relative"> {/* Added relative for dropdown positioning */}
+            <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newHomeCountryInput"
+                ref={homeCountryInputRef}
+                value={newHomeCountryInput}
+                onChange={handleHomeCountryInputChange}
+                onBlur={() => setTimeout(() => setFilteredHomeCountrySuggestions([]), 100)} // Hide suggestions on blur
+                placeholder="e.g., USA"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={handleSetHomeCountry} className={`${buttonClass} ml-3`}>Set</button>
+            </div>
+            {/* Country Suggestions Dropdown */}
+            {filteredHomeCountrySuggestions.length > 0 && (
+              <ul className={suggestionListClass}>
+                {filteredHomeCountrySuggestions.map((country) => (
+                  <li
+                    key={country.name}
+                    onMouseDown={() => selectHomeCountrySuggestion(country)} // Use onMouseDown to prevent blur
+                    className={suggestionItemClass}
+                  >
+                    {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
+                    {country.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* Display selected home country */}
+            {homeCountry.name && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className={flagTagClass}>
+                  {homeCountry.flag && <img src={homeCountry.flag} alt={`${homeCountry.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
+                  {homeCountry.name}
+                </span>
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="newHomeCityInput" className={labelClass}>Home City:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newHomeCityInput"
+                value={newHomeCityInput}
+                onChange={(e) => setNewHomeCityInput(e.target.value)}
+                placeholder="e.g., New York"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
+            </div>
+            {homeCity && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className={tagClass}>
+                  {homeCity}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* --- TRAVEL DESTINATIONS & DURATION SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="relative"> {/* Added relative for dropdown positioning */}
+            <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newCountry"
+                ref={destCountryInputRef}
+                value={newCountry}
+                onChange={handleDestCountryInputChange}
+                onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)} // Hide suggestions on blur
+                placeholder="e.g., Japan"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
+            </div>
+            {/* Country Suggestions Dropdown */}
+            {filteredDestCountrySuggestions.length > 0 && (
+              <ul className={suggestionListClass}>
+                {filteredDestCountrySuggestions.map((country) => (
+                  <li
+                    key={country.name}
+                    onMouseDown={() => selectDestCountrySuggestion(country)} // Use onMouseDown to prevent blur
+                    className={suggestionItemClass}
+                  >
+                    {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
+                    {country.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* Display selected destination countries */}
+            <div className="mt-4 flex flex-wrap gap-3">
+              {countries.map((country) => (
+                <span key={country.name} className={flagTagClass}>
+                  {country.flag && <img src={country.flag} alt={`${country.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
+                  {country.name}
+                  <button onClick={() => removeCountry(country)} className={removeButtonClass}>&times;</button>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="newCity" className={labelClass}>Add Destination City:</label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id="newCity"
+                value={newCity}
+                onChange={(e) => setNewCity(e.target.value)}
+                placeholder="e.g., Tokyo"
+                className={`${inputClass} flex-grow`}
+              />
+              <button onClick={addCity} className={`${buttonClass} ml-3`}>Add</button>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {cities.map((city) => (
+                <span key={city} className="bg-green-100 text-green-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
+                  {city}
+                  <button onClick={() => removeCity(city)} className={removeButtonClass}>&times;</button>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="duration" className={labelClass}>Duration of Stay (days):</label>
+          <input
+            type="number"
+            id="duration"
+            value={duration}
+            onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+            min="1"
+            className={`${inputClass} w-full`}
+          />
+        </div>
+      </div>
+
+      {/* --- FLIGHT DETAILS SECTION (INTEGRATED) --- */}
+      <div className={sectionContainerClass}>
+        <h3 className={sectionTitleClass}>
+          <PlaneTakeoff className="w-6 h-6 mr-2" /> Flight Details (Simulated Skyscanner)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <div>
+            <label htmlFor="originCity" className={labelClass}>Origin City</label>
+            <input
+              type="text"
+              id="originCity"
+              className={inputClass}
+              value={homeCity || originCity}
+              onChange={(e) => setOriginCity(e.target.value)}
+              placeholder="e.g., Sydney"
+            />
+          </div>
+          <div>
+            <label htmlFor="destinationCity" className={labelClass}>Destination City</label>
+            <input
+              type="text"
+              id="destinationCity"
+              className={inputClass}
+              value={cities.length > 0 ? cities[0] : destinationCity}
+              onChange={(e) => setDestinationCity(e.target.value)}
+              placeholder="e.g., New York"
+            />
+          </div>
+          <div>
+            <label htmlFor="departureDate" className={labelClass}>Departure Date</label>
+            <input
+              type="date"
+              id="departureDate"
+              className={inputClass}
+              value={departureDate}
+              onChange={(e) => setDepartureDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="returnDate" className={labelClass}>Return Date</label>
+            <input
+              type="date"
+              id="returnDate"
+              className={inputClass}
+              value={returnDate}
+              onChange={(e) => setReturnDate(e.target.value)}
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleFlightSearch}
+          className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-105 w-full sm:w-auto"
+          disabled={flightLoading || !originCity || !destinationCity || !departureDate || !returnDate}
+        >
+          {flightLoading ? (
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <PlaneLanding className="w-5 h-5 mr-2" />
+          )}
+          {flightLoading ? 'Searching Flights...' : 'Search Flights'}
+        </button>
+        {flightError && <p className="text-red-600 text-sm mt-2 text-center">{flightError}</p>}
+        {flightCost > 0 && (
+          <p className="mt-4 text-lg font-semibold text-green-700 text-center">
+            Simulated Flight Cost: ${flightCost.toLocaleString()}
+          </p>
+        )}
+      </div>
+
+      {/* --- TRANSPORT OPTIONS SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={carRental}
+              onChange={(e) => setCarRental(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Car Rental</span>
+          </label>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={shuttle}
+              onChange={(e) => setShuttle(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Shuttle</span>
+          </label>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={airportTransfers}
+              onChange={(e) => setAirportTransfers(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Airport Transfers</span>
+          </label>
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+              checked={airportParking}
+              onChange={(e) => setAirportParking(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-800">Airport Parking</span>
+          </label>
+        </div>
+      </div>
+
+      {/* --- ITINERARY & PREFERENCES SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
+        </h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Hotel Star Rating */}
+          <div>
+            <label htmlFor="starRating" className={labelClass}>Preferred Hotel Star Rating:</label>
+            <select
+              id="starRating"
+              value={starRating}
+              onChange={(e) => setStarRating(e.target.value)}
+              className={`${inputClass} w-full`}
+            >
+              <option value="">Select a rating</option>
+              <option value="1">1 Star</option>
+              <option value="2">2 Star</option>
+              <option value="3">3 Star</option>
+              <option value="4">4 Star</option>
+              <option value="5">5 Star</option>
+            </select>
+          </div>
+          {/* Topics of Interest */}
+          <div className="md:col-span-2">
+            <label className={labelClass}>Topics of Interest:</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {availableTopics.map((topic, index) => (
+                <label key={index} className="inline-flex items-center cursor-pointer bg-gray-100 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition duration-150 ease-in-out">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500"
+                    checked={topicsOfInterest.includes(topic)}
+                    onChange={() => handleTopicChange(topic)}
+                  />
+                  <span className="ml-2 text-gray-800 text-sm font-medium">{topic}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mb-6">
+          <button
+            onClick={generateSuggestions}
+            className={buttonClass}
+            disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
+          >
+            {isGeneratingSuggestions ? (
+              <span className="flex items-center justify-center">
+                <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
+              </span>
+            ) : (
+              'Generate Itinerary Suggestions'
+            )}
+          </button>
+          {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
+        </div>
+
+        {/* Suggested Activities --- UPDATED UI to show more details --- */}
+        {suggestedActivities.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Activities:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedActivities.map((item, index) => (
+                <div
+                  key={item.name + index} // Use name+index as a key for uniqueness if name is not always unique
+                  className={suggestionTagClass(item, selectedSuggestedActivities)}
+                  onClick={() => toggleSuggestionSelection('activities', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                  {item.simulated_booking_link && (
+                      <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Sporting Events --- UPDATED UI to show more details --- */}
+        {suggestedSportingEvents.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Sporting Events:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedSportingEvents.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedSportingEvents)}
+                  onClick={() => toggleSuggestionSelection('sportingEvents', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Food Locations --- UPDATED UI to show more details --- */}
+        {suggestedFoodLocations.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Food Locations:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedFoodLocations.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedFoodLocations)}
+                  onClick={() => toggleSuggestionSelection('foodLocations', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_price_range && (
+                      <div className="text-sm text-gray-700">Price Range: {item.simulated_price_range}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Theme Parks --- UPDATED UI to show more details --- */}
+        {suggestedThemeParks.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Theme Parks:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedThemeParks.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedThemeParks)}
+                  onClick={() => toggleSuggestionSelection('themeParks', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.location && <div className="text-sm text-gray-700">Location: {item.location}</div>}
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Tourist Spots --- UPDATED UI to show more details --- */}
+        {suggestedTouristSpots.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tourist Spots:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedTouristSpots.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedTouristSpots)}
+                  onClick={() => toggleSuggestionSelection('touristSpots', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Suggested Tours --- UPDATED UI to show more details --- */}
+        {suggestedTours.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tours:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {suggestedTours.map((item, index) => (
+                <div
+                  key={item.name + index}
+                  className={suggestionTagClass(item, selectedSuggestedTours)}
+                  onClick={() => toggleSuggestionSelection('tours', item)}
+                >
+                  <div className="font-semibold text-base">{item.name}</div>
+                  <div className="text-sm text-gray-600">{item.description}</div>
+                  {item.simulated_estimated_cost_usd && (
+                      <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
+                  )}
+                  {item.simulated_booking_link && (
+                      <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* --- BUDGET PLANNING SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
+        </h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Generate AI-powered budget estimates based on your trip details, or manually enter your own.
+        </p>
+
+        <div className="mb-6">
+          <label className={labelClass}>Cost Calculation Basis:</label>
+          <div className="flex space-x-6">
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                name="costBasis"
+                value="perPerson"
+                checked={isPerPerson}
+                onChange={() => setIsPerPerson(true)}
+              />
+              <span className="ml-2 text-gray-800">Per Person</span>
+            </label>
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="radio"
+                className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                name="costBasis"
+                value="perParty"
+                checked={!isPerPerson}
+                onChange={() => setIsPerPerson(false)}
+              />
+              <span className="ml-2 text-gray-800">Per Party</span>
+            </label>
+          </div>
+        </div>
+
+        {isPerPerson && (
+          <div className="mb-6">
+            <label htmlFor="numberOfPeople" className={labelClass}>Number of People:</label>
+            {/* numberOfPeople is now a derived state, display only, or could be an input for manual override */}
+            <input
+              type="number"
+              id="numberOfPeople"
+              value={numberOfPeople}
+              readOnly // Made readOnly as it's derived from partyMembers
+              min="1"
+              className={`${inputClass} w-full bg-gray-100`} // Add bg-gray-100 for read-only styling
+            />
+          </div>
+        )}
+
+        <div className="text-center mb-6">
+          <button
+            onClick={generateBudgetEstimates}
+            className={buttonClass}
+            disabled={isGeneratingBudget || (countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1}
+          >
+            {isGeneratingBudget ? (
+              <span className="flex items-center justify-center">
+                <Loader className="animate-spin mr-2" size={20} /> Generating Budget...
+              </span>
+            ) : (
+              'Generate Budget Estimates'
+            )}
+          </button>
+          {budgetError && <p className="text-red-500 text-sm mt-2">{budgetError}</p>}
+        </div>
+
+        {/* --- UPDATED: Display AI's detailed flight/hotel info inputs --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="estimatedFlightCost" className={labelClass}>AI Estimated Flight Cost:</label>
+            <input
+              type="number"
+              id="estimatedFlightCost"
+              value={estimatedFlightCost}
+              onChange={(e) => setEstimatedFlightCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+              readOnly={aiFlightDetails !== null} // Make read-only if AI provided details
+            />
+            {aiFlightDetails && (
+              <div className="text-sm text-gray-600 mt-2">
+                <p>Airline: {aiFlightDetails.airline}</p>
+                <p>Route: {aiFlightDetails.route}</p>
+                <p>Dates: {aiFlightDetails.departure_date} to {aiFlightDetails.return_date}</p>
+              </div>
+            )}
+          </div>
+          <div>
+            <label htmlFor="estimatedHotelCost" className={labelClass}>AI Estimated Hotel Cost:</label>
+            <input
+              type="number"
+              id="estimatedHotelCost"
+              value={estimatedHotelCost}
+              onChange={(e) => setEstimatedHotelCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+              readOnly={aiHotelDetails !== null} // Make read-only if AI provided details
+            />
+            {aiHotelDetails && (
+              <div className="text-sm text-gray-600 mt-2">
+                <p>Hotel: {aiHotelDetails.name}</p>
+                <p>Location: {aiHotelDetails.location}</p>
+                <p>Cost/Night: ${aiHotelDetails.cost_per_night_usd?.toFixed(2)} for {aiHotelDetails.total_nights} nights</p>
+              </div>
+            )}
+          </div>
+          {/* These below are still general AI estimates, no detailed breakdown requested from AI yet */}
+          <div>
+            <label htmlFor="estimatedActivityCost" className={labelClass}>AI Estimated Activity Cost (General):</label>
+            <input
+              type="number"
+              id="estimatedActivityCost"
+              value={estimatedActivityCost}
+              onChange={(e) => setEstimatedActivityCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="estimatedTransportCost" className={labelClass}>AI Estimated Transport Cost (Local):</label>
+            <input
+              type="number"
+              id="estimatedTransportCost"
+              value={estimatedTransportCost}
+              onChange={(e) => setEstimatedTransportCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>AI Estimated Miscellaneous Cost:</label>
+            <input
+              type="number"
+              id="estimatedMiscellaneousCost"
+              value={estimatedMiscellaneousCost}
+              onChange={(e) => setEstimatedMiscellaneousCost(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
+      <div className={sectionContainerClass}>
+        <h2 className={sectionTitleClass}>
+          <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
+            <input
+              type="number"
+              id="breakfastAllowance"
+              value={breakfastAllowance}
+              onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="lunchAllowance" className={labelClass}>Lunch:</label>
+            <input
+              type="number"
+              id="lunchAllowance"
+              value={lunchAllowance}
+              onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="dinnerAllowance" className={labelClass}>Dinner:</label>
+            <input
+              type="number"
+              id="dinnerAllowance"
+              value={dinnerAllowance}
+              onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label htmlFor="snacksAllowance" className={labelClass}>Snacks:</label>
+            <input
+              type="number"
+              id="snacksAllowance"
+              value={snacksAllowance}
+              onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)}
+              min="0"
+              className={`${inputClass} w-full`}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* --- MAIN GENERATE & CLEAR BUTTONS --- */}
+      <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+        <button
+          onClick={calculateTravelPlan}
+          className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:scale-105"
+          disabled={loading}
+        >
+          <Search className="w-5 h-5 mr-2" /> Generate Travel Plan
+        </button>
+        <button
+          onClick={handleClear}
+          className="flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-105"
+        >
+          <XCircle className="w-5 h-5 mr-2" /> Clear All
+        </button>
+      </div>
+
+      {/* --- TRAVEL PLAN SUMMARY SECTION --- */}
+      {travelPlanSummary && (
+        <div className={summarySectionClass}>
+          <h2 className={summaryTitleClass}>
+            <CheckCircle className="inline-block mr-3 text-indigo-700" size={32} /> Your Travel Plan Summary
+          </h2>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
+            <p className={summaryItemClass}>
+              <strong>Home Location:</strong>{' '}
+              {travelPlanSummary.homeCity ? `${travelPlanSummary.homeCity}, ` : ''}
+              {travelPlanSummary.homeCountry.name || 'Not specified'}
+              {travelPlanSummary.homeCountry.flag && (
+                <img src={travelPlanSummary.homeCountry.flag} alt={`${travelPlanSummary.homeCountry.name} flag`} className="w-6 h-4 ml-2 inline-block rounded-sm" />
+              )}
+            </p>
+            <p className={summaryItemClass}>
+              <strong>Destination Countries:</strong>{' '}
+              {travelPlanSummary.countries.length > 0 ? (
+                <span>
+                  {travelPlanSummary.countries.map(c => (
+                    <span key={c.name} className="inline-flex items-center mr-2">
+                      {c.flag && <img src={c.flag} alt={`${c.name} flag`} className="w-6 h-4 mr-1 rounded-sm" />}
+                      {c.name}
+                    </span>
+                  ))}
+                </span>
+              ) : 'Not specified'}
+            </p>
+            <p className={summaryItemClass}><strong>Destination Cities:</strong> {travelPlanSummary.cities.length > 0 ? travelPlanSummary.cities.join(', ') : 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Duration:</strong> {travelPlanSummary.duration} days</p>
+            <p className={summaryItemClass}><strong>Party Size:</strong> {travelPlanSummary.numberOfPeople} {travelPlanSummary.isPerPerson ? 'person(s)' : 'party'}
+                {travelPlanSummary.partyMembers && travelPlanSummary.partyMembers.length > 0 && (
+                    <span className="ml-2 text-xs text-gray-500">
+                        ({travelPlanSummary.partyMembers.map(m => `Age: ${m.age}${m.gender !== 'Prefer not to say' ? ` (${m.gender})` : ''}`).join(', ')})
+                    </span>
+                )}
+            </p>
+          </div>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Preferences & Itinerary:</h3>
+            <p className={summaryItemClass}><strong>Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Activities:</strong> {travelPlanSummary.activities || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Food Locations:</strong> {travelPlanSummary.foodLocations || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Theme Parks:</strong> {travelPlanSummary.themeParks || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Tourist Spots:</strong> {travelPlanSummary.touristSpots || 'Not specified'}</p>
+            <p className={summaryItemClass}><strong>Tours:</strong> {travelPlanSummary.tours || 'Not specified'}</p>
+          </div>
+
+          {/* Displaying actual itinerary items if added */}
+          {itineraryItems.length > 0 && (
+            <div className="mb-6 pb-4 border-b border-indigo-200">
+              <h3 className={summarySubTitleClass}>Selected Itinerary Items:</h3>
+              <ul className="list-disc list-inside ml-6 text-gray-700">
+                {itineraryItems.map(item => (
+                  <li key={item.id} className="mb-1">
+                    {item.name} (${item.baseCost.toFixed(2)}{item.type === 'hotel' ? ' / night' : ''})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {itineraryItems.length === 0 && (
+            <div className="mb-6 pb-4 border-b border-indigo-200">
+                <h3 className={summarySubTitleClass}>Selected Itinerary Items:</h3>
+                <p className="italic ml-6 text-gray-700">No specific items selected from suggestions.</p>
+            </div>
+          )}
+
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Estimated Costs:</h3>
+            <p className={summaryItemClass}><strong>Calculation Basis:</strong> {travelPlanSummary.isPerPerson ? `Per Person (${travelPlanSummary.numberOfPeople} people)` : 'Per Party'}</p>
+            <ul className="list-disc list-inside ml-6 text-gray-700">
+              {/* --- UPDATED: Display AI's detailed flight info in summary --- */}
+              <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">${travelPlanSummary.estimatedFlightCost.toFixed(2)}</span>
+                {travelPlanSummary.aiFlightDetails && (
+                  <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiFlightDetails.airline}, {travelPlanSummary.aiFlightDetails.route} {travelPlanSummary.aiFlightDetails.departure_date} to {travelPlanSummary.aiFlightDetails.return_date})</span>
+                )}
+              </li>
+              {/* --- UPDATED: Display AI's detailed hotel info in summary --- */}
+              <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">${travelPlanSummary.estimatedHotelCost.toFixed(2)}</span>
+                {travelPlanSummary.aiHotelDetails && (
+                  <span className="text-xs text-gray-500 ml-2">({travelPlanSummary.aiHotelDetails.name}, {travelPlanSummary.aiHotelDetails.location} @ ${travelPlanSummary.aiHotelDetails.cost_per_night_usd?.toFixed(2)}/night for {travelPlanSummary.aiHotelDetails.total_nights} nights)</span>
+                )}
+              </li>
+              <li className="mb-1">Estimated Activity Cost (General): <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
+              <li className="mb-1">Estimated Transport Cost (Local): <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
+              <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
+              {/* totalEstimatedCost from state now includes selected itinerary items */}
+              <li className="mt-2 text-lg font-bold text-indigo-800">Total Trip Cost (AI estimates + selected items + food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
+            </ul>
+          </div>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Food Allowances:</h3>
+            <ul className="list-disc list-inside ml-6 text-gray-700">
+              <li className="mb-1">Daily Breakfast Allowance: <span className="font-semibold">${travelPlanSummary.breakfastAllowance.toFixed(2)}</span></li>
+              <li className="mb-1">Daily Lunch Allowance: <span className="font-semibold">${travelPlanSummary.lunchAllowance.toFixed(2)}</span></li>
+              <li className="mb-1">Daily Dinner Allowance: <span className="font-semibold">${travelPlanSummary.dinnerAllowance.toFixed(2)}</span></li>
+              <li className="mb-1">Daily Snacks Allowance: <span className="font-semibold">${travelPlanSummary.snacksAllowance.toFixed(2)}</span></li>
+              <li className="mt-2 text-lg font-bold text-indigo-800">Total Daily Food Allowance: <span className="text-blue-700">${travelPlanSummary.totalDailyFoodAllowance.toFixed(2)}</span></li>
+              <li className="mt-1 text-lg font-bold text-indigo-800">Total Food Cost for Trip: <span className="text-blue-700">${travelPlanSummary.totalFoodCost.toFixed(2)}</span></li>
+            </ul>
+          </div>
+
+          <div className="mb-6 pb-4 border-b border-indigo-200">
+            <h3 className={summarySubTitleClass}>Transport Options Selected:</h3>
+            <ul className="list-disc list-inside ml-6 text-gray-700">
+              {travelPlanSummary.carRental && <li>Car Rental</li>}
+              {travelPlanSummary.shuttle && <li>Shuttle</li>}
+              {travelPlanSummary.airportTransfers && <li>Airport Transfers</li>}
+              {travelPlanSummary.airportParking && <li>Airport Parking</li>}
+              {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking && <li>No specific transport options selected.</li>}
+            </ul>
+          </div>
+
+          <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
+            {/* Grand Total now directly uses the `totalEstimatedCost` which is the calculated sum of all components */}
+            <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></h3>
+            {userSetTotalBudget > 0 && (
+                <p className={`text-lg font-bold mt-2 ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
+                    AI Estimated Budget: ${userSetTotalBudget.toLocaleString()} (You are {isOverBudget ? 'OVER' : 'UNDER'} by ${budgetDifference.toLocaleString()})
+                </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+}
+
+export default App;
