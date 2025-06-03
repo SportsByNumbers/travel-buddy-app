@@ -431,7 +431,7 @@ function App() {
     setSuggestionError("An error occurred while generating suggestions.");
   } finally {
     setIsGeneratingSuggestions(false);
-  }; // <--- THIS SEMICOLON IS THE CAUSE OF THE ERROR ON LINE 399/429.
+  }; // <--- ADDED SEMICOLON HERE (THIS IS THE FIX FOR LINE 399/429)
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
