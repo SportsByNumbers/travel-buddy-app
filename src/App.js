@@ -1975,8 +1975,7 @@ return (
                 <img src={travelPlanSummary.homeCountry.flag} alt={`${travelPlanSummary.homeCountry.name} flag`} className="w-6 h-4 ml-2 inline-block rounded-sm" />
               )}
             </p>
-            <p className={summaryItemClass}>
-              <strong>Destination Countries:</strong>{' '}
+            <p className={summaryItemClass}><strong>Destination Countries:</strong>{' '}
               {travelPlanSummary.countries.length > 0 ? (
                 <span>
                   {travelPlanSummary.countries.map(c => (
