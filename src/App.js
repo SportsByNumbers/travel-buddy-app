@@ -1486,7 +1486,7 @@ return (
           )}
           {flightLoading ? 'Searching Flights...' : 'Search Flights'}
         </button>
-        {flightError && <p className="text-red-600 text-sm mt-2 text-center">{flightError}</p>}
+        {flightError && <p className="text-red-600 text-sm mt-2">{flightError}</p>}
         {flightCost > 0 && (
           <p className="mt-4 text-lg font-semibold text-green-700 text-center">
             Simulated Flight Cost: ${flightCost.toLocaleString()}
