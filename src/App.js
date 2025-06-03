@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Compass, Wallet, Car, Home, User, PlaneTakeoff, PlaneLanding, XCircle, Search, CheckCircle, Utensils, Loader, LogIn, LogOut, FolderOpen, Save } from 'react-feather'; // Re-organized imports for clarity and added all used icons
-import { fetchFlightPrices, fetchTravelData, fetchBudgetEstimates, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi'; // Import mock API functions
+// Re-organized and verified lucide-react imports for clarity
+import { MapPin, Compass, Wallet, Car, Home, User, PlaneTakeoff, PlaneLanding, XCircle, Search, CheckCircle, Utensils, Loader, LogIn, LogOut, FolderOpen, Save } from 'lucide-react';
+// Import mock API functions - ensure these are correctly exported from your mockApi.js
+import { fetchFlightPrices, fetchTravelData, fetchBudgetEstimates, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi';
 import './index.css';
 
 // --- AVAILABLE TOPICS OF INTEREST (for checkboxes) ---
@@ -10,22 +12,49 @@ const availableTopics = [
 
 // --- FUNCTION TO CALCULATE TOTAL ESTIMATED COST (including itinerary items) ---
 const calculateTotalCost = (itineraryItems, durationDays, estimatedFlightCost, estimatedHotelCost, estimatedTransportCost, estimatedMiscellaneousCost, breakfastAllowance, lunchAllowance, dinnerAllowance, snacksAllowance, numberOfPeople, isPerPerson) => {
+  // Ensure all numerical inputs are treated as numbers, with a default of 0 if undefined/null
+  const numDuration = parseFloat(durationDays || 0);
+  const numEstimatedFlightCost = parseFloat(estimatedFlightCost || 0);
+  const numEstimatedHotelCost = parseFloat(estimatedHotelCost || 0);
+  const numEstimatedTransportCost = parseFloat(estimatedTransportCost || 0);
+  const numEstimatedMiscellaneousCost = parseFloat(estimatedMiscellaneousCost || 0);
+  const numBreakfastAllowance = parseFloat(breakfastAllowance || 0);
+  const numLunchAllowance = parseFloat(lunchAllowance || 0);
+  const numDinnerAllowance = parseFloat(dinnerAllowance || 0);
+  const numSnacksAllowance = parseFloat(snacksAllowance || 0);
+  const numNumberOfPeople = parseInt(numberOfPeople || 1); // Default to 1 person if not set
+
   // Calculate the cost of itinerary items
-  const itineraryCost = itineraryItems.reduce((acc, item) => acc + (item.baseCost || 0), 0);
+  let itineraryCost = 0;
+  if (itineraryItems && itineraryItems.length > 0) {
+    itineraryCost = itineraryItems.reduce((acc, item) => {
+      let itemCost = item.baseCost || 0;
+      if (item.type === 'hotel') { // Assuming hotels are per night
+        itemCost *= numDuration;
+      }
+      return acc + itemCost;
+    }, 0);
+  }
 
   // Calculate total food cost based on daily allowances and duration
-  const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
-  const totalFoodCost = totalDailyFoodAllowance * durationDays;
+  const totalDailyFoodAllowance = numBreakfastAllowance + numLunchAllowance + numDinnerAllowance + numSnacksAllowance;
+  let tripFoodCost = totalDailyFoodAllowance * numDuration;
+  if (isPerPerson) {
+    tripFoodCost *= numNumberOfPeople;
+  }
 
-  // Calculate the base cost (excluding food)
-  const baseCost = parseFloat(estimatedFlightCost) + parseFloat(estimatedHotelCost) + parseFloat(estimatedTransportCost) + parseFloat(estimatedMiscellaneousCost) + itineraryCost;
+  // Sum AI-generated general estimates (excluding AI's general activity estimate if specifics are used)
+  const totalEstimatedCostsFromAI =
+    numEstimatedFlightCost +
+    numEstimatedHotelCost +
+    numEstimatedTransportCost +
+    numEstimatedMiscellaneousCost;
 
-  // Adjust for per person or per party
-  const adjustedBaseCost = isPerPerson ? baseCost * numberOfPeople : baseCost;
-  const adjustedFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
+  // The final total is the sum of AI's general estimates, user-selected specific items, and total food cost.
+  // Note: AI's estimates for Flight/Hotel/Transport/Misc are assumed to be total trip costs.
+  const finalTotal = totalEstimatedCostsFromAI + itineraryCost + tripFoodCost;
 
-  // Return the sum of the adjusted base cost and adjusted food cost
-  return adjustedBaseCost + adjustedFoodCost;
+  return finalTotal;
 };
 
 function App() {
@@ -105,7 +134,7 @@ function App() {
   const destCountryInputRef = useRef(null);
 
   // --- DERIVED STATE (numberOfPeople) ---
-  const numberOfPeople = partyMembers.length;
+  const numberOfPeople = partyMembers.length; // This is now derived from the partyMembers array
 
   // --- HANDLERS FOR PARTY SIZE ---
   const handleAddMember = () => {
@@ -132,6 +161,7 @@ function App() {
     const value = e.target.value;
     setNewHomeCountryInput(value);
     if (value.length > 0) {
+      // Assuming countriesData is imported from mockApi.js and contains name and flag
       const filtered = countriesData.filter(country => country.name.toLowerCase().includes(value.toLowerCase()));
       setFilteredHomeCountrySuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
     } else {
@@ -401,7 +431,7 @@ function App() {
     setSuggestionError("An error occurred while generating suggestions.");
   } finally {
     setIsGeneratingSuggestions(false);
-  }; // <--- THIS SEMICOLON WAS THE CAUSE OF THE ERROR ON LINE 399.
+  }; // <--- ADDED SEMICOLON HERE (THIS IS THE FIX FOR LINE 399)
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
