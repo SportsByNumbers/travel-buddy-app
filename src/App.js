@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 // Re-organized and verified lucide-react imports for clarity
 import { MapPin, Compass, Wallet, Car, Home, User, PlaneTakeoff, PlaneLanding, XCircle, Search, CheckCircle, Utensils, Loader, LogIn, LogOut, FolderOpen, Save } from 'lucide-react';
 // Import mock API functions - ensure these are correctly exported from your mockApi.js
-import { fetchFlightPrices, fetchTravelData, fetchBudgetEstimates, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi';
+// NOTE: We are NOT using fetchTravelData or fetchBudgetEstimates directly here for AI calls in this diagnostic version.
+// Their mock data content is still relevant in mockApi.js, but App.js will bypass them for this test.
+import { fetchFlightPrices, countriesData, registerUser, authenticateUser, saveUserTrip, loadUserTrips } from './mockApi';
 import './index.css';
 
 // --- AVAILABLE TOPICS OF INTEREST (for checkboxes) ---
@@ -289,155 +291,26 @@ function App() {
     }
   };
 
-  // --- UPDATED: AI GENERATION FUNCTIONS (Richer Prompts & Schemas) ---
-  const generateSuggestions = async () => {
-    setSuggestionError(""); // Keep this for reset
-    setIsGeneratingSuggestions(true); // Keep this for loading state
+  // --- DIAGNOSTIC: generateSuggestions (TEMPORARILY SIMPLIFIED) ---
+  // This function is now a simple synchronous stub to bypass potential Babel parsing issues.
+  // If the build passes with this, the problem is in the original complex body.
+  const generateSuggestions = () => {
+    console.log("generateSuggestions is temporarily bypassed for build testing.");
+    setSuggestionError(""); // Reset error
+    setIsGeneratingSuggestions(false); // Stop loading state
+    // Reset suggested activities to empty to reflect no actual generation
+    setSuggestedActivities([]);
+    setSuggestedFoodLocations([]);
+    setSuggestedThemeParks([]);
+    setSuggestedTouristSpots([]);
+    setSuggestedTours([]);
+    setSuggestedSportingEvents([]);
+    // Return a basic mock response structure to prevent runtime errors if any part of the UI
+    // tries to access properties of the AI response that would otherwise be undefined.
+    // This is a minimal structure matching the AI schema for suggestions.
+    return { candidates: [{ content: { parts: [{ text: JSON.stringify({ activities: [], foodLocations: [], themeParks: [], touristSpots: [], tours: [], sportingEvents: [] }) }] } }] };
+  };
 
-    try {
-        // REMOVE ALL CODE HERE TEMPORARILY.
-        // Just add a dummy line.
-        console.log("Simulating API call success for suggestions.");
-        // Example of a minimal mock structure if needed:
-        const result = { candidates: [{ content: { parts: [{ text: JSON.stringify({ activities: [], foodLocations: [], themeParks: [], touristSpots: [], tours: [], sportingEvents: [] }) }] } }] };
-        // Simulate processing
-        const jsonString = result.candidates[0].content.parts[0].text;
-        const parsedJson = JSON.parse(jsonString);
-        // Simulate setting states:
-        setSuggestedActivities(parsedJson.activities || []);
-        setSuggestedFoodLocations(parsedJson.foodLocations || []);
-        setSuggestedThemeParks(parsedJson.themeParks || []);
-        setSuggestedTouristSpots(parsedJson.touristSpots || []);
-        setSuggestedTours(parsedJson.tours || []);
-        setSuggestedSportingEvents(parsedJson.sportingEvents || []);
-
-    } catch (error) {
-        console.error("Error generating suggestions (minimal):", error);
-        setSuggestionError("A minimal error occurred while generating suggestions.");
-    } finally {
-        setIsGeneratingSuggestions(false);
-    }
-}; // NO SEMICOLON
-
-    const destinationPrompt = countries.length > 0 && cities.length > 0
-      ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
-      : countries.length > 0
-        ? `in the countries: ${countries.map(c => c.name).join(' and ')}`
-        : `in the cities: ${cities.join(', ')}`;
-
-    const topicsPrompt = topicsOfInterest.length > 0
-      ? `with a focus on topics such as: ${topicsOfInterest.join(', ')}`
-      : '';
-
-    // --- UPDATED PROMPT: Requesting more structured details for suggestions ---
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations, 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events for a ${duration}-day trip ${destinationPrompt} ${topicsPrompt}.
-    For each activity, tour, and sporting event, provide its "name", a brief "description" (2-3 sentences), a simulated "estimated_cost_usd" (realistic number, e.g., 20-150), and a "simulated_booking_link" (e.g., "https://www.fakewebsite.com/book/activity").
-    For food locations, provide "name", "description", and a "simulated_price_range" (e.g., "$$", "$$$").
-    For theme parks and tourist spots, provide "name", "description", "location" (city/area), and "simulated_estimated_cost_usd" if applicable.
-    Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of objects.
-    Example for activities: { "name": "Hot Air Balloon Ride", "description": "Soar above the city at sunrise.", "simulated_estimated_cost_usd": 120, "simulated_booking_link": "https://balloonrides.com/book" }.
-    Example for food: { "name": "Sushi Heaven", "description": "Top-rated sushi experience.", "simulated_price_range": "$$$" }.
-    Example for theme park: { "name": "Fantasy Land", "description": "Magical rides and shows.", "location": "Orlando", "simulated_estimated_cost_usd": 100 }.
-    Ensure all fields are present in the JSON response.
-    `;
-
-    let chatHistory = [];
-    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-    // --- UPDATED SCHEMA: Reflecting the new structured details for suggestions ---
-    const payload = {
-      contents: chatHistory,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            "activities": { "type": "ARRAY", "items": {
-                "type": "OBJECT", "properties": {
-                    "name": {"type": "STRING"},
-                    "description": {"type": "STRING"},
-                    "simulated_estimated_cost_usd": {"type": "NUMBER"},
-                    "simulated_booking_link": {"type": "STRING"}
-                }
-            }},
-            "foodLocations": { "type": "ARRAY", "items": {
-                "type": "OBJECT", "properties": {
-                    "name": {"type": "STRING"},
-                    "description": {"type": "STRING"},
-                    "simulated_price_range": {"type": "STRING"}
-                }
-            }},
-            "themeParks": { "type": "ARRAY", "items": {
-                "type": "OBJECT", "properties": {
-                    "name": {"type": "STRING"},
-                    "description": {"type": "STRING"},
-                    "location": {"type": "STRING"},
-                    "simulated_estimated_cost_usd": {"type": "NUMBER"}
-                }
-            }},
-            "touristSpots": { "type": "ARRAY", "items": {
-                "type": "OBJECT", "properties": {
-                    "name": {"type": "STRING"},
-                    "description": {"type": "STRING"},
-                    "simulated_estimated_cost_usd": {"type": "NUMBER"} // Assuming some spots might have entrance fees
-                }
-            }},
-            "tours": { "type": "ARRAY", "items": {
-                "type": "OBJECT", "properties": {
-                    "name": {"type": "STRING"},
-                    "description": {"type": "STRING"},
-                    "simulated_estimated_cost_usd": {"type": "NUMBER"},
-                    "simulated_booking_link": {"type": "STRING"}
-                }
-            }},
-            "sportingEvents": { "type": "ARRAY", "items": {
-                "type": "OBJECT", "properties": {
-                    "name": {"type": "STRING"},
-                    "description": {"type": "STRING"},
-                    "simulated_estimated_cost_usd": {"type": "NUMBER"}
-                }
-            }}
-          },
-          "propertyOrdering": ["activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents"]
-        }
-      }
-    };
-
-    // --- SWITCHED: Use mockApi.js for suggestions during local development ---
-    // If you want to use the REAL Gemini API, uncomment the lines below and provide your API Key
-    // const apiKey = "YOUR_GEMINI_API_KEY";
-    // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    // const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    // const result = await response.json();
-
-    // Use the mock API function for suggestions
-    const result = await fetchTravelData(prompt); // fetchTravelData now returns data in Gemini API format
-
-
-    if (result.candidates && result.candidates.length > 0 &&
-        result.candidates[0].content && result.candidates[0].content.parts &&
-        result.candidates[0].content.parts.length > 0) {
-      const jsonString = result.candidates[0].content.parts[0].text;
-      const parsedJson = JSON.parse(jsonString);
-
-      // --- UPDATED: Set states with the new structured objects ---
-      setSuggestedActivities(parsedJson.activities || []);
-      setSuggestedFoodLocations(parsedJson.foodLocations || []);
-      setSuggestedThemeParks(parsedJson.themeParks || []);
-      setSuggestedTouristSpots(parsedJson.touristSpots || []);
-      setSuggestedTours(parsedJson.tours || []);
-      setSuggestedSportingEvents(parsedJson.sportingEvents || []);
-
-    } else {
-      setSuggestionError("Failed to get suggestions. Please try again.");
-    }
-  } catch (error) {
-    console.error("Error generating suggestions:", error);
-    setSuggestionError("An error occurred while generating suggestions.");
-  } finally {
-    setIsGeneratingSuggestions(false);
-  }
-}; // NO SEMICOLON (Letting ASI handle it correctly for `const fn = () => {};` syntax)
 
 const generateBudgetEstimates = async () => {
   if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
@@ -1594,7 +1467,7 @@ return (
 
         <div className="text-center mb-6">
           <button
-            onClick={generateSuggestions}
+            // onClick={generateSuggestions} // Commented out for diagnostic build
             className={buttonClass}
             disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
           >
@@ -1805,7 +1678,7 @@ return (
           <button
             onClick={generateBudgetEstimates}
             className={buttonClass}
-            disabled={isGeneratingBudget || (countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1}
+            disabled={isGeneratingBudget || (countries.length === 0 && cities.length === 0) || numberOfPeople < 1} // Removed duration check as it's not always needed for initial budget
           >
             {isGeneratingBudget ? (
               <span className="flex items-center justify-center">
