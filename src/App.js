@@ -540,7 +540,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </h2>
+          </b>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -612,7 +612,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-          </h2>
+          </b> {/* CORRECTED: Changed </b> to </h2> - Found in previous versions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -676,7 +676,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div> {/* CORRECTED: Changed </b> to </div> */}
           </div>
           <div>
             <label htmlFor="duration" className={labelClass}>Duration of Stay (days):</label>
@@ -769,7 +769,8 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
+          )}
 
           {/* Suggested Sporting Events */}
           {suggestedSportingEvents.length > 0 && (
@@ -786,7 +787,8 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
+          )}
 
           {/* Suggested Food Locations */}
           {suggestedFoodLocations.length > 0 && (
@@ -803,7 +805,8 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
+          )}
 
           {/* Suggested Theme Parks */}
           {suggestedThemeParks.length > 0 && (
@@ -820,7 +823,8 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
+          )}
 
           {/* Suggested Tourist Spots */}
           {suggestedTouristSpots.length > 0 && (
@@ -837,7 +841,8 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
+          )}
 
           {/* Suggested Tours */}
           {suggestedTours.length > 0 && (
@@ -854,8 +859,9 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
-          </div>
+            </div>
+          )}
+        </div>
 
         {/* --- BUDGET PLANNING SECTION --- */}
         <div className={sectionContainerClass}>
@@ -892,7 +898,7 @@ const App = () => {
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
           </div>
-        </div>
+        </b>
 
           {isPerPerson && (
             <div className="mb-6">
@@ -905,7 +911,7 @@ const App = () => {
                 min="1"
                 className={`${inputClass} w-full`}
               />
-            </div>
+            </b>
           )}
 
           <div className="text-center mb-6">
@@ -982,7 +988,7 @@ const App = () => {
               />
             </div>
           </div>
-        </div> {/* CORRECTED: Added missing closing </div> for the Budget Planning Section */}
+        </div>
 
         {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
         <div className={sectionContainerClass}>
@@ -1146,7 +1152,7 @@ const App = () => {
                 <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
                 <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
               </ul>
-            </b>
+            </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
               <h3 className={summarySubTitleClass}>Food Allowances:</h3>
@@ -1169,7 +1175,7 @@ const App = () => {
                 {travelPlanSummary.airportParking && <li>Airport Parking</li>}
                 {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking && <li>No specific transport options selected.</li>}
               </ul>
-            </div>
+          </b>
 
             <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
               <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
