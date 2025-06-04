@@ -1,3 +1,4 @@
+// Version: 1.0.1
 import React, { useState, useEffect, useRef } from 'react';
 // Corrected Lucide imports - removed unused icons
 import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home } from 'lucide-react';
