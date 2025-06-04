@@ -1112,8 +1112,7 @@ return (
                 </div>
             )}
           </div>
-        </div>
-      )}
+        </b>
 
       {/* --- NEW SECTION: PARTY SIZE --- */}
       <div className={sectionContainerClass}>
@@ -1152,7 +1151,6 @@ return (
           </div>
           <div className="flex items-end">
             <button onClick={handleAddMember} className={`${buttonClass} w-full`}>Add Member</button>
-            {/* The onClick for generateSuggestions was removed in the previous prompt, assuming it was intentional for debugging */}
           </div>
         </div>
 
@@ -1177,7 +1175,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-        </b>
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -1247,7 +1245,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-        </h2>
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -1289,7 +1287,7 @@ return (
                 </span>
               ))}
             </div>
-          </div>
+          </b>
           <div>
             <label htmlFor="newCity" className={labelClass}>Add Destination City:</label>
             <div className="flex items-center">
@@ -1447,7 +1445,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
-        </b>
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <p className="text-sm text-gray-600 mb-6">
           Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
         </p>
@@ -1571,7 +1569,7 @@ return (
                   )}
                 </div>
               ))}
-            </b>
+            </div>
           </div>
         )}
 
@@ -1592,7 +1590,7 @@ return (
                   {item.simulated_estimated_cost_usd && (
                       <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
                   )}
-                </div>
+                </b>
               ))}
             </div>
           </div>
@@ -1616,8 +1614,8 @@ return (
                   )}
                 </div>
               ))}
-            </div>
-          </b>
+            </b>
+          </div>
         )}
 
         {/* Suggested Tours --- UPDATED UI to show more details --- */}
@@ -1650,7 +1648,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-        </b>
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <p className="text-sm text-gray-600 mb-6">
           Generate AI-powered budget estimates based on your trip details, or manually enter your own.
         </p>
