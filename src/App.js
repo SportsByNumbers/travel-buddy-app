@@ -1118,7 +1118,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <User className="mr-3 text-indigo-600" size={28} /> Who's Traveling? (Party Size)
-        </b> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="mb-4">
           <p className="text-lg font-semibold text-gray-800">Total Travelers: {numberOfPeople}</p>
         </div>
@@ -1226,7 +1226,7 @@ return (
                 value={newHomeCityInput}
                 onChange={(e) => setNewHomeCityInput(e.target.value)}
                 placeholder="e.g., New York"
-                className={`${inputClass} w-full`}
+                className={`${inputClass} flex-grow`}
               />
               <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
             </div>
@@ -1235,7 +1235,7 @@ return (
                 <span className={tagClass}>
                   {homeCity}
                 </span>
-              </div>
+              </b>
             )}
           </div>
         </div>
@@ -1245,7 +1245,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-        </b> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -1310,17 +1310,6 @@ return (
               ))}
             </div>
           </div>
-        </div>
-        <div>
-          <label htmlFor="duration" className={labelClass}>Duration of Stay (days):</label>
-          <input
-            type="number"
-            id="duration"
-            value={duration}
-            onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
-            min="1"
-            className={`${inputClass} w-full`}
-          />
         </b>
       </div>
 
@@ -1445,7 +1434,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
-        </b> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <p className="text-sm text-gray-600 mb-6">
           Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
         </p>
@@ -1485,7 +1474,7 @@ return (
               ))}
             </div>
           </div>
-        </b> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
+        </b>
 
         <div className="text-center mb-6">
           <button
@@ -1502,7 +1491,7 @@ return (
             )}
           </button>
           {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
-        </b>
+        </div>
 
         {/* Suggested Activities --- UPDATED UI to show more details --- */}
         {suggestedActivities.length > 0 && (
@@ -1523,7 +1512,7 @@ return (
                   {item.simulated_booking_link && (
                       <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
                   )}
-                </b>
+                </div>
               ))}
             </div>
           </div>
@@ -1548,7 +1537,8 @@ return (
                 </div>
               ))}
             </div>
-          </b>
+          </div>
+        )}
 
         {/* Suggested Food Locations --- UPDATED UI to show more details --- */}
         {suggestedFoodLocations.length > 0 && (
@@ -1611,7 +1601,7 @@ return (
                   {item.simulated_estimated_cost_usd && (
                       <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
                   )}
-                </b>
+                </div>
               ))}
             </div>
           </div>
@@ -1647,7 +1637,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-        </h2> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <p className="text-sm text-gray-600 mb-6">
           Generate AI-powered budget estimates based on your trip details, or manually enter your own.
         </p>
@@ -1678,7 +1668,7 @@ return (
               <span className="ml-2 text-gray-800">Per Party</span>
             </label>
           </div>
-        </b>
+        </div>
 
         {isPerPerson && (
           <div className="mb-6">
@@ -1690,7 +1680,7 @@ return (
               value={numberOfPeople}
               readOnly // Made readOnly as it's derived from partyMembers
               min="1"
-              className={`${inputClass} w-full bg-gray-100`} // Add bg-gray-100 for read-only styling
+              className={`${inputClass} w-full`}
             />
           </div>
         )}
@@ -1857,14 +1847,14 @@ return (
         >
           <XCircle className="w-5 h-5 mr-2" /> Clear All
         </button>
-      </div>
+      </b>
 
       {/* --- TRAVEL PLAN SUMMARY SECTION --- */}
       {travelPlanSummary && (
         <div className={summarySectionClass}>
           <h2 className={summaryTitleClass}>
             <CheckCircle className="inline-block mr-3 text-indigo-700" size={32} /> Your Travel Plan Summary
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2> {/* CORRECTED: Changed </b> to <h2> */}
 
           <div className="mb-6 pb-4 border-b border-indigo-200">
             <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
@@ -1988,8 +1978,9 @@ return (
                 </p>
             )}
           </div>
-        </b>
-      </div>
+        </div>
+      )}
+    </div>
   </div>
 );
 }
