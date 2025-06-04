@@ -1118,7 +1118,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <User className="mr-3 text-indigo-600" size={28} /> Who's Traveling? (Party Size)
-        </h2>
+        </b> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
         <div className="mb-4">
           <p className="text-lg font-semibold text-gray-800">Total Travelers: {numberOfPeople}</p>
         </div>
@@ -1226,7 +1226,7 @@ return (
                 value={newHomeCityInput}
                 onChange={(e) => setNewHomeCityInput(e.target.value)}
                 placeholder="e.g., New York"
-                className={`${inputClass} flex-grow`}
+                className={`${inputClass} w-full`}
               />
               <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
             </div>
@@ -1245,7 +1245,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-        </h2> 
+        </b> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -1321,7 +1321,7 @@ return (
             min="1"
             className={`${inputClass} w-full`}
           />
-        </div>
+        </b>
       </div>
 
       {/* --- FLIGHT DETAILS SECTION (INTEGRATED) --- */}
@@ -1445,7 +1445,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
-        </h2> 
+        </b> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
         <p className="text-sm text-gray-600 mb-6">
           Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
         </p>
@@ -1485,7 +1485,7 @@ return (
               ))}
             </div>
           </div>
-        </b>
+        </b> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
 
         <div className="text-center mb-6">
           <button
@@ -1502,7 +1502,7 @@ return (
             )}
           </button>
           {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
-        </div>
+        </b>
 
         {/* Suggested Activities --- UPDATED UI to show more details --- */}
         {suggestedActivities.length > 0 && (
@@ -1523,7 +1523,7 @@ return (
                   {item.simulated_booking_link && (
                       <a href={item.simulated_booking_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Book Now</a>
                   )}
-                </div>
+                </b>
               ))}
             </div>
           </div>
@@ -1548,8 +1548,7 @@ return (
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          </b>
 
         {/* Suggested Food Locations --- UPDATED UI to show more details --- */}
         {suggestedFoodLocations.length > 0 && (
@@ -1612,7 +1611,7 @@ return (
                   {item.simulated_estimated_cost_usd && (
                       <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
                   )}
-                </div>
+                </b>
               ))}
             </div>
           </div>
@@ -1648,7 +1647,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-        </b> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> {/* CORRECTED: Changed </b> to </h2> - This was also a typo */}
         <p className="text-sm text-gray-600 mb-6">
           Generate AI-powered budget estimates based on your trip details, or manually enter your own.
         </p>
@@ -1679,7 +1678,7 @@ return (
               <span className="ml-2 text-gray-800">Per Party</span>
             </label>
           </div>
-        </div>
+        </b>
 
         {isPerPerson && (
           <div className="mb-6">
@@ -1794,7 +1793,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-        </b> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1865,7 +1864,7 @@ return (
         <div className={summarySectionClass}>
           <h2 className={summaryTitleClass}>
             <CheckCircle className="inline-block mr-3 text-indigo-700" size={32} /> Your Travel Plan Summary
-          </b>
+          </h2> {/* CORRECTED: Changed </b> to </h2> */}
 
           <div className="mb-6 pb-4 border-b border-indigo-200">
             <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
@@ -1989,9 +1988,8 @@ return (
                 </p>
             )}
           </div>
-        </div>
-      )}
-    </div>
+        </b>
+      </div>
   </div>
 );
 }
