@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Calendar, Star, Compass, DollarSign, Utensils, Car, Plane, Wallet, CheckCircle, Lightbulb, Loader, Heart, Home } from 'lucide-react';
+// Corrected Lucide imports - removed unused icons
+import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'; // Don't forget to import the CSS!
 
@@ -14,8 +15,8 @@ const App = () => {
   // *** NEW: Start and End Dates ***
   const [startDate, setStartDate] = useState(null); // Initial state is null
   const [endDate, setEndDate] = useState(null); // Initial state is null
-  // Duration will now be derived
-  const duration = startDate && endDate ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
+  // Duration will now be derived, with corrected parentheses for ESLint
+  const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
   const [starRating, setStarRating] = useState('');
 
   // State for Home Location
