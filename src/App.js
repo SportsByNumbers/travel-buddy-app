@@ -1,6 +1,5 @@
-// Version: 1.0.1
 import React, { useState, useEffect, useRef } from 'react';
-// Corrected Lucide imports - removed unused icons
+// Corrected Lucide imports - removed unused icons as per ESLint warnings
 import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'; // Don't forget to import the CSS!
@@ -13,11 +12,11 @@ const App = () => {
   const [newCountry, setNewCountry] = useState('');
   const [cities, setCities] = useState([]);
   const [newCity, setNewCity] = useState('');
-  // *** NEW: Start and End Dates ***
+  // Start and End Dates
   const [startDate, setStartDate] = useState(null); // Initial state is null
   const [endDate, setEndDate] = useState(null); // Initial state is null
   // Duration will now be derived, with corrected parentheses for ESLint
-  const duration = (startDate && endDate) ? **(Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1)** : 0;
+  const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
   const [starRating, setStarRating] = useState('');
 
   // State for Home Location
@@ -297,10 +296,10 @@ const App = () => {
         : `in the cities: ${cities.join(', ')}`;
 
     const topicsPrompt = topicsOfInterest.length > 0
-      ? `with a focus on topics suchas: ${topicsOfInterest.join(', ')}`
+      ? `with a focus on topics such as: ${topicsOfInterest.join(', ')}`
       : '';
 
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
+    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an.array of strings.`;
 
     const apiKey = "AIzaSyDYgF6Mc-fSbM_DO9e5cLkgLaJ6lFXscok"; // Your Gemini API Key
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
@@ -636,7 +635,7 @@ const App = () => {
                   onChange={handleDestCountryInputChange}
                   onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)} // Hide suggestions on blur
                   placeholder="e.g., Japan"
-                  className={`${inputClass} flex-grow`}
+                  className={`${inputClass} w-full`}
                 />
                 <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
               </div>
@@ -689,7 +688,7 @@ const App = () => {
               </div>
             </div>
           </div>
-         {/* *** UPDATED: Date Pickers for Start and End Dates *** */}
+         {/* Date Pickers for Start and End Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label htmlFor="startDate" className={labelClass}>Start Date:</label>
@@ -717,7 +716,6 @@ const App = () => {
                 minDate={startDate} // End date cannot be before start date
                 placeholderText="Select end date"
                 className={`${inputClass} w-full`}
-                dateFormat="dd/MM/yyyy"
               />
             </div>
           </div>
@@ -933,7 +931,7 @@ const App = () => {
                 />
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
-            </div>
+            </b>
           </div>
 
           {isPerPerson && (
