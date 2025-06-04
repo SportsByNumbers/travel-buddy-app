@@ -300,7 +300,7 @@ const App = () => {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) // Corrected payload structure
       });
       const result = await response.json();
 
@@ -540,7 +540,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </h2> {/* This line (543) is the problem */}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -612,7 +612,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -867,7 +867,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </b> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2> {/* CORRECTED: Changed </b> to </h2> */}
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -897,8 +897,8 @@ const App = () => {
                 />
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
-          </div>
-        </b> {/* CORRECTED: Changed </b> to </div> */}
+            </div>
+          </div> {/* CORRECTED: Changed </b> to </div> */}
 
           {isPerPerson && (
             <div className="mb-6">
@@ -988,7 +988,7 @@ const App = () => {
               />
             </div>
           </div>
-        </div> {/* CORRECTED: Added missing closing </div> for the Budget Planning Section */}
+        </div>
 
         {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
         <div className={sectionContainerClass}>
@@ -1047,7 +1047,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </b> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2> {/* CORRECTED: Changed </b> to </h2> */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
