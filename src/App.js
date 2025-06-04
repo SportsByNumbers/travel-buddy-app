@@ -540,7 +540,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </b> {/* This line (543) is the problem */}
+          </h2> {/* This line (543) is the problem */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
