@@ -1112,7 +1112,7 @@ return (
                 </div>
             )}
           </div>
-        </b>
+        </div> {/* CORRECTED: Changed </b> to </div> */}
 
       {/* --- NEW SECTION: PARTY SIZE --- */}
       <div className={sectionContainerClass}>
@@ -1245,7 +1245,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-        </h2> {/* CORRECTED: Changed </b> to </h2> */}
+        </b> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -1287,7 +1287,7 @@ return (
                 </span>
               ))}
             </div>
-          </b>
+          </div>
           <div>
             <label htmlFor="newCity" className={labelClass}>Add Destination City:</label>
             <div className="flex items-center">
@@ -1400,7 +1400,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-        </b>
+        </h2> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="inline-flex items-center cursor-pointer">
             <input
@@ -1445,7 +1445,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
-        </h2> {/* CORRECTED: Changed </b> to </h2> */}
+        </b> {/* CORRECTED: Changed </b> to </h2> */}
         <p className="text-sm text-gray-600 mb-6">
           Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
         </p>
@@ -1590,7 +1590,7 @@ return (
                   {item.simulated_estimated_cost_usd && (
                       <div className="text-sm text-gray-700">Cost: ${item.simulated_estimated_cost_usd.toFixed(2)}</div>
                   )}
-                </b>
+                </div>
               ))}
             </div>
           </div>
@@ -1614,7 +1614,7 @@ return (
                   )}
                 </div>
               ))}
-            </b>
+            </div>
           </div>
         )}
 
@@ -1639,7 +1639,7 @@ return (
                   )}
                 </div>
               ))}
-            </b>
+            </div>
           </div>
         )}
       </div>
@@ -1678,7 +1678,7 @@ return (
               />
               <span className="ml-2 text-gray-800">Per Party</span>
             </label>
-          </b>
+          </div>
         </div>
 
         {isPerPerson && (
@@ -1787,14 +1787,14 @@ return (
               className={`${inputClass} w-full`}
             />
           </div>
-        </b>
+        </div>
       </div>
 
       {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-        </b>
+        </h2> {/* CORRECTED: Changed </b> to </b> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
