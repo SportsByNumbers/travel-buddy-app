@@ -3,14 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.364.0"
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4",
+    "lucide-react": "^latest", // Or whatever version you have
+    "react-datepicker": "^latest", // <--- ENSURE THIS IS HERE
+    "date-fns": "^latest"         // <--- AND THIS IS HERE
   },
   "scripts": {
-    "start": "webpack serve --mode development --open",
-    "build": "webpack --mode production",
-    "test": "echo \"No custom test script configured for this example\""
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -31,22 +39,6 @@
     ]
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.3",
-    "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19",
-    "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.4",
-    "html-webpack-plugin": "^5.6.0",
-    "babel-loader": "^9.1.3",
-    "@babel/core": "^7.24.4",
-    "@babel/preset-env": "^7.24.4",
-    "@babel/preset-react": "^7.24.1",
-    "css-loader": "^7.1.1",
-    "style-loader": "^4.0.0",
-    "postcss-loader": "^8.1.1",
-    "serve": "^14.2.3",
-    "copy-webpack-plugin": "^12.0.2",
-    "process": "^0.11.10"
+    "tailwindcss": "^3.4.3"
   }
 }
