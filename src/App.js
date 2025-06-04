@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Calendar, Star, Compass, DollarSign, Utensils, Car, Plane, Wallet, CheckCircle, Lightbulb, Loader, Heart, Home } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css'; // Don't forget to import the CSS!
+
 
 // Main App component
 const App = () => {
@@ -8,7 +11,11 @@ const App = () => {
   const [newCountry, setNewCountry] = useState('');
   const [cities, setCities] = useState([]);
   const [newCity, setNewCity] = useState('');
-  const [duration, setDuration] = useState(1); // Duration in days
+  // *** NEW: Start and End Dates ***
+  const [startDate, setStartDate] = useState(null); // Initial state is null
+  const [endDate, setEndDate] = useState(null); // Initial state is null
+  // Duration will now be derived
+  const duration = startDate && endDate ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
   const [starRating, setStarRating] = useState('');
 
   // State for Home Location
@@ -25,7 +32,7 @@ const App = () => {
   const [isPerPerson, setIsPerPerson] = useState(true); // true for per person, false for per party
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [estimatedFlightCost, setEstimatedFlightCost] = useState(0);
-  const [estimatedHotelCost, setEstimatedHotelCost] = useState(0);
+  const [estimatedHotelCost, setEstimatedHotelCost, ] = useState(0);
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
@@ -293,14 +300,14 @@ const App = () => {
 
     const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
 
-    const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+    const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) // Corrected payload structure
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const result = await response.json();
 
@@ -400,7 +407,7 @@ const App = () => {
       }
     };
 
-    const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+    const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -453,7 +460,7 @@ const App = () => {
 
     // Calculate total food allowance per day
     const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
-    const totalFoodCost = totalDailyFoodAllowance * parseInt(duration);
+    const totalFoodCost = totalDailyFoodAllowance * duration; // Use derived duration
 
     // Calculate total estimated costs
     const totalEstimatedCost =
@@ -472,7 +479,9 @@ const App = () => {
       homeCity,
       countries,
       cities,
-      duration,
+      duration, // Still pass duration in summary
+      startDate: startDate ? startDate.toLocaleDateString() : 'Not set', // Pass formatted dates
+      endDate: endDate ? endDate.toLocaleDateString() : 'Not set',
       starRating,
       activities: finalActivities,
       sportingEvents: finalSportingEvents,
@@ -678,16 +687,41 @@ const App = () => {
               </div>
             </div>
           </div>
+         {/* *** UPDATED: Date Pickers for Start and End Dates *** */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label htmlFor="startDate" className={labelClass}>Start Date:</label>
+              <DatePicker
+                id="startDate"
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                selectsStart
+                startDate={startDate}
+                endDate={endDate}
+                placeholderText="Select start date"
+                className={`${inputClass} w-full`}
+                dateFormat="dd/MM/yyyy"
+              />
+            </div>
+            <div>
+              <label htmlFor="endDate" className={labelClass}>End Date:</label>
+              <DatePicker
+                id="endDate"
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                selectsEnd
+                startDate={startDate}
+                endDate={endDate}
+                minDate={startDate} // End date cannot be before start date
+                placeholderText="Select end date"
+                className={`${inputClass} w-full`}
+                dateFormat="dd/MM/yyyy"
+              />
+            </div>
+          </div>
           <div>
-            <label htmlFor="duration" className={labelClass}>Duration of Stay (days):</label>
-            <input
-              type="number"
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))} // Ensure minimum 1 day
-              min="1"
-              className={`${inputClass} w-full`}
-            />
+            <p className={labelClass}>Calculated Duration:</p>
+            <p className="text-xl font-semibold text-indigo-700">{duration} days</p>
           </div>
         </div>
 
@@ -867,7 +901,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2>
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -898,7 +932,7 @@ const App = () => {
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
             </div>
-          </div> {/* CORRECTED: Changed </b> to </div> */}
+          </div>
 
           {isPerPerson && (
             <div className="mb-6">
@@ -1047,7 +1081,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -1126,6 +1160,9 @@ const App = () => {
               </p>
               <p className={summaryItemClass}><strong>Destination Cities:</strong> {travelPlanSummary.cities.length > 0 ? travelPlanSummary.cities.join(', ') : 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Duration:</strong> {travelPlanSummary.duration} days</p>
+              <p className={summaryItemClass}>
+                <strong>Travel Dates:</strong> {travelPlanSummary.startDate} - {travelPlanSummary.endDate}
+              </p>
             </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
