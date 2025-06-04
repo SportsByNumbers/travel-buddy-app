@@ -10,9 +10,9 @@
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
-    "lucide-react": "^latest", // Or whatever version you have
-    "react-datepicker": "^latest", // <--- ENSURE THIS IS HERE
-    "date-fns": "^latest"         // <--- AND THIS IS HERE
+    "lucide-react": "^0.309.0", 
+    "react-datepicker": "^4.25.0", 
+    "date-fns": "^3.3.1"         
   },
   "scripts": {
     "start": "react-scripts start",
