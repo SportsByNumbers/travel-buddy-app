@@ -300,7 +300,7 @@ const App = () => {
 
     const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
 
-    const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key
+    const apiKey = "AIzaSyDYgF6Mc-fSbM_DO9e5cLkgLaJ6lFXscok"; // Your Gemini API Key
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -407,7 +407,7 @@ const App = () => {
       }
     };
 
-    const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key
+    const apiKey = "AIzaSyDYgF6Mc-fSbM_DO9e5cLkgLaJ6lFXscok"; // Your Gemini API Key
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
