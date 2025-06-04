@@ -1112,7 +1112,7 @@ return (
                 </div>
             )}
           </div>
-        </div> {/* CORRECTED: Changed </b> to </div> */}
+        </div>
 
       {/* --- NEW SECTION: PARTY SIZE --- */}
       <div className={sectionContainerClass}>
@@ -1175,7 +1175,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-        </h2> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -1245,7 +1245,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-        </b> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="relative"> {/* Added relative for dropdown positioning */}
             <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -1400,7 +1400,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-        </h2> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="inline-flex items-center cursor-pointer">
             <input
@@ -1445,7 +1445,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
-        </b> {/* CORRECTED: Changed </b> to </h2> */}
+        </h2> 
         <p className="text-sm text-gray-600 mb-6">
           Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
         </p>
@@ -1489,7 +1489,7 @@ return (
 
         <div className="text-center mb-6">
           <button
-            onClick={generateSuggestions} {/* Re-enabled the onClick for generateSuggestions */}
+            onClick={generateSuggestions} 
             className={buttonClass}
             disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
           >
@@ -1648,7 +1648,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-        </h2> {/* CORRECTED: Changed </b> to </h2> */}
+        </b> {/* CORRECTED: Changed </b> to </h2> */}
         <p className="text-sm text-gray-600 mb-6">
           Generate AI-powered budget estimates based on your trip details, or manually enter your own.
         </p>
@@ -1794,7 +1794,7 @@ return (
       <div className={sectionContainerClass}>
         <h2 className={sectionTitleClass}>
           <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-        </h2> {/* CORRECTED: Changed </b> to </b> */}
+        </b> {/* CORRECTED: Changed </b> to </h2> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1840,7 +1840,7 @@ return (
               className={`${inputClass} w-full`}
             />
           </div>
-        </b>
+        </div>
       </div>
 
       {/* --- MAIN GENERATE & CLEAR BUTTONS --- */}
