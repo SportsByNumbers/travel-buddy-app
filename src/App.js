@@ -17,7 +17,7 @@ const App = () => {
   const [startDate, setStartDate] = useState(null); // Initial state is null
   const [endDate, setEndDate] = useState(null); // Initial state is null
   // Duration will now be derived, with corrected parentheses for ESLint
-  const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
+  const duration = (startDate && endDate) ? **(Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1)** : 0;
   const [starRating, setStarRating] = useState('');
 
   // State for Home Location
@@ -297,7 +297,7 @@ const App = () => {
         : `in the cities: ${cities.join(', ')}`;
 
     const topicsPrompt = topicsOfInterest.length > 0
-      ? `with a focus on topics such as: ${topicsOfInterest.join(', ')}`
+      ? `with a focus on topics suchas: ${topicsOfInterest.join(', ')}`
       : '';
 
     const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
