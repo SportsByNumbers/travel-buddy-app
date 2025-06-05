@@ -1,0 +1,81 @@
+// Function to fetch AI responses from Gemini
+export const fetchAI = async (prompt, schema = null) => {
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("Gemini API Key is not configured. Please set REACT_APP_GEMINI_API_KEY environment variable.");
+    }
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: schema ? { responseMimeType: "application/json", responseSchema: schema } : {}
+    };
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("AI API Error:", errorBody);
+            throw new Error(`AI API request failed: ${errorBody.error?.message || response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const text = result.candidates[0].content.parts[0].text;
+            if (schema) {
+                try {
+                    // Gemini might sometimes return extra backticks/json wrapper
+                    return JSON.parse(text.replace(/```json\n|\n```/g, ''));
+                } catch (jsonError) {
+                    console.error("Failed to parse JSON from AI response:", text, jsonError);
+                    throw new Error("AI response was not valid JSON. Please try again.");
+                }
+            }
+            return text; // Return raw text if no schema expected
+        } else {
+            console.error("AI API response structure invalid:", result);
+            throw new Error("Failed to get a valid response from AI. Response structure invalid.");
+        }
+    } catch (error) {
+        console.error("Error during fetchAI call:", error);
+        throw error; // Re-throw to be caught by the component
+    }
+};
+
+// Function to fetch specific country flag/data
+export const fetchCountryData = async (countryName, allCountries) => {
+    if (!countryName) return { name: '', flag: '' };
+    // Try to find in already fetched allCountries to avoid new API call if possible
+    const foundCountry = allCountries.find(c => c.name.toLowerCase() === countryName.toLowerCase());
+    if (foundCountry) return foundCountry;
+
+    // Fallback: If not found in allCountries, make a specific API call
+    try {
+        let response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fields=flags,name&fullText=true`);
+        if (!response.ok) {
+            // Try partial match if exact match fails
+            response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fields=flags,name`);
+            if (!response.ok) {
+                console.warn(`Could not find flag for country: ${countryName}`);
+                return { name: countryName, flag: '' };
+            }
+        }
+        const data = await response.json();
+        if (data && data.length > 0) {
+            return { name: data[0].name.common, flag: data[0].flags.svg };
+        }
+        return { name: countryName, flag: '' };
+    } catch (error) {
+        console.error("Error fetching country flag:", error);
+        return { name: countryName, flag: '' };
+    }
+};
