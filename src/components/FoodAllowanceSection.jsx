@@ -1,22 +1,58 @@
 import React, { useContext } from 'react';
 import { Utensils } from 'lucide-react';
-import { TripContext } from '../App';
-import SectionWrapper from './SectionWrapper';
-import InputField from './InputField';
+import { TripContext } from '../App.jsx';
+import SectionWrapper from './SectionWrapper.jsx';
+import InputField from './InputField.jsx';
 
 const FoodAllowanceSection = () => {
-    const { breakfastAllowance, setBreakfastAllowance, lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance, actualFoodCost, setActualFoodCost, getFormattedCurrency } = useContext(TripContext);
+    const {
+        breakfastAllowance, setBreakfastAllowance,
+        lunchAllowance, setLunchAllowance,
+        dinnerAllowance, setDinnerAllowance,
+        snacksAllowance, setSnacksAllowance,
+        currency
+    } = useContext(TripContext);
 
     return (
-        <SectionWrapper title={`Daily Food Allowances (Per Person, ${getFormattedCurrency(0).charAt(0)})`} icon={Utensils}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField label="Breakfast" id="breakfastAllowance" type="number" value={breakfastAllowance} onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)} min="0" />
-                <InputField label="Lunch" id="lunchAllowance" type="number" value={lunchAllowance} onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)} min="0" />
-                <InputField label="Dinner" id="dinnerAllowance" type="number" value={dinnerAllowance} onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)} min="0" />
-                <InputField label="Snacks" id="snacksAllowance" type="number" value={snacksAllowance} onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)} min="0" />
-                <div className="md:col-span-2">
-                    <InputField label={`Actual Total Food Cost (${getFormattedCurrency(0).charAt(0)})`} id="actualFoodCost" type="number" value={actualFoodCost} onChange={(e) => setActualFoodCost(parseFloat(e.target.value) || 0)} min="0" />
-                </div>
+        <SectionWrapper title="Food Allowance" icon={Utensils}>
+            <p className="text-gray-700 mb-4">Estimate your daily food budget per person ({currency}).</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <InputField
+                    id="breakfastAllowance"
+                    label={`Breakfast (${currency})`}
+                    type="number"
+                    value={breakfastAllowance}
+                    onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 15"
+                    min="0"
+                />
+                <InputField
+                    id="lunchAllowance"
+                    label={`Lunch (${currency})`}
+                    type="number"
+                    value={lunchAllowance}
+                    onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 20"
+                    min="0"
+                />
+                <InputField
+                    id="dinnerAllowance"
+                    label={`Dinner (${currency})`}
+                    type="number"
+                    value={dinnerAllowance}
+                    onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 30"
+                    min="0"
+                />
+                <InputField
+                    id="snacksAllowance"
+                    label={`Snacks & Drinks (${currency})`}
+                    type="number"
+                    value={snacksAllowance}
+                    onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 10"
+                    min="0"
+                />
             </div>
         </SectionWrapper>
     );
