@@ -4,21 +4,21 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 
-// Import all refactored components without explicit file extensions
-import HomeLocationSection from './components/HomeLocationSection';
-import DestinationsSection from './components/DestinationsSection';
-import TripDatesSection from './components/TripDatesSection';
-import PreferencesSection from './components/PreferencesSection';
-import ItinerarySuggestions from './components/ItinerarySuggestions';
-import BudgetPlanningSection from './components/BudgetPlanningSection';
-import FoodAllowanceSection from './components/FoodAllowanceSection';
-import TransportOptionsSection from './components/TransportOptionsSection';
-import TravelPlanSummary from './components/TravelPlanSummary';
-import TripList from './components/TripList'; // New component
-import ExpenseTracker from './components/ExpenseTracker'; // New component
+// Import all refactored components with explicit .jsx extension
+import HomeLocationSection from './components/HomeLocationSection.jsx';
+import DestinationsSection from './components/DestinationsSection.jsx';
+import TripDatesSection from './components/TripDatesSection.jsx';
+import PreferencesSection from './components/PreferencesSection.jsx';
+import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
+import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
+import TransportOptionsSection from './components/TransportOptionsSection.jsx';
+import TravelPlanSummary from './components/TravelPlanSummary.jsx';
+import TripList from './components/TripList.jsx'; // New component
+import ExpenseTracker from './components/ExpenseTracker.jsx'; // New component
 
-// Import custom hooks without explicit file extensions
-import { useMultiSelection } from './hooks/useMultiSelection';
+// Import custom hooks with explicit .js extension
+import { useMultiSelection } from './hooks/useMultiSelection.js';
 
 // Create a context for sharing state
 export const TripContext = createContext();
@@ -491,7 +491,7 @@ const App = () => {
                 airportParkingCost, estimatedInterCityFlightCost, estimatedInterCityTrainCost,
                 estimatedInterCityBusCost, localPublicTransport, taxiRideShare, walking,
                 dailyLocalTransportAllowance, breakfastAllowance, lunchAllowance, dinnerAllowance,
-                snacksAllowance, carRental, shuttle, airportTransfers, airportParking, // Corrected from duplicate airportTransfers
+                snacksAllowance, carRental, shuttle, airportTransfers, airportParking,
                 selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
                 selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
             };
