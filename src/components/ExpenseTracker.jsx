@@ -1,12 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { TripContext } from '../App.js'; // Explicit .jsx
-import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx
-import InputField from './InputField.jsx'; // Explicit .jsx
+import { TripContext } from '../App.js';
+import SectionWrapper from './SectionWrapper.jsx';
+import InputField from './InputField.jsx';
 import { PlusCircle, DollarSign, XCircle } from 'lucide-react';
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 const ExpenseTracker = () => {
-    const { db, userId, currentTripId, expenses, currency, getFormattedCurrency } = useContext(TripContext);
+    // FIX: Added 'appId' to destructuring from TripContext
+    const { db, userId, currentTripId, expenses, currency, getFormattedCurrency, appId } = useContext(TripContext);
 
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
@@ -46,7 +47,8 @@ const ExpenseTracker = () => {
             return;
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // FIX: Removed this line as appId is now correctly sourced from context
+        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         try {
             await addDoc(collection(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`), {
@@ -72,7 +74,8 @@ const ExpenseTracker = () => {
             console.error("Cannot delete expense: Firestore not initialized, user not authenticated, or no trip selected.");
             return;
         }
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // FIX: Removed this line as appId is now correctly sourced from context
+        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         try {
             await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`, expenseId));
             console.log("Expense deleted successfully:", expenseId);
