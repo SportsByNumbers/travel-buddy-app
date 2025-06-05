@@ -211,9 +211,9 @@ const App = () => {
     useEffect(() => {
         if (isAuthReady && userId && db) {
             // Use process.env.REACT_APP_FIREBASE_APP_ID or a default if __app_id is truly a global variable
-            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
-            const tripsRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
-            const q = query(tripsRef);
+            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
+            const tripsRef = collection(db, `artifacts/${appId}/users/${userId}/trips`); //
+            const q = query(tripsRef); //
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const fetchedTrips = snapshot.docs.map(doc => ({
@@ -233,9 +233,9 @@ const App = () => {
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
-            const expensesRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips/${currentTripId}/expenses`);
-            const q = query(expensesRef);
+            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
+            const expensesRef = collection(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`); //
+            const q = query(expensesRef); //
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const fetchedExpenses = snapshot.docs.map(doc => ({
@@ -306,11 +306,11 @@ const App = () => {
     useEffect(() => {
         const fetchAllCountries = async () => {
             try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags');
-                const data = await response.json();
-                setAllCountries(data.map(country => ({
-                    name: country.name.common,
-                    flag: country.flags.svg
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags'); //
+                const data = await response.json(); //
+                setAllCountries(data.map(country => ({ //
+                    name: country.name.common, //
+                    flag: country.flags.svg //
                 })));
             } catch (error) {
                 console.error("Error fetching all countries for suggestions:", error);
@@ -398,45 +398,45 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
-        const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, tripId);
+        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
+        const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/trips`, tripId); //
         try {
-            const tripDocSnap = await getDoc(tripDocRef);
-            if (tripDocSnap.exists()) {
-                const tripData = tripDocSnap.data();
-                console.log("Loading trip data:", tripData);
+            const tripDocSnap = await getDoc(tripDocRef); //
+            if (tripDocSnap.exists()) { //
+                const tripData = tripDocSnap.data(); //
+                console.log("Loading trip data:", tripData); //
 
                 // Reset all states first to avoid stale data
-                resetTripStates();
+                resetTripStates(); //
 
                 // Populate states with loaded data (handle potential undefined/null)
-                setCountries(tripData.countries || []);
-                setCities(tripData.cities || []);
-                setStartDate(tripData.startDate ? new Date(tripData.startDate) : null);
-                setEndDate(tripData.endDate ? new Date(tripData.endDate) : null);
-                setStarRating(tripData.starRating || '');
-                setHomeCountry(tripData.homeCountry || { name: '', flag: '' });
-                setHomeCity(tripData.homeCity || '');
-                setTopicsOfInterest(tripData.topicsOfInterest || []);
-                setTravelStyle(tripData.travelStyle || '');
-                setHotelAmenities(tripData.hotelAmenities || []);
-                setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
+                setCountries(tripData.countries || []); //
+                setCities(tripData.cities || []); //
+                setStartDate(tripData.startDate ? new Date(tripData.startDate) : null); //
+                setEndDate(tripData.endDate ? new Date(tripData.endDate) : null); //
+                setStarRating(tripData.starRating || ''); //
+                setHomeCountry(tripData.homeCountry || { name: '', flag: '' }); //
+                setHomeCity(tripData.homeCity || ''); //
+                setTopicsOfInterest(tripData.topicsOfInterest || []); //
+                setTravelStyle(tripData.travelStyle || ''); //
+                setHotelAmenities(tripData.hotelAmenities || []); //
+                setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true); //
                 setNumberOfAdults(tripData.numberOfAdults || 1); // Load adults
                 setNumberOfChildren(tripData.numberOfChildren || 0); // Load children
-                setCurrency(tripData.currency || 'USD');
-                setMoneyAvailable(tripData.moneyAvailable || 0);
-                setMoneySaved(tripData.moneySaved || 0);
-                setContingencyPercentage(tripData.contingencyPercentage || 10);
-                setEstimatedFlightCost(tripData.estimatedFlightCost || 0);
-                setEstimatedHotelCost(tripData.estimatedHotelCost || 0);
-                setEstimatedActivityCost(tripData.estimatedActivityCost || 0);
-                setEstimatedMiscellaneousCost(tripData.estimatedMiscellaneousCost || 0);
-                setEstimatedTransportCost(tripData.estimatedTransportCost || 0);
-                setCarRentalCost(tripData.carRentalCost || 0);
-                setShuttleCost(tripData.shuttleCost || 0);
-                setAirportTransfersCost(tripData.airportTransfersCost || 0);
-                setAirportParkingCost(tripData.airportParkingCost || 0);
-                setEstimatedInterCityFlightCost(tripData.estimatedInterCityFlightCost || 0);
+                setCurrency(tripData.currency || 'USD'); //
+                setMoneyAvailable(tripData.moneyAvailable || 0); //
+                setMoneySaved(tripData.moneySaved || 0); //
+                setContingencyPercentage(tripData.contingencyPercentage || 10); //
+                setEstimatedFlightCost(tripData.estimatedFlightCost || 0); //
+                setEstimatedHotelCost(tripData.estimatedHotelCost || 0); //
+                setEstimatedActivityCost(tripData.estimatedActivityCost || 0); //
+                setEstimatedMiscellaneousCost(tripData.estimatedMiscellaneousCost || 0); //
+                setEstimatedTransportCost(tripData.estimatedTransportCost || 0); //
+                setCarRentalCost(tripData.carRentalCost || 0); //
+                setShuttleCost(tripData.shuttleCost || 0); //
+                setAirportTransfersCost(tripData.airportTransfersCost || 0); //
+                setAirportParkingCost(tripData.airportParkingCost || 0); //
+                setEstimatedInterCityFlightCost(tripData.estimatedInterCityFlightCost || 0); //
                 setEstimatedInterCityTrainCost(tripData.estimatedInterCityTrainCost || 0);
                 setEstimatedInterCityBusCost(tripData.estimatedInterCityBusCost || 0);
                 setLocalPublicTransport(tripData.localPublicTransport || false);
@@ -454,16 +454,16 @@ const App = () => {
                 setTravelPlanSummary(tripData.travelPlanSummary || null);
 
                 // Load selected AI suggestions (ensure they exist and handle defaults)
-                setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []);
-                setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []);
-                setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []);
-                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []);
-                setSelectedSuggestedTours(tripData.selectedSuggestedTours || []);
-                setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
+                setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []); //
+                setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []); //
+                setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []); //
+                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []); //
+                setSelectedSuggestedTours(tripData.selectedSuggestedTours || []); //
+                setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []); //
 
                 setCurrentTripId(tripId); // Set the current trip ID after loading
                 setIsNewTripStarted(false); // EXISTING TRIP: Set to false
-                console.log(`Trip ${tripId} loaded successfully.`);
+                console.log(`Trip ${tripId} loaded successfully.`); //
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 console.warn("No such trip document!");
@@ -496,7 +496,7 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
 
         try {
             const tripDataToSave = {
@@ -523,15 +523,15 @@ const App = () => {
 
             if (currentTripId) {
                 // Update existing trip
-                const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, currentTripId);
-                await setDoc(tripDocRef, tripDataToSave, { merge: true });
-                console.log("Trip updated with ID:", currentTripId);
+                const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/trips`, currentTripId); //
+                await setDoc(tripDocRef, tripDataToSave, { merge: true }); //
+                console.log("Trip updated with ID:", currentTripId); //
             } else {
                 // Create new trip
-                const tripsCollectionRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
-                const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
+                const tripsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/trips`); //
+                const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave); //
                 setCurrentTripId(newTripDocRef.id); // Set the newly created trip as current
-                console.log("New trip created with ID:", newTripDocRef.id);
+                console.log("New trip created with ID:", newTripDocRef.id); //
             }
             // After saving, generate summary again to refresh UI with latest data, and scroll to summary
             setTravelPlanSummary(summaryData);
@@ -696,4 +696,163 @@ const App = () => {
             remainingBudgetActual, // New: Remaining budget based on actual spending
             topicsOfInterest,
             // Include selected AI suggestions for persistence
-            selected
+            selectedSuggestedActivities, //
+            selectedSuggestedFoodLocations, //
+            selectedSuggestedThemeParks, //
+            selectedSuggestedTouristSpots, //
+            selectedSuggestedTours, //
+            selectedSuggestedSportingEvents, //
+        };
+
+        saveCurrentTrip(summaryData); // Save/update the trip in Firestore
+    };
+
+    const getFormattedCurrency = (amount) => {
+        const numAmount = parseFloat(amount);
+        if (isNaN(numAmount)) return `${currency}0.00`;
+        switch (currency) {
+            case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
+            case 'GBP': return `£${numAmount.toFixed(2)}`;
+            case 'EUR': return `€${numAmount.toFixed(2)}`;
+            default: return `$${numAmount.toFixed(2)}`;
+        }
+    };
+
+    // Bundle all state and helper functions into a single context value
+    const contextValue = {
+        db, auth, userId, isAuthReady, // Firebase related
+        trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
+        isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
+
+        countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
+        newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics,
+        startDate, setStartDate, endDate, setEndDate, overallDuration, starRating, setStarRating, travelStyle,
+        setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
+        homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
+        availableAmenities, isPerPerson, setIsPerPerson, numberOfAdults, setNumberOfAdults, numberOfChildren, setNumberOfChildren, // New states
+        numberOfPeople, // Pass derived total
+        currency, setCurrency,
+        moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
+        estimatedFlightCost, setEstimatedFlightCost, estimatedHotelCost, setEstimatedHotelCost, estimatedActivityCost,
+        setEstimatedActivityCost, estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, estimatedTransportCost,
+        setEstimatedTransportCost, carRentalCost, setCarRentalCost, shuttleCost, setShuttleCost, airportTransfersCost,
+        setAirportTransfersCost, airportParkingCost, setAirportParkingCost, estimatedInterCityFlightCost,
+        setEstimatedInterCityFlightCost, estimatedInterCityTrainCost, setEstimatedInterCityTrainCost,
+        estimatedInterCityBusCost, setEstimatedInterCityBusCost, localPublicTransport, setLocalPublicTransport,
+        taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
+        actualFlightCost, setActualFlightCost, actualHotelCost, setActualHotelCost, actualActivityCost,
+        setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
+        setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
+        lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
+        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
+        travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
+        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
+        setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
+        setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
+        setSuggestionError, allCountries,
+        isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
+        expenses, setExpenses, // Pass expenses state
+
+        selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities,
+        selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations,
+        selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks,
+        selectedSuggestedTouristSpots, toggleSuggestedTouristSpots, setSelectedSuggestedTouristSpots,
+        selectedSuggestedTours, toggleSuggestedTours, setSelectedSuggestedTours,
+        selectedSuggestedSportingEvents, toggleSuggestedSportingEvents, setSelectedSuggestedSportingEvents,
+
+        homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, destCountryError, setDestCountryError,
+        destCityError, setDestCityError, dateError, setDateError,
+        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError, // New error states
+        newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
+
+        getFormattedCurrency, toggleSuggestionSelection
+    };
+
+    if (!isAuthReady) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+                <Loader className="animate-spin text-indigo-600" size={48} />
+                <p className="ml-4 text-indigo-800 text-lg">Loading application...</p>
+            </div>
+        );
+    }
+
+    return (
+        <TripContext.Provider value={contextValue}>
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased print:bg-white print:p-0">
+                <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl print:shadow-none print:rounded-none print:p-4">
+                    <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-6 tracking-tight print:text-black">
+                        <span className="block text-indigo-600 text-xl mb-1 print:text-gray-700">Your Ultimate</span>
+                        Travel Planner
+                    </h1>
+
+                    {userId && ( // Display userId and trip management only when authenticated
+                        <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
+                            <p className="text-sm text-gray-600 mb-2 sm:mb-0">
+                                User ID: <span className="font-mono text-indigo-700 break-all">{userId}</span>
+                            </p>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={createNewTrip}
+                                    className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md"
+                                >
+                                    <PlusCircle size={16} className="mr-1" /> New Trip
+                                </button>
+                                <TripList /> {/* New TripList component */}
+                            </div>
+                        </div>
+                    )}
+
+
+                    {/* MODIFIED: Only show sections if a trip is being planned (either new or loaded) */}
+                    {currentTripId !== null || isNewTripStarted ? (
+                        <>
+                            <HomeLocationSection />
+                            <DestinationsSection />
+                            <TripDatesSection />
+                            <PreferencesSection />
+                            <ItinerarySuggestions />
+                            <BudgetPlanningSection />
+                            <FoodAllowanceSection />
+                            <TransportOptionsSection />
+
+                            {/* Generate Travel Plan Button */}
+                            <div className="text-center mt-10 print:hidden">
+                                <button
+                                    onClick={calculateTravelPlan}
+                                    className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || (numberOfAdults + numberOfChildren) < 1}
+                                >
+                                    {isGeneratingSuggestions ? (
+                                        <span className="flex items-center justify-center">
+                                            <Loader className="animate-spin mr-2" size={24} /> Generating Plan & Saving...
+                                        </span>
+                                    ) : (
+                                        currentTripId ? 'Update Travel Plan' : 'Generate & Save Travel Plan'
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Travel Plan Summary */}
+                            <TravelPlanSummary />
+                            {/* Expense Tracker Section */}
+                            <ExpenseTracker /> {/* New ExpenseTracker component */}
+                        </>
+                    ) : (
+                        <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
+                            <p className="text-lg mb-4">Start by creating a new trip or loading an existing one!</p>
+                            <button
+                                onClick={createNewTrip}
+                                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                            >
+                                <PlusCircle size={20} className="mr-2" /> Start New Travel Plan
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </TripContext.Provider>
+    );
+};
+
+export default App;
