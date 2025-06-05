@@ -931,7 +931,6 @@ const App = () => {
                 />
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
-            </b>
           </div>
 
           {isPerPerson && (
