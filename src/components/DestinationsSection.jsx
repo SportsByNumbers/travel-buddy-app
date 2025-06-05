@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react'; // Removed useEffect
+import React, { useContext, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
@@ -9,7 +9,7 @@ import { useCountrySearch } from '../hooks/useCountrySearch';
 import { fetchCountryData } from '../services/apiService';
 
 const DestinationsSection = () => {
-    const { countries, setCountries, cities, setCities, newCountry, setNewCountry, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
+    const { countries, setCountries, cities, setCities, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
     const destCountryInputRef = useRef(null);
 
     const { inputValue: destCountryInputValue, setInputValue: setDestCountryInputValue, filteredSuggestions: filteredDestCountrySuggestions, handleInputChange: handleDestCountryInputChange, clearSuggestions: clearDestCountrySuggestions } = useCountrySearch(allCountries, countries);
