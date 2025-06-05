@@ -1,4 +1,4 @@
-// src/components/ItinerarySuggestions.jsx (Example - integrate these changes into your existing file)
+// src/components/ItinerarySuggestions.jsx
 
 import React, { useContext } from 'react';
 import { TripContext } from '../App.js'; // Ensure correct path to App.js
@@ -6,26 +6,28 @@ import { Loader } from 'lucide-react'; // Add this import for the Loader compone
 
 const ItinerarySuggestions = () => {
     const {
-        suggestedActivities,
-        setSuggestedActivities,
-        isGeneratingSuggestions,
-        suggestionError,
-        // ... (keep any other context values you were already destructuring)
+        // Removed as unused in this component:
+        // suggestedActivities,
+        // setSuggestedActivities,
+        // suggestionError,
+        // setSelectedSuggestedActivities,
+        // setSelectedSuggestedFoodLocations,
+        // setSelectedSuggestedThemeParks,
+        // setSelectedSuggestedTouristSpots,
+        // setSelectedSuggestedTours,
+        // setSelectedSuggestedSportingEvents,
 
-        // Add these setSelected... functions to your useContext destructuring:
-        setSelectedSuggestedActivities,
-        setSelectedSuggestedFoodLocations,
-        setSelectedSuggestedThemeParks,
-        setSelectedSuggestedTouristSpots,
-        setSelectedSuggestedTours,
-        setSelectedSuggestedSportingEvents
+        // Keep these if you use them:
+        isGeneratingSuggestions,
+        // ... (keep any other context values you were already destructuring and using)
     } = useContext(TripContext);
 
     // ... rest of your existing ItinerarySuggestions.jsx code
+    // Ensure you are actually using `isGeneratingSuggestions` in your JSX,
+    // and if you need the other `suggested...` or `setSelectedSuggested...` variables,
+    // make sure to uncomment them and use them in your component's logic or JSX.
 
     return (
-        // ... your existing JSX, where Loader is used, it should now be defined.
-        // Example:
         <section className="mt-8 p-6 bg-white rounded-xl shadow-md">
             <h2 className="text-2xl font-semibold text-indigo-800 mb-4">Itinerary Suggestions</h2>
             {isGeneratingSuggestions && (
