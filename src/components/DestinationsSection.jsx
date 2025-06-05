@@ -1,15 +1,28 @@
 import React, { useContext, useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { TripContext } from '../App';
-import SectionWrapper from './SectionWrapper';
-import TagInput from './TagInput';
-import InputField from './InputField';
-import CheckboxGroup from './CheckboxGroup';
-import { useCountrySearch } from '../hooks/useCountrySearch';
-import { fetchCountryData } from '../services/apiService';
+import { TripContext } from '../App.jsx';
+import SectionWrapper from './SectionWrapper.jsx';
+import TagInput from './TagInput.jsx';
+import InputField from './InputField.jsx';
+import CheckboxGroup from './CheckboxGroup.jsx';
+import { useCountrySearch } from '../hooks/useCountrySearch.js';
+import { fetchCountryData } from '../services/apiService.js'; // Assuming you have an apiService
 
 const DestinationsSection = () => {
-    const { countries, setCountries, cities, setCities, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
+    const {
+        countries, setCountries,
+        cities, setCities,
+        newCityName, setNewCityName,
+        newCityDuration, setNewCityDuration,
+        newCityStarRating, setNewCityStarRating,
+        newCityTopics, setNewCityTopics,
+        destCountryError, setDestCountryError,
+        destCityError, setDestCityError,
+        newCityNameError, setNewCityNameError,
+        newCityDurationError, setNewCityDurationError,
+        allCountries, availableTopics
+    } = useContext(TripContext);
+
     const destCountryInputRef = useRef(null);
 
     const { inputValue: destCountryInputValue, setInputValue: setDestCountryInputValue, filteredSuggestions: filteredDestCountrySuggestions, handleInputChange: handleDestCountryInputChange, clearSuggestions: clearDestCountrySuggestions } = useCountrySearch(allCountries, countries);
