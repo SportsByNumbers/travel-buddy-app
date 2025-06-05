@@ -75,8 +75,8 @@ const ItinerarySuggestions = () => {
                 ? `suitable for a trip from ${homeCountry.name}`
                 : '';
 
+        // FIX: Removed duplicated ternary condition for dateContext
         const dateContext = (startDate && endDate)
-            ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
             ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
             : 'at any time of year';
 
