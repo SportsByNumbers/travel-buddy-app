@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
-import { TripContext } from '../App';
-import SectionWrapper from './SectionWrapper';
-import InputField from './InputField';
+import { TripContext } from '../App.jsx'; // Explicit .jsx
+import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx
+import InputField from './InputField.jsx'; // Explicit .jsx
 import { DollarSign } from 'lucide-react';
 
 const BudgetPlanningSection = () => {
