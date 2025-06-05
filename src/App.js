@@ -36,6 +36,7 @@ const App = () => {
   const [estimatedHotelCost, setEstimatedHotelCost] = useState(0);
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
+  // CORRECTED: Proper useState declaration
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
 
   // Food allowances
@@ -87,6 +88,7 @@ const App = () => {
   useEffect(() => {
     const fetchAllCountries = async () => {
       try {
+        // CORRECTED: Removed Markdown link formatting from URL
         const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags');
         const data = await response.json();
         setAllCountries(data.map(country => ({
@@ -567,7 +569,7 @@ const App = () => {
                   className={`${inputClass} w-full`}
                 />
                 <button onClick={handleSetHomeCountry} className={`${buttonClass} ml-3`}>Set</button>
-              </b>
+              </div>
               {/* Country Suggestions Dropdown */}
               {filteredHomeCountrySuggestions.length > 0 && (
                 <ul className={suggestionListClass}>
@@ -582,7 +584,7 @@ const App = () => {
                       {country.name}
                     </li>
                   ))}
-                </ul>
+                </b>
               )}
               {/* Display selected home country */}
               {homeCountry.name && (
@@ -637,7 +639,7 @@ const App = () => {
                   className={`${inputClass} w-full`}
                 />
                 <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
-              </b>
+              </div>
               {/* Destination Country Suggestions Dropdown */}
               {filteredDestCountrySuggestions.length > 0 && (
                 <ul className={suggestionListClass}>
@@ -685,7 +687,8 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
+          </div>
          {/* Date Pickers for Start and End Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -720,7 +723,8 @@ const App = () => {
             <p className={labelClass}>Calculated Duration:</p>
             <p className="text-xl font-semibold text-indigo-700">{duration} days</p>
           </div>
-        </b>
+        </div>
+
         {/* --- ITINERARY & PREFERENCES SECTION --- */}
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
@@ -739,7 +743,7 @@ const App = () => {
                 value={starRating}
                 onChange={(e) => setStarRating(e.target.value)}
                 className={`${inputClass} w-full`}
-              />
+              >
                 <option value="">Select a rating</option>
                 <option value="1">1 Star</option>
                 <option value="2">2 Star</option>
@@ -1023,7 +1027,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </b>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1076,7 +1080,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </b>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -1092,7 +1096,6 @@ const App = () => {
                 type="checkbox"
                 className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
                 checked={shuttle}
-                onChange={(e) => setShuttle(e.target.checked)}
               />
               <span className="ml-2 text-gray-800">Shuttle</span>
             </label>
@@ -1130,7 +1133,7 @@ const App = () => {
             <div className="mb-6 pb-4 border-b border-indigo-200">
               <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
               <p className={summaryItemClass}>
-                <strong>Home Location:</b>{' '}
+                <strong>Home Location:</strong>{' '}
                 {travelPlanSummary.homeCity ? `${travelPlanSummary.homeCity}, ` : ''}
                 {travelPlanSummary.homeCountry.name || 'Not specified'}
                 {travelPlanSummary.homeCountry.flag && (
@@ -1153,7 +1156,7 @@ const App = () => {
               <p className={summaryItemClass}><strong>Destination Cities:</strong> {travelPlanSummary.cities.length > 0 ? travelPlanSummary.cities.join(', ') : 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Duration:</strong> {travelPlanSummary.duration} days</p>
               <p className={summaryItemClass}>
-                <strong>Travel Dates:</b> {travelPlanSummary.startDate} - {travelPlanSummary.endDate}
+                <strong>Travel Dates:</strong> {travelPlanSummary.startDate} - {travelPlanSummary.endDate}
               </p>
             </div>
 
@@ -1161,10 +1164,10 @@ const App = () => {
               <h3 className={summarySubTitleClass}>Preferences & Itinerary:</h3>
               <p className={summaryItemClass}><strong>Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Activities:</strong> {travelPlanSummary.activities || 'Not specified'}</p>
+              <p className={summaryItemClass}><strong>Activities:</b> {travelPlanSummary.activities || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Food Locations:</strong> {travelPlanSummary.foodLocations || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Theme Parks:</b> {travelPlanSummary.themeParks || 'Not specified'}</p>
+              <p className={summaryItemClass}><strong>Theme Parks:</strong> {travelPlanSummary.themeParks || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Tourist Spots:</strong> {travelPlanSummary.touristSpots || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Tours:</strong> {travelPlanSummary.tours || 'Not specified'}</p>
             </div>
@@ -1203,15 +1206,15 @@ const App = () => {
                 {travelPlanSummary.airportParking && <li>Airport Parking</li>}
                 {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking && <li>No specific transport options selected.</li>}
               </ul>
-          </b>
-          </div>
+            </div>
 
             <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
               <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
+            </div>
           </div>
         )}
       </div>
-    </div>
+      </div>
   );
 };
 
