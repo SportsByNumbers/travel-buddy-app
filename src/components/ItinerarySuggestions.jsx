@@ -1,41 +1,29 @@
-import React, { useContext } from 'react';
-import { Compass, Loader } from 'lucide-react';
-import { TripContext } from '../App';
-import SectionWrapper from './SectionWrapper';
-import ToggleButton from './ToggleButton';
-import { fetchAI } from '../services/apiService';
+import React, { useContext, useState } from 'react';
+import { Lightbulb, CheckCircle, PlusCircle } from 'lucide-react';
+import { TripContext } from '../App.jsx';
+import SectionWrapper from './SectionWrapper.jsx';
 
 const ItinerarySuggestions = () => {
-    const { countries, cities, homeCountry, homeCity, startDate, endDate, topicsOfInterest,
-            isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError, setSuggestionError,
-            suggestedActivities, setSuggestedActivities, selectedSuggestedActivities,
-            suggestedFoodLocations, setSuggestedFoodLocations, selectedSuggestedFoodLocations,
-            suggestedThemeParks, setSuggestedThemeParks, selectedSuggestedThemeParks,
-            suggestedTouristSpots, setSuggestedTouristSpots, selectedSuggestedTouristSpots,
-            suggestedTours, setSuggestedTours, selectedSuggestedTours,
-            suggestedSportingEvents, setSuggestedSportingEvents, selectedSuggestedSportingEvents,
-            toggleSuggestionSelection,
-            // ADDED: Destructure the individual setSelected functions from context
-            setSelectedSuggestedActivities,
-            setSelectedSuggestedFoodLocations,
-            setSelectedSuggestedThemeParks,
-            setSelectedSuggestedTouristSpots,
-            setSelectedSuggestedTours,
-            setSelectedSuggestedSportingEvents
+    const {
+        homeCountry, homeCity, countries, cities, startDate, endDate, overallDuration,
+        starRating, travelStyle, hotelAmenities, topicsOfInterest,
+        suggestedActivities, setSuggestedActivities,
+        suggestedFoodLocations, setSuggestedFoodLocations,
+        suggestedThemeParks, setSuggestedThemeParks,
+        suggestedTouristSpots, setSuggestedTouristSpots,
+        suggestedTours, setSuggestedTours,
+        suggestedSportingEvents, setSuggestedSportingEvents,
+        isGeneratingSuggestions, setIsGeneratingSuggestions,
+        suggestionError, setSuggestionError,
+        toggleSuggestionSelection,
+        selectedSuggestedActivities, selectedSuggestedFoodLocations,
+        selectedSuggestedThemeParks, selectedSuggestedTouristSpots,
+        selectedSuggestedTours, selectedSuggestedSportingEvents,
     } = useContext(TripContext);
 
-    const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
-
     const generateSuggestions = async () => {
-        if (countries.length === 0 && cities.length === 0) {
-            setSuggestionError("Please select at least one country or city to get suggestions.");
-            return;
-        }
-
         setIsGeneratingSuggestions(true);
         setSuggestionError('');
-
-        // Clear previous AI-generated suggestions
         setSuggestedActivities([]);
         setSuggestedFoodLocations([]);
         setSuggestedThemeParks([]);
@@ -43,8 +31,7 @@ const ItinerarySuggestions = () => {
         setSuggestedTours([]);
         setSuggestedSportingEvents([]);
 
-        // Clear previous user selections for these suggestions
-        // Now that these are destructured from context, you can directly use them.
+        // Clear previous selections for a fresh generation
         setSelectedSuggestedActivities([]);
         setSelectedSuggestedFoodLocations([]);
         setSelectedSuggestedThemeParks([]);
@@ -52,118 +39,154 @@ const ItinerarySuggestions = () => {
         setSelectedSuggestedTours([]);
         setSelectedSuggestedSportingEvents([]);
 
-
-        const destinationPromptCountries = countries.length > 0 ? `countries: ${countries.map(c => c.name).join(', ')}` : '';
-        const destinationPromptCities = cities.length > 0 ? `cities: ${cities.map(c => `${c.name} (${c.duration} days, ${c.starRating || 'any'} star)`).join(', ')}` : '';
-
-        let fullDestinationPrompt = '';
-        if (destinationPromptCountries && destinationPromptCities) {
-            fullDestinationPrompt = `in the ${destinationPromptCountries} and ${destinationPromptCities}`;
-        } else if (destinationPromptCountries) {
-            fullDestinationPrompt = `in the ${destinationPromptCountries}`;
-        } else if (destinationPromptCities) {
-            fullDestinationPrompt = `in the ${destinationPromptCities}`;
-        }
-
-        const topicsPrompt = topicsOfInterest.length > 0
-            ? `with overall trip topics such as: ${topicsOfInterest.join(', ')}`
-            : '';
-
-        const homeLocationContext = (homeCountry.name && homeCity)
-            ? `suitable for a trip from ${homeCity}, ${homeCountry.name}`
-            : homeCountry.name
-                ? `suitable for a trip from ${homeCountry.name}`
-                : '';
-
-        // FIX: Removed duplicated ternary condition for dateContext
-        const dateContext = (startDate && endDate)
-            ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
-            : 'at any time of year';
-
-        const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${fullDestinationPrompt} ${homeLocationContext} ${dateContext} ${topicsPrompt}. Consider varied hotel star ratings and specific city durations if provided. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
-
-        const suggestionSchema = {
-            type: "OBJECT",
-            properties: {
-                "activities": { "type": "ARRAY", "items": { "type": "STRING" } },
-                "foodLocations": { "type": "ARRAY", "items": { "type": "STRING" } },
-                "themeParks": { "type": "ARRAY", "items": { "type": "STRING" } },
-                "touristSpots": { "type": "ARRAY", "items": { "type": "STRING" } },
-                "tours": { "type": "ARRAY", "items": { "type": "STRING" } },
-                "sportingEvents": { "type": "ARRAY", "items": { "type": "STRING" } }
-            }
+        const tripDetails = {
+            home: { country: homeCountry.name, city: homeCity },
+            destinations: cities.length > 0 ? cities : countries.map(c => ({ name: c.name, duration: 0, starRating: '', topics: [] })),
+            dates: { startDate: startDate?.toLocaleDateString(), endDate: endDate?.toLocaleDateString(), duration: overallDuration },
+            preferences: { travelStyle, starRating, hotelAmenities, topicsOfInterest },
         };
 
-        try {
-            const parsedJson = await fetchAI(prompt, suggestionSchema);
+        const prompt = `Generate comprehensive travel suggestions for a trip with the following details:
+        Home Location: ${tripDetails.home.city}, ${tripDetails.home.country}
+        Destinations: ${tripDetails.destinations.map(d => `${d.name} (${d.duration || 'N/A'} days, ${d.starRating ? d.starRating + ' Star, ' : ''}Topics: ${d.topics.join(', ') || 'None'})`).join('; ')}
+        Dates: From ${tripDetails.dates.startDate} to ${tripDetails.dates.endDate} (${tripDetails.dates.duration} days total)
+        Travel Style: ${tripDetails.preferences.travelStyle || 'Any'}
+        Hotel Rating Preference: ${tripDetails.preferences.starRating || 'Any'}
+        Selected Hotel Amenities: ${tripDetails.preferences.hotelAmenities.join(', ') || 'None'}
+        Topics of Interest: ${tripDetails.preferences.topicsOfInterest.join(', ') || 'None'}
 
-            setSuggestedActivities(parsedJson.activities || []);
-            setSuggestedFoodLocations(parsedJson.foodLocations || []);
-            setSuggestedThemeParks(parsedJson.themeParks || []);
-            setSuggestedTouristSpots(parsedJson.touristSpots || []);
-            setSuggestedTours(parsedJson.tours || []);
-            setSuggestedSportingEvents(parsedJson.sportingEvents || []);
+        Please provide suggestions categorized as follows, each with a brief description. Focus on unique and engaging ideas. If no specific topic of interest is provided, offer general popular suggestions.
+
+        Output should be a JSON object with the following structure:
+        {
+          "activities": ["Activity 1: Description", "Activity 2: Description"],
+          "foodLocations": ["Restaurant A: Cuisine type", "Cafe B: Specialty"],
+          "themeParks": ["Theme Park X: Key rides", "Amusement Park Y: Family attractions"],
+          "touristSpots": ["Landmark P: Historical significance", "Museum Q: Main exhibits"],
+          "tours": ["City Walking Tour: Highlights", "Day Trip to Z: What to expect"],
+          "sportingEvents": ["Local Game: Sport type", "Outdoor Adventure: Activity type"]
+        }
+        If a category is not applicable or no suggestions can be made, return an empty array for that category.`;
+
+        try {
+            const apiKey = ""; // Canvas will automatically provide this in runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    // No explicit responseSchema for flexible output, parse manually
+                }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            console.log("AI Response:", result);
+
+            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                try {
+                    const parsedSuggestions = JSON.parse(text);
+                    setSuggestedActivities(parsedSuggestions.activities || []);
+                    setSuggestedFoodLocations(parsedSuggestions.foodLocations || []);
+                    setSuggestedThemeParks(parsedSuggestions.themeParks || []);
+                    setSuggestedTouristSpots(parsedSuggestions.touristSpots || []);
+                    setSuggestedTours(parsedSuggestions.tours || []);
+                    setSuggestedSportingEvents(parsedSuggestions.sportingEvents || []);
+                } catch (jsonError) {
+                    console.error("Error parsing AI response JSON:", jsonError);
+                    setSuggestionError("Failed to parse AI suggestions. Please try again.");
+                }
+            } else {
+                setSuggestionError("No suggestions received from AI. Please refine your preferences or try again.");
+            }
 
         } catch (error) {
-            console.error("Error generating suggestions:", error);
-            setSuggestionError(error.message || "An error occurred while generating suggestions.");
+            console.error("Error fetching AI suggestions:", error);
+            setSuggestionError("Error generating suggestions. Please check your network or try again later.");
         } finally {
             setIsGeneratingSuggestions(false);
         }
     };
 
-    const SuggestionCategory = ({ title, items, selectedItems, toggleHandler, isLoading }) => (
-        items.length > 0 && ( // Only render category if there are items
-            <div className="mb-6">
-                <h3 className="text-lg font-semibold text-indigo-700 mb-3">{title}:</h3>
-                <div className="flex flex-wrap gap-2">
-                    {isLoading ? (
-                        <div className="flex items-center text-gray-500">
-                            <Loader className="animate-spin mr-2" size={16} /> Loading {title.toLowerCase()}...
-                        </div>
-                    ) : (
-                        items.map((item, index) => (
-                            <ToggleButton
-                                key={index}
-                                item={item}
-                                isSelected={selectedItems.includes(item)}
-                                onToggle={() => toggleHandler(item)}
+    const renderSuggestions = (title, suggestions, selectedItems, toggleFunction) => (
+        suggestions.length > 0 && (
+            <div className="mb-6 bg-gray-50 p-4 rounded-lg shadow-inner">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">{title}</h3>
+                <ul className="space-y-2">
+                    {suggestions.map((suggestion, index) => (
+                        <li key={index} className="flex items-start">
+                            <input
+                                type="checkbox"
+                                id={`${title.replace(/\s/g, '')}-${index}`}
+                                checked={selectedItems.includes(suggestion)}
+                                onChange={() => toggleFunction(suggestion)}
+                                className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                             />
-                        ))
-                    )}
-                </div>
+                            <label htmlFor={`${title.replace(/\s/g, '')}-${index}`} className="ml-3 text-gray-700 text-sm cursor-pointer">
+                                {suggestion}
+                            </label>
+                        </li>
+                    ))}
+                </ul>
             </div>
         )
     );
 
     return (
-        <SectionWrapper title="Itinerary Suggestions" icon={Compass}>
-            <p className="text-sm text-gray-600 mb-6">
-                Generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
-            </p>
+        <SectionWrapper title="Itinerary Suggestions" icon={Lightbulb}>
+            <p className="text-gray-700 mb-6">Let AI suggest activities, food spots, and attractions based on your preferences!</p>
             <div className="text-center mb-6">
                 <button
                     onClick={generateSuggestions}
-                    className={buttonClass}
-                    disabled={isGeneratingSuggestions || (countries.length === 0 && cities.length === 0)}
+                    className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isGeneratingSuggestions || !homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1}
                 >
                     {isGeneratingSuggestions ? (
                         <span className="flex items-center justify-center">
                             <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
                         </span>
                     ) : (
-                        'Generate Itinerary Suggestions'
+                        <span className="flex items-center justify-center">
+                            <PlusCircle size={20} className="mr-2" /> Generate Suggestions
+                        </span>
                     )}
                 </button>
                 {suggestionError && <p className="text-red-500 text-sm mt-2">{suggestionError}</p>}
             </div>
 
-            <SuggestionCategory title="Activities" items={suggestedActivities} selectedItems={selectedSuggestedActivities} toggleHandler={(item) => toggleSuggestionSelection('activities', item)} isLoading={isGeneratingSuggestions} />
-            <SuggestionCategory title="Sporting Events" items={suggestedSportingEvents} selectedItems={selectedSuggestedSportingEvents} toggleHandler={(item) => toggleSuggestionSelection('sportingEvents', item)} isLoading={isGeneratingSuggestions} />
-            <SuggestionCategory title="Food Locations" items={suggestedFoodLocations} selectedItems={selectedSuggestedFoodLocations} toggleHandler={(item) => toggleSuggestionSelection('foodLocations', item)} isLoading={isGeneratingSuggestions} />
-            <SuggestionCategory title="Theme Parks" items={suggestedThemeParks} selectedItems={selectedSuggestedThemeParks} toggleHandler={(item) => toggleSuggestionSelection('themeParks', item)} isLoading={isGeneratingSuggestions} />
-            <SuggestionCategory title="Tourist Spots" items={suggestedTouristSpots} selectedItems={selectedSuggestedTouristSpots} toggleHandler={(item) => toggleSuggestionSelection('touristSpots', item)} isLoading={isGeneratingSuggestions} />
-            <SuggestionCategory title="Tours" items={suggestedTours} selectedItems={selectedSuggestedTours} toggleHandler={(item) => toggleSuggestionSelection('tours', item)} isLoading={isGeneratingSuggestions} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                {renderSuggestions("Suggested Activities", suggestedActivities, selectedSuggestedActivities, toggleSuggestionSelection.bind(null, 'activities'))}
+                {renderSuggestions("Suggested Food Locations", suggestedFoodLocations, selectedSuggestedFoodLocations, toggleSuggestionSelection.bind(null, 'foodLocations'))}
+                {renderSuggestions("Suggested Theme Parks", suggestedThemeParks, selectedSuggestedThemeParks, toggleSuggestionSelection.bind(null, 'themeParks'))}
+                {renderSuggestions("Suggested Tourist Spots", suggestedTouristSpots, selectedSuggestedTouristSpots, toggleSuggestionSelection.bind(null, 'touristSpots'))}
+                {renderSuggestions("Suggested Tours", suggestedTours, selectedSuggestedTours, toggleSuggestionSelection.bind(null, 'tours'))}
+                {renderSuggestions("Suggested Sporting Events", suggestedSportingEvents, selectedSuggestedSportingEvents, toggleSuggestionSelection.bind(null, 'sportingEvents'))}
+            </div>
+
+            {(suggestedActivities.length > 0 || suggestedFoodLocations.length > 0 || suggestedThemeParks.length > 0 || suggestedTouristSpots.length > 0 || suggestedTours.length > 0 || suggestedSportingEvents.length > 0) && (
+                <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm">
+                    <p className="font-semibold mb-2">Selected Suggestions:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                        {selectedSuggestedActivities.length > 0 && <li>Activities: {selectedSuggestedActivities.join(', ')}</li>}
+                        {selectedSuggestedFoodLocations.length > 0 && <li>Food: {selectedSuggestedFoodLocations.join(', ')}</li>}
+                        {selectedSuggestedThemeParks.length > 0 && <li>Theme Parks: {selectedSuggestedThemeParks.join(', ')}</li>}
+                        {selectedSuggestedTouristSpots.length > 0 && <li>Tourist Spots: {selectedSuggestedTouristSpots.join(', ')}</li>}
+                        {selectedSuggestedTours.length > 0 && <li>Tours: {selectedSuggestedTours.join(', ')}</li>}
+                        {selectedSuggestedSportingEvents.length > 0 && <li>Sporting Events: {selectedSuggestedSportingEvents.join(', ')}</li>}
+                        {selectedSuggestedActivities.length === 0 && selectedSuggestedFoodLocations.length === 0 &&
+                         selectedSuggestedThemeParks.length === 0 && selectedSuggestedTouristSpots.length === 0 &&
+                         selectedSuggestedTours.length === 0 && selectedSuggestedSportingEvents.length === 0 &&
+                         <li>None selected yet. Select items above to include them in your plan summary.</li>}
+                    </ul>
+                </div>
+            )}
         </SectionWrapper>
     );
 };
