@@ -1,9 +1,9 @@
 // components/BudgetPlanningSection.jsx
 import React, { useContext } from 'react';
-import { TripContext } from '../App'; // Adjust path if necessary
-import SectionWrapper from './SectionWrapper.jsx'; // CORRECTED: Import SectionWrapper
+import { TripContext } from '../App.js'; // Ensure .js extension for App
+import SectionWrapper from './SectionWrapper.jsx'; // FIX: Corrected import to SectionWrapper
 import InputField from './InputField.jsx';
-import { PlusCircle, XCircle } from 'lucide-react'; // For add/remove icons
+import { PlusCircle, XCircle } from 'lucide-react';
 
 const BudgetPlanningSection = () => {
     const {
@@ -19,8 +19,8 @@ const BudgetPlanningSection = () => {
         isPerPerson, setIsPerPerson,
         travelingParties, setTravelingParties,
         numberOfPeople,
-        numberOfAdultsError, setNumberOfAdultsError,
-        numberOfChildrenError, setNumberOfChildrenError,
+        numberOfAdultsError, // FIX: Removed setNumberOfAdultsError as it's not used here
+        numberOfChildrenError, // FIX: Removed setNumberOfChildrenError as it's not used here
     } = useContext(TripContext);
 
     // Handler to update a specific party's details
@@ -47,8 +47,8 @@ const BudgetPlanningSection = () => {
     };
 
     return (
-        <SectionWrapper // CORRECTED: Use SectionWrapper here
-            icon={<span className="text-xl">💰</span>}
+        <SectionWrapper // FIX: Used SectionWrapper here
+            icon={<span className="text-xl">💰</span>} // This icon usage is fine
             title="Budget Planning"
             description="Plan your trip's finances. Estimate costs and track savings."
         >
