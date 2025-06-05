@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
-import { TripContext } from '../App.js'; // Explicit .jsx
+import { TripContext } from '../App.js';
 import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { doc, deleteDoc } from 'firebase/firestore';
 
 const TripList = () => {
-    const { trips, loadTrip, currentTripId, db, userId, setTravelPlanSummary, createNewTrip } = useContext(TripContext);
+    const { trips, loadTrip, currentTripId, db, userId, /* Removed: setTravelPlanSummary, */ createNewTrip } = useContext(TripContext);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // Stores trip ID to confirm deletion
 
