@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
-import { TripContext } from '../App.js'; // Explicit .jsx
-import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx
+import { TripContext } from '../App.js';
+import SectionWrapper from './SectionWrapper.jsx';
 import { FileText } from 'lucide-react';
 
 const TravelPlanSummary = () => {
-    const { travelPlanSummary, getFormattedCurrency, currentTripId, expenses } = useContext(TripContext);
+    const { travelPlanSummary, getFormattedCurrency, currentTripId /* Removed: expenses */ } = useContext(TripContext);
 
     if (!travelPlanSummary) {
         return (
