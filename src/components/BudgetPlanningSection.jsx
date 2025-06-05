@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
-import { Wallet, Info, Loader } from 'lucide-react';
+import { Wallet, Info, Loader } from 'lucide-react'; // Info and Loader are now used
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 import InputField from './InputField';
-import CostInput from './CostInput'; // Import the CostInput component
+import CostInput from './CostInput';
 import { fetchAI } from '../services/apiService';
 
 const BudgetPlanningSection = () => {
@@ -12,20 +12,18 @@ const BudgetPlanningSection = () => {
             estimatedHotelCost, setEstimatedHotelCost, actualHotelCost, setActualHotelCost,
             estimatedActivityCost, setEstimatedActivityCost, actualActivityCost, setActualActivityCost,
             estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, actualMiscellaneousCost, setActualMiscellaneousCost,
-            estimatedTransportCost, // This specific estimatedTransportCost is from AI, handled separately
-            actualTransportCost, setActualTransportCost, // This specific actualTransportCost combines manual transport, handled separately
+            estimatedTransportCost, setEstimatedTransportCost, // Keep these as they are used
+            actualTransportCost, setActualTransportCost, // Keep these as they are used
             countries, cities, overallDuration, homeCountry, homeCity,
             selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
             selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
-            starRating, travelStyle, hotelAmenities, dateError, setDateError, // Also need setDateError here for validation
-
-            setEstimatedTransportCost, // Need this setter for AI generated transport
-            setBreakfastAllowance, setLunchAllowance, setDinnerAllowance, setSnacksAllowance, // Setters for allowances
+            starRating, travelStyle, hotelAmenities, setDateError, // setDateError is used for validation feedback
+            setBreakfastAllowance, setLunchAllowance, setDinnerAllowance, setSnacksAllowance,
             isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
-            carRental, shuttle, airportTransfers, airportParking, localPublicTransport, taxiRideShare, walking, // Transport options (booleans)
+            carRental, shuttle, airportTransfers, airportParking, localPublicTransport, taxiRideShare, walking,
     } = useContext(TripContext);
 
-    const { getFormattedCurrency } = useContext(TripContext); // Get currency formatter from context
+    const { getFormattedCurrency } = useContext(TripContext);
 
     const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
     const labelClass = "block text-sm font-medium text-gray-700 mb-1";
@@ -35,22 +33,22 @@ const BudgetPlanningSection = () => {
         // Initial validation check
         let hasError = false;
         if (countries.length === 0 && cities.length === 0) {
-          setBudgetError("Please specify destination countries/cities."); // Use setter
+          setBudgetError("Please specify destination countries/cities.");
           hasError = true;
         } else {
-          setBudgetError(''); // Clear error if condition is met
+          setBudgetError('');
         }
         if (overallDuration < 1) {
-           setDateError("Please select valid start and end dates."); // Use setter
+           setDateError("Please select valid start and end dates.");
            hasError = true;
         } else {
-           setDateError(''); // Clear error if condition is met
+           setDateError('');
         }
         if (numberOfPeople < 1) {
-          setNumberOfPeopleError("Number of people must be at least 1."); // Use setter
+          setNumberOfPeopleError("Number of people must be at least 1.");
           hasError = true;
         } else {
-          setNumberOfPeopleError(''); // Clear error if condition is met
+          setNumberOfPeopleError('');
         }
         if (hasError) return;
 
@@ -225,7 +223,7 @@ const BudgetPlanningSection = () => {
                     onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
                     min="0"
                     max="100"
-                    icon={Info}
+                    icon={Info} // Used the Info icon here
                 />
             </div>
 
