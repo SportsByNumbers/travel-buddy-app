@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Wallet, Info, Loader } from 'lucide-react'; // Info and Loader are now used
+import { Wallet, Info, Loader } from 'lucide-react';
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 import InputField from './InputField';
@@ -12,18 +12,19 @@ const BudgetPlanningSection = () => {
             estimatedHotelCost, setEstimatedHotelCost, actualHotelCost, setActualHotelCost,
             estimatedActivityCost, setEstimatedActivityCost, actualActivityCost, setActualActivityCost,
             estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, actualMiscellaneousCost, setActualMiscellaneousCost,
-            estimatedTransportCost, setEstimatedTransportCost, // Keep these as they are used
-            actualTransportCost, setActualTransportCost, // Keep these as they are used
+            estimatedTransportCost, // This specific estimatedTransportCost is from AI, handled separately
+            actualTransportCost, setActualTransportCost, // This specific actualTransportCost combines manual transport, handled separately
             countries, cities, overallDuration, homeCountry, homeCity,
             selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
             selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
             starRating, travelStyle, hotelAmenities, setDateError, // setDateError is used for validation feedback
-            setBreakfastAllowance, setLunchAllowance, setDinnerAllowance, setSnacksAllowance,
+            setEstimatedTransportCost, // Need this setter for AI generated transport
+            setBreakfastAllowance, setLunchAllowance, setDinnerAllowance, setSnacksAllowance, // Setters for allowances
             isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
-            carRental, shuttle, airportTransfers, airportParking, localPublicTransport, taxiRideShare, walking,
+            carRental, shuttle, airportTransfers, airportParking, localPublicTransport, taxiRideShare, walking, // Transport options (booleans)
     } = useContext(TripContext);
 
-    const { getFormattedCurrency } = useContext(TripContext);
+    const { getFormattedCurrency } = useContext(TripContext); // Get currency formatter from context
 
     const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
     const labelClass = "block text-sm font-medium text-gray-700 mb-1";
@@ -33,22 +34,22 @@ const BudgetPlanningSection = () => {
         // Initial validation check
         let hasError = false;
         if (countries.length === 0 && cities.length === 0) {
-          setBudgetError("Please specify destination countries/cities.");
+          setBudgetError("Please specify destination countries/cities."); // Use setter
           hasError = true;
         } else {
-          setBudgetError('');
+          setBudgetError(''); // Clear error if condition is met
         }
         if (overallDuration < 1) {
-           setDateError("Please select valid start and end dates.");
+           setDateError("Please select valid start and end dates."); // Use setter
            hasError = true;
         } else {
-           setDateError('');
+           setDateError(''); // Clear error if condition is met
         }
         if (numberOfPeople < 1) {
-          setNumberOfPeopleError("Number of people must be at least 1.");
+          setNumberOfPeopleError("Number of people must be at least 1."); // Use setter
           hasError = true;
         } else {
-          setNumberOfPeopleError('');
+          setNumberOfPeopleError(''); // Clear error if condition is met
         }
         if (hasError) return;
 
@@ -223,7 +224,7 @@ const BudgetPlanningSection = () => {
                     onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
                     min="0"
                     max="100"
-                    icon={Info} // Used the Info icon here
+                    icon={Info}
                 />
             </div>
 
