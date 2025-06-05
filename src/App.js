@@ -16,6 +16,7 @@ const App = () => {
   const [startDate, setStartDate] = useState(null); // Initial state is null
   const [endDate, setEndDate] = useState(null); // Initial state is null
   // Duration will now be derived, with corrected parentheses for ESLint
+  // ESLint Fix: Added parentheses to clarify the order of operations for '&&' and '?'
   const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
   const [starRating, setStarRating] = useState('');
 
@@ -291,9 +292,10 @@ const App = () => {
     setSelectedSuggestedSportingEvents([]);
 
 
-    const destinationPrompt = (countries.length > 0 && cities.length > 0) // Added parentheses for clarity
+    // ESLint Fix: Added parentheses to clarify the order of operations for '&&' and ':'
+    const destinationPrompt = (countries.length > 0 && cities.length > 0)
       ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
-      : (countries.length > 0) // Added parentheses for clarity
+      : (countries.length > 0)
         ? `in the countries: ${countries.map(c => c.name).join(', ')}`
         : `in the cities: ${cities.join(', ')}`;
 
@@ -347,9 +349,10 @@ const App = () => {
     setIsGeneratingBudget(true);
     setBudgetError('');
 
-    const destinationPrompt = (countries.length > 0 && cities.length > 0) // Added parentheses for clarity
+    // ESLint Fix: Added parentheses to clarify the order of operations for '&&' and ':'
+    const destinationPrompt = (countries.length > 0 && cities.length > 0)
       ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')})`
-      : (countries.length > 0) // Added parentheses for clarity
+      : (countries.length > 0)
         ? `for a trip to ${countries.map(c => c.name).join(' and ')}`
         : `for a trip to ${cities.join(', ')}`;
 
