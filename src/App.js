@@ -36,7 +36,7 @@ const App = () => {
   const [estimatedHotelCost, setEstimatedHotelCost, ] = useState(0);
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
-  const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
+  const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost = useState(0)];
 
   // Food allowances
   const [breakfastAllowance, setBreakfastAllowance] = useState(0);
@@ -550,7 +550,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -611,7 +611,7 @@ const App = () => {
                   <span className={tagClass}>
                     {homeCity}
                   </span>
-                </div> {/* CORRECTED: Changed </b> to </div> */}
+                </div>
               )}
             </div>
           </div>
@@ -621,7 +621,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-          </div>
+          </b>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -649,7 +649,7 @@ const App = () => {
                     >
                       {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
                       {country.name}
-                    </div>
+                    </li>
                   ))}
                 </ul>
               )}
@@ -686,7 +686,7 @@ const App = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </b>
          {/* Date Pickers for Start and End Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -715,7 +715,7 @@ const App = () => {
                 placeholderText="Select end date"
                 className={`${inputClass} w-full`}
               />
-            </div> {/* CORRECTED: Changed </b> to </div> */}
+            </div>
           </div>
           <div>
             <p className={labelClass}>Calculated Duration:</p>
@@ -750,7 +750,6 @@ const App = () => {
                 <option value="5">5 Star</option>
               </select>
             </div>
-          </div>
             {/* Topics of Interest */}
             <div className="md:col-span-2">
               <label className={labelClass}>Topics of Interest:</label>
@@ -820,7 +819,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div>
+            </b>
           )}
 
           {/* Suggested Food Locations */}
@@ -900,7 +899,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </div>
+          </h2>
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -930,7 +929,7 @@ const App = () => {
                 />
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
-            </div> {/* CORRECTED: Changed </b> to </div> */}
+            </div>
           </div>
 
           {isPerPerson && (
@@ -963,7 +962,6 @@ const App = () => {
             </button>
             {budgetError && <p className="text-red-500 text-sm mt-2">{budgetError}</p>}
           </div>
-        </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -1009,7 +1007,7 @@ const App = () => {
                 min="0"
                 className={`${inputClass} w-full`}
               />
-            </div> {/* CORRECTED: Changed </b> to </div> */}
+            </div>
             <div>
               <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost:</label>
               <input
@@ -1028,7 +1026,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </div>
+          </h2> {/* CORRECTED: Changed </b> to <h2> */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1073,7 +1071,7 @@ const App = () => {
                 min="0"
                 className={`${inputClass} w-full`}
               />
-            </div> {/* CORRECTED: Changed </b> to </div> */}
+            </div>
           </div>
         </div>
 
@@ -1081,7 +1079,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </div>
+          </h2> {/* CORRECTED: Changed </b> to </h2> */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -1187,7 +1185,8 @@ const App = () => {
                 <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
                 <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
               </ul>
-            </div>
+            </b>
+          </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
               <h3 className={summarySubTitleClass}>Food Allowances:</h3>
