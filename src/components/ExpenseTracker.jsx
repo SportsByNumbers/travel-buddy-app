@@ -21,7 +21,7 @@ const ExpenseTracker = () => {
     // Set default expense date to today
     useEffect(() => {
         const today = new Date();
-        setExpenseDate(today.toISOString().split('T')[0]); // YYYY-MM-DD
+        setExpenseDate(today.toISOString().split('T')[0]); // Format as YYYY-MM-DD
     }, []);
 
     const handleAddExpense = async () => {
