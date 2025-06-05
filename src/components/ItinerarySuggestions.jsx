@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { Lightbulb, CheckCircle, PlusCircle } from 'lucide-react';
-import { TripContext } from '../App.jsx';
+import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 
 const ItinerarySuggestions = () => {
