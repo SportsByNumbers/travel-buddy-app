@@ -1,15 +1,17 @@
 import React, { useContext } from 'react';
-import { Car } from 'lucide-react';
+import { Car } from 'lucide-react'; // Car icon is used here
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 import InputField from './InputField';
 
 const TransportOptionsSection = () => {
-    const { estimatedTransportCost, setEstimatedTransportCost, actualTransportCost, setActualTransportCost,
+    // Removed estimatedTransportCost, setEstimatedTransportCost, actualTransportCost, setActualTransportCost
+    // as their primary display/input is handled in BudgetPlanningSection.
+    const {
             carRental, setCarRental, carRentalCost, setCarRentalCost, shuttle, setShuttle, shuttleCost, setShuttleCost,
             airportTransfers, setAirportTransfers, airportTransfersCost, setAirportTransfersCost, airportParking, setAirportParking, airportParkingCost, setAirportParkingCost,
             estimatedInterCityFlightCost, setEstimatedInterCityFlightCost, estimatedInterCityTrainCost, setEstimatedInterCityTrainCost, estimatedInterCityBusCost, setEstimatedInterCityBusCost,
-            localPublicTransport, setLocalPublicTransport, taxiRideShare, setTaxiShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
+            localPublicTransport, setLocalPublicTransport, taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
             getFormattedCurrency
     } = useContext(TripContext);
 
@@ -103,7 +105,7 @@ const TransportOptionsSection = () => {
                             type="checkbox"
                             className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
                             checked={taxiRideShare}
-                            onChange={(e) => setTaxiShare(e.target.checked)}
+                            onChange={(e) => setTaxiRideShare(e.target.checked)} {/* Fixed typo here */}
                         />
                         <span className="ml-2 text-gray-800">Taxis / Ride-Share</span>
                     </label>
@@ -127,19 +129,6 @@ const TransportOptionsSection = () => {
                     onChange={(e) => setDailyLocalTransportAllowance(parseFloat(e.target.value) || 0)}
                     min="0"
                 />
-
-                {/* Actual Total Transport Cost is primarily managed in BudgetPlanningSection,
-                    but kept here if you want a direct input specifically for "actual" non-checkbox derived transport */}
-                {/* <div className="md:col-span-2 mt-4">
-                    <InputField
-                        label={`Actual Total Transport Cost (${getFormattedCurrency(0).charAt(0)})`}
-                        id="actualTransportCost"
-                        type="number"
-                        value={actualTransportCost}
-                        onChange={(e) => setActualTransportCost(parseFloat(e.target.value) || 0)}
-                        min="0"
-                    />
-                </div> */}
             </div>
         </SectionWrapper>
     );
