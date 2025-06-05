@@ -291,9 +291,9 @@ const App = () => {
     setSelectedSuggestedSportingEvents([]);
 
 
-    const destinationPrompt = countries.length > 0 && cities.length > 0
+    const destinationPrompt = (countries.length > 0 && cities.length > 0) // Added parentheses for clarity
       ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
-      : countries.length > 0
+      : (countries.length > 0) // Added parentheses for clarity
         ? `in the countries: ${countries.map(c => c.name).join(', ')}`
         : `in the cities: ${cities.join(', ')}`;
 
@@ -347,9 +347,9 @@ const App = () => {
     setIsGeneratingBudget(true);
     setBudgetError('');
 
-    const destinationPrompt = countries.length > 0 && cities.length > 0
+    const destinationPrompt = (countries.length > 0 && cities.length > 0) // Added parentheses for clarity
       ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')})`
-      : countries.length > 0
+      : (countries.length > 0) // Added parentheses for clarity
         ? `for a trip to ${countries.map(c => c.name).join(' and ')}`
         : `for a trip to ${cities.join(', ')}`;
 
@@ -901,7 +901,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </h2> {/* Corrected: Changed </div> to </h2> */}
+          </h2>
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
