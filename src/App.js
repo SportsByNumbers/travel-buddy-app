@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-// Corrected Lucide imports - removed unused icons as per ESLint warnings
 import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
 
 // Main App component
 const App = () => {
@@ -16,7 +14,6 @@ const App = () => {
   const [startDate, setStartDate] = useState(null); // Initial state is null
   const [endDate, setEndDate] = useState(null); // Initial state is null
   // Duration will now be derived, with corrected parentheses for ESLint
-  // ESLint Fix: Added parentheses to clarify the order of operations for '&&' and '?'
   const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
   const [starRating, setStarRating] = useState('');
 
@@ -37,7 +34,6 @@ const App = () => {
   const [estimatedHotelCost, setEstimatedHotelCost] = useState(0);
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
-  // CORRECTED: Proper useState declaration
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
 
   // Food allowances
@@ -89,7 +85,6 @@ const App = () => {
   useEffect(() => {
     const fetchAllCountries = async () => {
       try {
-        // CORRECTED: Removed Markdown link formatting from URL
         const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags');
         const data = await response.json();
         setAllCountries(data.map(country => ({
@@ -291,8 +286,7 @@ const App = () => {
     setSelectedSuggestedTours([]);
     setSelectedSuggestedSportingEvents([]);
 
-
-    // ESLint Fix: Added parentheses to clarify the order of operations for '&&' and ':'
+    // Corrected logic for destinationPrompt to use parentheses
     const destinationPrompt = (countries.length > 0 && cities.length > 0)
       ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
       : (countries.length > 0)
@@ -305,7 +299,14 @@ const App = () => {
 
     const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
 
-    const apiKey = "AIzaSyDYgF6Mc-fSbM_DO9e5cLkgLaJ6lFXscok"; // Your Gemini API Key
+    // IMPORTANT: Use environment variable for API key
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+    if (!apiKey) {
+      setSuggestionError("Gemini API Key is not configured. Please set REACT_APP_GEMINI_API_KEY environment variable.");
+      setIsGeneratingSuggestions(false);
+      return;
+    }
+
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -319,7 +320,8 @@ const App = () => {
       if (result.candidates && result.candidates.length > 0 &&
           result.candidates[0].content && result.candidates[0].content.parts &&
           result.candidates[0].content.parts.length > 0) {
-        const jsonString = result.candidates[0].content.parts[0].text;
+        // This is a robust way to extract JSON even if it's wrapped in markdown
+        const jsonString = result.candidates[0].content.parts[0].text.replace(/```json\n|\n```/g, '');
         const parsedJson = JSON.parse(jsonString);
 
         setSuggestedActivities(parsedJson.activities || []);
@@ -334,14 +336,15 @@ const App = () => {
       }
     } catch (error) {
       console.error("Error generating suggestions:", error);
-      setSuggestionError("An error occurred while generating suggestions.");
+      setSuggestionError("An error occurred while generating suggestions. Make sure your API key is correct and try again.");
     } finally {
       setIsGeneratingSuggestions(false);
     }
   };
 
   const generateBudgetEstimates = async () => {
-    if (countries.length === 0 && cities.length === 0 || duration < 1 || numberOfPeople < 1) {
+    // Corrected condition: added parentheses for clarity
+    if ((countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1) {
       setBudgetError("Please ensure countries/cities, duration, and number of people are set to generate budget estimates.");
       return;
     }
@@ -349,14 +352,14 @@ const App = () => {
     setIsGeneratingBudget(true);
     setBudgetError('');
 
-    // ESLint Fix: Added parentheses to clarify the order of operations for '&&' and ':'
+    // Corrected logic for destinationPrompt to use parentheses
     const destinationPrompt = (countries.length > 0 && cities.length > 0)
       ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')})`
       : (countries.length > 0)
         ? `for a trip to ${countries.map(c => c.name).join(' and ')}`
         : `for a trip to ${cities.join(', ')}`;
 
-    const homeLocationPrompt = homeCountry.name && homeCity
+    const homeLocationPrompt = (homeCountry.name && homeCity)
       ? `starting from ${homeCity}, ${homeCountry.name}`
       : homeCountry.name
         ? `starting from ${homeCountry.name}`
@@ -413,7 +416,14 @@ const App = () => {
       }
     };
 
-    const apiKey = "AIzaSyDYgF6Mc-fSbM_DO9e5cLkgLaJ6lFXscok"; // Your Gemini API Key
+    // IMPORTANT: Use environment variable for API key
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+    if (!apiKey) {
+      setBudgetError("Gemini API Key is not configured. Please set REACT_APP_GEMINI_API_KEY environment variable.");
+      setIsGeneratingBudget(false);
+      return;
+    }
+
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -427,7 +437,8 @@ const App = () => {
       if (result.candidates && result.candidates.length > 0 &&
           result.candidates[0].content && result.candidates[0].content.parts &&
           result.candidates[0].content.parts.length > 0) {
-        const jsonString = result.candidates[0].content.parts[0].text;
+        // This is a robust way to extract JSON even if it's wrapped in markdown
+        const jsonString = result.candidates[0].content.parts[0].text.replace(/```json\n|\n```/g, '');
         const parsedJson = JSON.parse(jsonString);
 
         // Auto-populate fields with AI-generated values
@@ -446,7 +457,7 @@ const App = () => {
       }
     } catch (error) {
       console.error("Error generating budget estimates:", error);
-      setBudgetError("An error occurred while generating budget estimates.");
+      setBudgetError("An error occurred while generating budget estimates. Make sure your API key is correct and try again.");
     } finally {
       setIsGeneratingBudget(false);
     }
@@ -954,7 +965,8 @@ const App = () => {
             <button
               onClick={generateBudgetEstimates}
               className={buttonClass}
-              disabled={isGeneratingBudget || (countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1}
+              // Corrected condition: added parentheses for clarity
+              disabled={isGeneratingBudget || ((countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1)}
             >
               {isGeneratingBudget ? (
                 <span className="flex items-center justify-center">
