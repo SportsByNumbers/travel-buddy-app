@@ -1,6 +1,6 @@
 import React, { useContext, useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { TripContext } from '../App.jsx';
+import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import TagInput from './TagInput.jsx';
 import InputField from './InputField.jsx';
