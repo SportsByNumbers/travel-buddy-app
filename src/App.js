@@ -1,8 +1,8 @@
 import React, { useState, useEffect, createContext } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged /* Removed: signOut */ } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp /* Removed: deleteDoc */ } from 'firebase/firestore';
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
@@ -39,7 +39,7 @@ const App = () => {
     const [cities, setCities] = useState([]);
     const [newCityName, setNewCityName] = useState('');
     const [newCityDuration, setNewCityDuration] = useState(0);
-    const [newCityStarRating, setNewCityStarRating] = useState('');
+    const [newCityStarRating, setNewCityStarRating] = '';
     const [newCityTopics, setNewCityTopics] = useState([]);
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
@@ -98,8 +98,8 @@ const App = () => {
     const [snacksAllowance, setSnacksAllowance] = useState(0);
     const [carRental, setCarRental] = useState(false);
     const [shuttle, setShuttle] = useState(false);
-    const [airportTransfers, setAirportTransfers] = useState(false);
-    const [airportParking, setAirportParking] = useState(false);
+    const [airportTransfers, setAirportTransfers] = false;
+    const [airportParking, setAirportParking] = false;
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
     const [suggestedActivities, setSuggestedActivities] = useState([]);
     const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
