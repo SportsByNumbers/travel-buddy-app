@@ -103,7 +103,7 @@ const TransportOptionsSection = () => {
                             type="checkbox"
                             className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
                             checked={taxiRideShare}
-                            onChange={(e) => setTaxiRideShare(e.target.checked)} // The problematic comment is removed or correctly placed
+                            onChange={(e) => setTaxiRideShare(e.target.checked)}
                         />
                         <span className="ml-2 text-gray-800">Taxis / Ride-Share</span>
                     </label>
