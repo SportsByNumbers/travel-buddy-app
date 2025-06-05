@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext } from 'react';
-import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home, Info, Printer } from 'lucide-react';
+import { Loader } from 'lucide-react'; // Only Loader is used directly in App.js
 
 // Import all refactored components
 import HomeLocationSection from './components/HomeLocationSection';
@@ -201,15 +201,15 @@ const App = () => {
 
         // Calculate total estimated transport costs (AI estimate + manual inputs)
         const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
-                                                 (carRental ? parseFloat(carRentalCost) : 0) +
-                                                 (shuttle ? parseFloat(shuttleCost) : 0) +
-                                                 (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
-                                                 (airportParking ? parseFloat(airportParkingCost) : 0) +
-                                                 parseFloat(estimatedInterCityFlightCost) +
-                                                 parseFloat(estimatedInterCityTrainCost) +
-                                                 parseFloat(estimatedInterCityBusCost) +
-                                                 (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) + // Daily local transport cost
-                                                 (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0); // Assuming taxi/ride-share would also have a daily allowance. This could be more granular.
+                                                (carRental ? parseFloat(carRentalCost) : 0) +
+                                                (shuttle ? parseFloat(shuttleCost) : 0) +
+                                                (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+                                                (airportParking ? parseFloat(airportParkingCost) : 0) +
+                                                parseFloat(estimatedInterCityFlightCost) +
+                                                parseFloat(estimatedInterCityTrainCost) +
+                                                parseFloat(estimatedInterCityBusCost) +
+                                                (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
+                                                (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0); // Assuming taxi/ride-share would also have a daily allowance. This could be more granular.
 
 
         // Calculate total estimated costs (excluding food for now, as food has its own calculation)
@@ -343,7 +343,7 @@ const App = () => {
         setAirportTransfersCost, airportParkingCost, setAirportParkingCost, estimatedInterCityFlightCost,
         setEstimatedInterCityFlightCost, estimatedInterCityTrainCost, setEstimatedInterCityTrainCost,
         estimatedInterCityBusCost, setEstimatedInterCityBusCost, localPublicTransport, setLocalPublicTransport,
-        taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance, // Fix: Changed setTaxiShare to setTaxiRideShare
+        taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
         actualFlightCost, setActualFlightCost, actualHotelCost, setActualHotelCost, actualActivityCost,
         setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
         setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
