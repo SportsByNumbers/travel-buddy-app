@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Plane, Car, Train } from 'lucide-react';
+import { Plane /* Removed: Car, Train */ } from 'lucide-react'; // Removed unused imports
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
