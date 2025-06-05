@@ -12,7 +12,8 @@
     "web-vitals": "^2.1.4",
     "lucide-react": "^0.309.0",
     "react-datepicker": "^4.25.0",
-    "date-fns": "^3.3.1"
+    "date-fns": "^3.3.1",
+    "firebase": "^9.x.x"  // This line has been added
   },
   "scripts": {
     "start": "react-scripts start",
