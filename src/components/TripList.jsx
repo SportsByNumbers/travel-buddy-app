@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { TripContext } from '../App.jsx'; // Explicit .jsx
+import { TripContext } from '../App.js'; // Explicit .jsx
 import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { doc, deleteDoc } from 'firebase/firestore';
 
