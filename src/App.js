@@ -544,13 +544,13 @@ const App = () => {
         <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
           <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
           Travel Planner
-        </h1> {/* CORRECTED: Changed </b> to </h1> */}
+        </h1>
 
         {/* --- YOUR HOME LOCATION SECTION --- */}
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </b>
+          </h2> {/* CORRECTED: Changed </b> to </h2> */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -587,8 +587,7 @@ const App = () => {
               {/* Display selected home country */}
               {homeCountry.name && (
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <span className={flagTagClass}>
-                    {homeCountry.flag && <img src={homeCountry.flag} alt={`${homeCountry.name} flag`} className="w-6 h-4 mr-2 rounded-sm" />}
+                  <span className={tagClass}>
                     {homeCountry.name}
                   </span>
                 </div>
@@ -612,7 +611,7 @@ const App = () => {
                   <span className={tagClass}>
                     {homeCity}
                   </span>
-                </b>
+                </div> {/* CORRECTED: Changed </b> to </div> */}
               )}
             </div>
           </div>
@@ -622,7 +621,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-          </h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -650,7 +649,7 @@ const App = () => {
                     >
                       {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
                       {country.name}
-                    </li>
+                    </div>
                   ))}
                 </ul>
               )}
@@ -716,7 +715,7 @@ const App = () => {
                 placeholderText="Select end date"
                 className={`${inputClass} w-full`}
               />
-            </b>
+            </div> {/* CORRECTED: Changed </b> to </div> */}
           </div>
           <div>
             <p className={labelClass}>Calculated Duration:</p>
@@ -751,6 +750,7 @@ const App = () => {
                 <option value="5">5 Star</option>
               </select>
             </div>
+          </div>
             {/* Topics of Interest */}
             <div className="md:col-span-2">
               <label className={labelClass}>Topics of Interest:</label>
@@ -779,7 +779,7 @@ const App = () => {
               {isGeneratingSuggestions ? (
                 <span className="flex items-center justify-center">
                   <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
-                </span> // CORRECTED: Changed </b> to </span>
+                </span>
               ) : (
                 'Generate Itinerary Suggestions'
               )}
@@ -838,7 +838,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div> // CORRECTED: Changed </b> to </div>
+            </div>
           )}
 
           {/* Suggested Theme Parks */}
@@ -856,7 +856,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div> // CORRECTED: Changed </b> to </div>
+            </div>
           )}
 
           {/* Suggested Tourist Spots */}
@@ -874,7 +874,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div> // CORRECTED: Changed </b> to </div>
+            </div>
           )}
 
           {/* Suggested Tours */}
@@ -892,7 +892,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div> // CORRECTED: Changed </b> to </div>
+            </div>
           )}
         </div>
 
@@ -900,7 +900,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </div>
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -963,6 +963,7 @@ const App = () => {
             </button>
             {budgetError && <p className="text-red-500 text-sm mt-2">{budgetError}</p>}
           </div>
+        </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -1008,8 +1009,7 @@ const App = () => {
                 min="0"
                 className={`${inputClass} w-full`}
               />
-            </b>
-          </div>
+            </div> {/* CORRECTED: Changed </b> to </div> */}
             <div>
               <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost:</label>
               <input
@@ -1028,7 +1028,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </b>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1073,7 +1073,7 @@ const App = () => {
                 min="0"
                 className={`${inputClass} w-full`}
               />
-            </b>
+            </div> {/* CORRECTED: Changed </b> to </div> */}
           </div>
         </div>
 
@@ -1081,7 +1081,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </b>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -1128,7 +1128,6 @@ const App = () => {
             Generate Travel Plan
           </button>
         </div>
-
         {/* --- TRAVEL PLAN SUMMARY SECTION --- */}
         {travelPlanSummary && (
           <div className={summarySectionClass}>
