@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home, Info } from 'lucide-react';
+import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home, Info, Printer } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -8,40 +8,75 @@ const App = () => {
   // State variables for various inputs
   const [countries, setCountries] = useState([]); // Stores { name: string, flag: string } for destinations
   const [newCountry, setNewCountry] = useState('');
-  const [cities, setCities] = useState([]);
-  const [newCity, setNewCity] = useState('');
-  // Start and End Dates
-  const [startDate, setStartDate] = useState(null); // Initial state is null
-  const [endDate, setEndDate] = useState(null); // Initial state is null
-  // Duration will now be derived, with corrected parentheses for ESLint
-  const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
-  const [starRating, setStarRating] = useState('');
+
+  // Cities now store objects with more details
+  const [cities, setCities] = useState([]); // [{ name: string, duration: number, starRating: string, topics: string[] }]
+  const [newCityName, setNewCityName] = useState('');
+  const [newCityDuration, setNewCityDuration] = useState(0);
+  const [newCityStarRating, setNewCityStarRating] = useState('');
+  const [newCityTopics, setNewCityTopics] = useState([]);
+
+  // Overall trip Start and End Dates
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  // Duration will now be derived from overall trip dates or sum of city durations
+  const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
+
+  const [starRating, setStarRating] = useState(''); // Overall preferred hotel star rating
 
   // State for Home Location
-  const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' }); // Stores { name: string, flag: string }
-  const [newHomeCountryInput, setNewHomeCountryInput] = useState(''); // Input for home country
-  const [homeCity, setHomeCity] = useState(''); // Home city as string
-  const [newHomeCityInput, setNewHomeCityInput] = useState(''); // Input for home city
+  const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
+  const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
+  const [homeCity, setHomeCity] = useState('');
+  const [newHomeCityInput, setNewHomeCityInput] = useState('');
 
-  // Topics of interest
+  // Topics of interest (overall trip)
   const [topicsOfInterest, setTopicsOfInterest] = useState([]);
   const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
 
+  // New Hotel Preferences
+  const [travelStyle, setTravelStyle] = useState('');
+  const [hotelAmenities, setHotelAmenities] = useState([]);
+  const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
+
+
   // Budget Planning states
-  const [isPerPerson, setIsPerPerson] = useState(true); // true for per person, false for per party
+  const [isPerPerson, setIsPerPerson] = useState(true);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
+  const [currency, setCurrency] = useState('USD');
+  const [moneyAvailable, setMoneyAvailable] = useState(0);
+  const [moneySaved, setMoneySaved] = useState(0);
+  const [contingencyPercentage, setContingencyPercentage] = useState(10);
+
+  // Estimated Costs
   const [estimatedFlightCost, setEstimatedFlightCost] = useState(0);
   const [estimatedHotelCost, setEstimatedHotelCost] = useState(0);
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
-  const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
 
-  // New Budget Features
-  const [currency, setCurrency] = useState('USD'); // Default currency
-  const [moneyAvailable, setMoneyAvailable] = useState(0);
-  const [moneySaved, setMoneySaved] = useState(0);
-  const [contingencyPercentage, setContingencyPercentage] = useState(10); // Default 10%
-  const [travelStyle, setTravelStyle] = useState(''); // New state for travel style
+  // New Transport Costs
+  const [estimatedTransportCost, setEstimatedTransportCost] = useState(0); // AI estimated total transport
+  const [carRentalCost, setCarRentalCost] = useState(0);
+  const [shuttleCost, setShuttleCost] = useState(0);
+  const [airportTransfersCost, setAirportTransfersCost] = useState(0);
+  const [airportParkingCost, setAirportParkingCost] = useState(0);
+  const [estimatedInterCityFlightCost, setEstimatedInterCityFlightCost] = useState(0); // New inter-city transport
+  const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
+  const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
+  const [localPublicTransport, setLocalPublicTransport] = useState(false);
+  const [taxiRideShare, setTaxiRideShare] = useState(false);
+  const [walking, setWalking] = useState(false); // For local transport planning
+  const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
+
+
+  // Actual Costs for comparison
+  const [actualFlightCost, setActualFlightCost] = useState(0);
+  const [actualHotelCost, setActualHotelCost] = useState(0);
+  const [actualActivityCost, setActualActivityCost] = useState(0);
+  const [actualTransportCost, setActualTransportCost] = useState(0); // Combines all actual transport
+  const [actualMiscellaneousCost, setActualMiscellaneousCost] = useState(0);
+  const [actualFoodCost, setActualFoodCost] = useState(0);
+
 
   // Food allowances
   const [breakfastAllowance, setBreakfastAllowance] = useState(0);
@@ -49,11 +84,12 @@ const App = () => {
   const [dinnerAllowance, setDinnerAllowance] = useState(0);
   const [snacksAllowance, setSnacksAllowance] = useState(0);
 
-  // Transport options
+  // Transport options (checkboxes)
   const [carRental, setCarRental] = useState(false);
   const [shuttle, setShuttle] = useState(false);
   const [airportTransfers, setAirportTransfers] = useState(false);
   const [airportParking, setAirportParking] = useState(false);
+
 
   // State for the generated travel plan summary
   const [travelPlanSummary, setTravelPlanSummary] = useState(null);
@@ -94,6 +130,8 @@ const App = () => {
   const [destCityError, setDestCityError] = useState('');
   const [dateError, setDateError] = useState('');
   const [numberOfPeopleError, setNumberOfPeopleError] = useState('');
+  const [newCityNameError, setNewCityNameError] = useState('');
+  const [newCityDurationError, setNewCityDurationError] = useState('');
 
 
   // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -251,23 +289,40 @@ const App = () => {
     }
   };
 
+  // Handler for adding a new city object
   const addCity = () => {
-    if (newCity.trim() === '') {
-      setDestCityError("Destination city cannot be empty.");
+    if (newCityName.trim() === '') {
+      setNewCityNameError("City name cannot be empty.");
       return;
     }
-    if (!cities.includes(newCity.trim())) {
-      setCities([...cities, newCity.trim()]);
-      setDestCityError('');
-    } else {
-      setDestCityError("This city has already been added.");
+    if (newCityDuration <= 0) {
+      setNewCityDurationError("Duration must be greater than 0.");
+      return;
     }
-    setNewCity('');
+    if (cities.some(c => c.name.toLowerCase() === newCityName.trim().toLowerCase())) {
+      setNewCityNameError("This city has already been added.");
+      return;
+    }
+
+    setCities([...cities, {
+      name: newCityName.trim(),
+      duration: parseInt(newCityDuration),
+      starRating: newCityStarRating,
+      topics: newCityTopics // Use newCityTopics for city-specific interests
+    }]);
+
+    setNewCityName('');
+    setNewCityDuration(0);
+    setNewCityStarRating('');
+    setNewCityTopics([]); // Clear city-specific topics
+    setNewCityNameError('');
+    setNewCityDurationError('');
+    setDestCityError(''); // Clear overall dest city error if fixed
   };
 
   const removeCity = (cityToRemove) => {
-    setCities(cities.filter(city => city !== cityToRemove));
-    if (cities.filter(city => city !== cityToRemove).length === 0 && countries.length === 0) {
+    setCities(cities.filter(city => city.name !== cityToRemove.name));
+    if (cities.filter(city => city.name !== cityToRemove.name).length === 0 && countries.length === 0) {
       setDestCityError("Please add at least one destination country or city.");
     }
   };
@@ -284,6 +339,23 @@ const App = () => {
     setEndDate(date);
     setDateError(''); // Clear error on change
   };
+
+  const handleAmenityChange = (amenity) => {
+    setHotelAmenities(prevAmenities =>
+      prevAmenities.includes(amenity)
+        ? prevAmenities.filter(a => a !== amenity)
+        : [...prevAmenities, amenity]
+    );
+  };
+
+  const handleNewCityTopicChange = (topic) => {
+    setNewCityTopics(prevTopics =>
+      prevTopics.includes(topic)
+        ? prevTopics.filter(t => t !== topic)
+        : [...prevTopics, topic]
+    );
+  };
+
 
   // --- HANDLERS FOR ITINERARY SUGGESTIONS AND TOPICS ---
   const toggleSuggestionSelection = (category, item) => {
@@ -347,14 +419,20 @@ const App = () => {
     setSelectedSuggestedTours([]);
     setSelectedSuggestedSportingEvents([]);
 
-    const destinationPrompt = (countries.length > 0 && cities.length > 0)
-      ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
-      : (countries.length > 0)
-        ? `in the countries: ${countries.map(c => c.name).join(', ')}`
-        : `in the cities: ${cities.join(', ')}`;
+    const destinationPromptCountries = countries.length > 0 ? `countries: ${countries.map(c => c.name).join(', ')}` : '';
+    const destinationPromptCities = cities.length > 0 ? `cities: ${cities.map(c => `${c.name} (${c.duration} days, ${c.starRating || 'any'} star)`).join(', ')}` : '';
+
+    let fullDestinationPrompt = '';
+    if (destinationPromptCountries && destinationPromptCities) {
+        fullDestinationPrompt = `in the ${destinationPromptCountries} and ${destinationPromptCities}`;
+    } else if (destinationPromptCountries) {
+        fullDestinationPrompt = `in the ${destinationPromptCountries}`;
+    } else if (destinationPromptCities) {
+        fullDestinationPrompt = `in the ${destinationPromptCities}`;
+    }
 
     const topicsPrompt = topicsOfInterest.length > 0
-      ? `with a focus on topics such as: ${topicsOfInterest.join(', ')}`
+      ? `with overall trip topics such as: ${topicsOfInterest.join(', ')}`
       : '';
 
     const homeLocationContext = (homeCountry.name && homeCity)
@@ -367,7 +445,7 @@ const App = () => {
       ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
       : 'at any time of year';
 
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${homeLocationContext} ${dateContext} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
+    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${fullDestinationPrompt} ${homeLocationContext} ${dateContext} ${topicsPrompt}. Consider varied hotel star ratings and specific city durations if provided. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
 
     const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
     if (!apiKey) {
@@ -419,7 +497,7 @@ const App = () => {
     } else {
       setBudgetError('');
     }
-    if (duration < 1) {
+    if (overallDuration < 1) { // Use overallDuration for budget calculations
       setDateError("Please select valid start and end dates.");
       hasError = true;
     } else {
@@ -437,11 +515,18 @@ const App = () => {
     setIsGeneratingBudget(true);
     setBudgetError('');
 
-    const destinationPrompt = (countries.length > 0 && cities.length > 0)
-      ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')})`
-      : (countries.length > 0)
-        ? `for a trip to ${countries.map(c => c.name).join(' and ')}`
-        : `for a trip to ${cities.join(', ')}`;
+    const destinationPromptCountries = countries.length > 0 ? `${countries.map(c => c.name).join(' and ')}` : '';
+    const destinationPromptCities = cities.length > 0 ? `(cities: ${cities.map(c => c.name).join(', ')})` : '';
+
+    let destinationPrompt = '';
+    if (destinationPromptCountries && destinationPromptCities) {
+        destinationPrompt = `for a trip to ${destinationPromptCountries} ${destinationPromptCities}`;
+    } else if (destinationPromptCountries) {
+        destinationPrompt = `for a trip to ${destinationPromptCountries}`;
+    } else if (destinationPromptCities) {
+        destinationPrompt = `for a trip to ${destinationPromptCities}`;
+    }
+
 
     const homeLocationPrompt = (homeCountry.name && homeCity)
       ? `starting from ${homeCity}, ${homeCountry.name}`
@@ -462,13 +547,18 @@ const App = () => {
       carRental ? 'car rental' : '',
       shuttle ? 'shuttle' : '',
       airportTransfers ? 'airport transfers' : '',
-      airportParking ? 'airport parking' : ''
+      airportParking ? 'airport parking' : '',
+      localPublicTransport ? 'local public transport' : '',
+      taxiRideShare ? 'taxis/ride-share' : '',
+      walking ? 'walking' : ''
     ].filter(Boolean).join(', ');
 
-    const prompt = `Estimate the following costs in ${currency} for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
+    const hotelAmenitiesPrompt = hotelAmenities.length > 0 ? `with amenities like: ${hotelAmenities.join(', ')}` : '';
+
+    const prompt = `Estimate the following costs in ${currency} for a ${overallDuration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
     Consider these itinerary items: ${itineraryPrompt || 'general sightseeing'}.
-    Preferred hotel star rating: ${starRating || 'any'}.
-    Travel style: ${travelStyle || 'standard'}.
+    Preferred overall hotel star rating: ${starRating || 'any'}. Individual city hotel star ratings if provided in city details.
+    Travel style: ${travelStyle || 'standard'}. ${hotelAmenitiesPrompt}.
     Transport options: ${transportOptions || 'standard public transport'}.
     Provide the response as a JSON object with keys: "estimatedFlightCost", "estimatedHotelCost", "estimatedActivityCost", "estimatedTransportCost", "estimatedMiscellaneousCost", "breakfastAllowance", "lunchAllowance", "dinnerAllowance", "snacksAllowance". All values should be numbers.`;
 
@@ -527,7 +617,7 @@ const App = () => {
         setEstimatedFlightCost(parsedJson.estimatedFlightCost || 0);
         setEstimatedHotelCost(parsedJson.estimatedHotelCost || 0);
         setEstimatedActivityCost(parsedJson.estimatedActivityCost || 0);
-        setEstimatedTransportCost(parsedJson.estimatedTransportCost || 0);
+        setEstimatedTransportCost(parsedJson.estimatedTransportCost || 0); // AI estimated total transport
         setEstimatedMiscellaneousCost(parsedJson.estimatedMiscellaneousCost || 0);
         setBreakfastAllowance(parsedJson.breakfastAllowance || 0);
         setLunchAllowance(parsedJson.lunchAllowance || 0);
@@ -553,12 +643,11 @@ const App = () => {
     if (homeCountry.name === '') { setHomeCountryError("Please set your home country."); hasError = true; }
     if (homeCity === '') { setHomeCityError("Please set your home city."); hasError = true; }
     if (countries.length === 0 && cities.length === 0) { setDestCountryError("Please add at least one destination country or city."); setDestCityError("Please add at least one destination country or city."); hasError = true; }
-    if (!startDate || !endDate || duration < 1) { setDateError("Please select valid start and end dates."); hasError = true; }
+    if (!startDate || !endDate || overallDuration < 1) { setDateError("Please select valid start and end dates."); hasError = true; }
     if (numberOfPeople < 1) { setNumberOfPeopleError("Number of people must be at least 1."); hasError = true; }
 
     if (hasError) {
       setTravelPlanSummary(null); // Clear previous summary if there are errors
-      // Scroll to top or specific error location
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -574,18 +663,31 @@ const App = () => {
 
     // Calculate total food allowance per day
     const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
-    const totalFoodCost = totalDailyFoodAllowance * duration;
+    const totalFoodCost = totalDailyFoodAllowance * overallDuration;
 
-    // Calculate total estimated costs
-    const totalEstimatedCost =
+    // Calculate total estimated transport costs (AI estimate + manual inputs)
+    const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
+                                           (carRental ? parseFloat(carRentalCost) : 0) +
+                                           (shuttle ? parseFloat(shuttleCost) : 0) +
+                                           (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+                                           (airportParking ? parseFloat(airportParkingCost) : 0) +
+                                           parseFloat(estimatedInterCityFlightCost) +
+                                           parseFloat(estimatedInterCityTrainCost) +
+                                           parseFloat(estimatedInterCityBusCost) +
+                                           (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) + // Daily local transport cost
+                                           (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0); // Assuming taxi/ride-share would also have a daily allowance. This could be more granular.
+
+
+    // Calculate total estimated costs (excluding food for now, as food has its own calculation)
+    const totalEstimatedCostBeforeFoodAndContingency =
       parseFloat(estimatedFlightCost) +
       parseFloat(estimatedHotelCost) +
       parseFloat(estimatedActivityCost) +
-      parseFloat(estimatedTransportCost) +
+      combinedEstimatedTransportCost + // Use combined transport cost
       parseFloat(estimatedMiscellaneousCost);
 
     // Adjust costs based on per person/per party
-    const subTotalEstimatedCost = isPerPerson ? totalEstimatedCost * parseInt(numberOfPeople) : totalEstimatedCost;
+    const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * parseInt(numberOfPeople) : totalEstimatedCostBeforeFoodAndContingency;
     const finalTotalFoodCost = isPerPerson ? totalFoodCost * parseInt(numberOfPeople) : totalFoodCost;
 
     // Calculate contingency
@@ -596,16 +698,31 @@ const App = () => {
     // Calculate budget surplus/deficit
     const remainingBudget = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotal;
 
+    // Calculate actual total transport cost for variance
+    const combinedActualTransportCost =
+        (carRental ? parseFloat(carRentalCost) : 0) + // Assuming manual inputs for these services are actual for now
+        (shuttle ? parseFloat(shuttleCost) : 0) +
+        (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+        (airportParking ? parseFloat(airportParkingCost) : 0) +
+        parseFloat(estimatedInterCityFlightCost) + // Assuming manual inputs for these services are actual for now
+        parseFloat(estimatedInterCityTrainCost) +
+        parseFloat(estimatedInterCityBusCost) +
+        (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
+        (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
+        // Add actual transport cost if it's different from AI estimate
+        (actualTransportCost || 0); // Use actualTransportCost if provided by user
 
     setTravelPlanSummary({
       homeCountry,
       homeCity,
       countries,
-      cities,
-      duration,
+      cities, // Now includes duration, starRating, topics for each city
+      overallDuration, // Overall trip duration
       startDate: startDate ? startDate.toLocaleDateString() : 'Not set',
       endDate: endDate ? endDate.toLocaleDateString() : 'Not set',
-      starRating,
+      starRating, // Overall star rating
+      travelStyle,
+      hotelAmenities,
       activities: finalActivities,
       sportingEvents: finalSportingEvents,
       foodLocations: finalFoodLocations,
@@ -614,37 +731,75 @@ const App = () => {
       tours: finalTours,
       isPerPerson,
       numberOfPeople,
+      currency,
+      moneyAvailable,
+      moneySaved,
+      contingencyPercentage,
+      contingencyAmount,
+
+      // Estimated Costs
       estimatedFlightCost,
       estimatedHotelCost,
       estimatedActivityCost,
-      estimatedTransportCost,
       estimatedMiscellaneousCost,
-      totalEstimatedCost: subTotalEstimatedCost, // This is the sum of estimated costs before food & contingency
+      combinedEstimatedTransportCost, // Sum of all estimated transport costs
+      totalEstimatedCost: subTotalEstimatedCost, // Total estimated before food/contingency adjusted for people
+
+      // Actual Costs
+      actualFlightCost,
+      actualHotelCost,
+      actualActivityCost,
+      actualMiscellaneousCost,
+      actualTransportCost: combinedActualTransportCost, // Sum of all actual transport costs
+      actualFoodCost,
+
+      // Food Allowances
       breakfastAllowance,
       lunchAllowance,
       dinnerAllowance,
       snacksAllowance,
       totalDailyFoodAllowance,
       totalFoodCost: finalTotalFoodCost,
+
+      // Transport Options (checked status and specific costs)
       carRental,
+      carRentalCost,
       shuttle,
+      shuttleCost,
       airportTransfers,
+      airportTransfersCost,
       airportParking,
-      currency, // Include currency in summary
-      moneyAvailable,
-      moneySaved,
-      contingencyPercentage,
-      contingencyAmount,
+      airportParkingCost,
+      estimatedInterCityFlightCost,
+      estimatedInterCityTrainCost,
+      estimatedInterCityBusCost,
+      localPublicTransport,
+      taxiRideShare,
+      walking,
+      dailyLocalTransportAllowance,
+
+      // Final Totals
       grandTotal,
       remainingBudget,
-      topicsOfInterest,
-      travelStyle, // Include travel style in summary
+      topicsOfInterest, // Overall trip topics
     });
+  };
+
+  const getFormattedCurrency = (amount) => {
+    switch (currency) {
+      case 'JPY': return `¥${amount.toFixed(2)}`;
+      case 'GBP': return `£${amount.toFixed(2)}`;
+      case 'EUR': return `€${amount.toFixed(2)}`;
+      default: return `$${amount.toFixed(2)}`;
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   // --- TAILWIND CSS CLASSES FOR CONSISTENT STYLING ---
   const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
-  // Added required field indicator to labelClass
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
   const requiredLabelClass = "block text-sm font-medium text-gray-700 mb-1 after:content-['*'] after:ml-0.5 after:text-red-500";
   const errorClass = "text-red-500 text-xs mt-1"; // For input-specific errors
@@ -663,21 +818,23 @@ const App = () => {
   const suggestionItemClass = "p-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-800";
 
 
-  const summarySectionClass = "mt-12 p-8 border-2 border-indigo-500 rounded-xl bg-indigo-50 shadow-xl";
-  const summaryTitleClass = "text-3xl font-bold text-indigo-800 mb-8 text-center";
-  const summarySubTitleClass = "text-xl font-semibold text-indigo-700 mb-3";
-  const summaryItemClass = "text-gray-700 mb-1";
-  const totalCostClass = "text-2xl font-bold text-indigo-800";
-  const grandTotalAmountClass = "text-green-700 text-3xl font-extrabold";
+  const summarySectionClass = "mt-12 p-8 border-2 border-indigo-500 rounded-xl bg-indigo-50 shadow-xl print:shadow-none print:border-none";
+  const summaryTitleClass = "text-3xl font-bold text-indigo-800 mb-8 text-center print:text-black";
+  const summarySubTitleClass = "text-xl font-semibold text-indigo-700 mb-3 print:text-gray-800";
+  const summaryItemClass = "text-gray-700 mb-1 print:text-gray-600";
+  const totalCostClass = "text-2xl font-bold text-indigo-800 print:text-black";
+  const grandTotalAmountClass = "text-green-700 text-3xl font-extrabold print:text-green-800";
   const remainingBudgetClass = (amount) =>
-    `text-2xl font-extrabold ${amount >= 0 ? 'text-green-700' : 'text-red-700'}`;
+    `text-2xl font-extrabold ${amount >= 0 ? 'text-green-700' : 'text-red-700'} print:${amount >= 0 ? 'text-green-800' : 'text-red-800'}`;
+  const varianceClass = (amount) =>
+    `font-semibold ${amount < 0 ? 'text-red-600' : amount > 0 ? 'text-green-600' : 'text-gray-600'}`;
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased">
-      <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl">
-        <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
-          <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased print:bg-white print:p-0">
+      <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl print:shadow-none print:rounded-none print:p-4">
+        <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight print:text-black">
+          <span className="block text-indigo-600 text-xl mb-2 print:text-gray-700">Your Ultimate</span>
           Travel Planner
         </h1>
 
@@ -798,33 +955,76 @@ const App = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="newCity" className={requiredLabelClass}>Add Destination City:</label>
-              <div className="flex items-center">
+              <label htmlFor="newCityName" className={requiredLabelClass}>Add Destination City:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
                 <input
                   type="text"
-                  id="newCity"
-                  value={newCity}
-                  onChange={(e) => { setNewCity(e.target.value); setDestCityError(''); }}
-                  placeholder="e.g., Tokyo"
-                  className={`${inputClass} w-full ${destCityError && cities.length === 0 ? 'border-red-500' : ''}`}
+                  id="newCityName"
+                  value={newCityName}
+                  onChange={(e) => { setNewCityName(e.target.value); setNewCityNameError(''); setDestCityError('');}}
+                  placeholder="City Name (e.g., Tokyo)"
+                  className={`${inputClass} w-full ${newCityNameError ? 'border-red-500' : ''}`}
                 />
-                <button onClick={addCity} className={`${buttonClass} ml-3`}>Add</button>
+                <input
+                  type="number"
+                  id="newCityDuration"
+                  value={newCityDuration}
+                  onChange={(e) => { setNewCityDuration(parseInt(e.target.value) || 0); setNewCityDurationError('');}}
+                  placeholder="Days (e.g., 5)"
+                  min="0"
+                  className={`${inputClass} w-full ${newCityDurationError ? 'border-red-500' : ''}`}
+                />
+                {newCityNameError && <p className={`${errorClass} sm:col-span-2`}>{newCityNameError}</p>}
+                {newCityDurationError && <p className={`${errorClass} sm:col-span-2`}>{newCityDurationError}</p>}
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <select
+                  id="newCityStarRating"
+                  value={newCityStarRating}
+                  onChange={(e) => setNewCityStarRating(e.target.value)}
+                  className={`${inputClass} w-full`}
+                >
+                  <option value="">City Hotel Rating (Optional)</option>
+                  <option value="1">1 Star (Budget)</option>
+                  <option value="2">2 Star (Economy)</option>
+                  <option value="3">3 Star (Mid-Range)</option>
+                  <option value="4">4 Star (First Class)</option>
+                  <option value="5">5 Star (Luxury)</option>
+                </select>
+                <div className="flex flex-wrap gap-2">
+                  {availableTopics.map((topic, index) => (
+                    <label key={index} className="inline-flex items-center cursor-pointer text-sm">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-4 w-4 text-indigo-600 rounded"
+                        checked={newCityTopics.includes(topic)}
+                        onChange={() => handleNewCityTopicChange(topic)}
+                      />
+                      <span className="ml-1 text-gray-700">{topic.split(' ')[0]}</span> {/* Shorten for space */}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <button onClick={addCity} className={`${buttonClass} w-full`}>Add City</button>
               {destCityError && cities.length === 0 && <p className={errorClass}>{destCityError}</p>}
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-col gap-3">
                 {cities.map((city) => (
-                  <span key={city} className="bg-green-100 text-green-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
-                    {city}
+                  <span key={city.name} className="bg-green-100 text-green-800 px-4 py-2 rounded-full flex justify-between items-center text-sm font-medium shadow-sm">
+                    <span>
+                      {city.name} ({city.duration} days)
+                      {city.starRating && ` - ${city.starRating} Star`}
+                      {city.topics.length > 0 && ` [${city.topics.join(', ')}]`}
+                    </span>
                     <button onClick={() => removeCity(city)} className={removeButtonClass}>&times;</button>
                   </span>
                 ))}
               </div>
             </div>
           </div>
-          {/* Date Pickers for Start and End Dates */}
+          {/* Overall Date Pickers */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="startDate" className={requiredLabelClass}>Start Date:</label>
+              <label htmlFor="startDate" className={requiredLabelClass}>Overall Trip Start Date:</label>
               <DatePicker
                 id="startDate"
                 selected={startDate}
@@ -837,7 +1037,7 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="endDate" className={requiredLabelClass}>End Date:</label>
+              <label htmlFor="endDate" className={requiredLabelClass}>Overall Trip End Date:</label>
               <DatePicker
                 id="endDate"
                 selected={endDate}
@@ -853,8 +1053,8 @@ const App = () => {
             {dateError && <p className={`${errorClass} md:col-span-2`}>{dateError}</p>}
           </div>
           <div>
-            <p className={labelClass}>Calculated Duration:</p>
-            <p className="text-xl font-semibold text-indigo-700">{duration} days</p>
+            <p className={labelClass}>Calculated Overall Duration:</p>
+            <p className="text-xl font-semibold text-indigo-700">{overallDuration} days</p>
           </div>
         </div>
 
@@ -864,13 +1064,13 @@ const App = () => {
             <Compass className="mr-3 text-indigo-600" size={28} /> Itinerary & Preferences
           </h2>
           <p className="text-sm text-gray-600 mb-6">
-            Select your preferred hotel star rating and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
+            Select your preferred overall hotel star rating, travel style, and topics of interest. Then, generate AI-powered suggestions for your itinerary. Click on suggestions to add them to your plan.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Hotel Star Rating */}
+            {/* Overall Hotel Star Rating */}
             <div>
-              <label htmlFor="starRating" className={labelClass}>Preferred Hotel Star Rating:</label>
+              <label htmlFor="starRating" className={labelClass}>Overall Hotel Star Rating (Optional):</label>
               <select
                 id="starRating"
                 value={starRating}
@@ -887,7 +1087,7 @@ const App = () => {
             </div>
              {/* Travel Style */}
             <div>
-              <label htmlFor="travelStyle" className={labelClass}>Travel Style:</label>
+              <label htmlFor="travelStyle" className={labelClass}>Travel Style (Optional):</label>
               <select
                 id="travelStyle"
                 value={travelStyle}
@@ -903,9 +1103,26 @@ const App = () => {
                 <option value="Relaxation">Relaxation</option>
               </select>
             </div>
-            {/* Topics of Interest */}
+            {/* Hotel Amenities */}
             <div className="md:col-span-2">
-              <label className={labelClass}>Topics of Interest:</label>
+              <label className={labelClass}>Preferred Hotel Amenities (Optional):</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {availableAmenities.map((amenity, index) => (
+                  <label key={index} className="inline-flex items-center cursor-pointer bg-gray-100 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition duration-150 ease-in-out">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500"
+                      checked={hotelAmenities.includes(amenity)}
+                      onChange={() => handleAmenityChange(amenity)}
+                    />
+                    <span className="ml-2 text-gray-800 text-sm font-medium">{amenity}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {/* Overall Topics of Interest */}
+            <div className="md:col-span-2">
+              <label className={labelClass}>Overall Topics of Interest (Optional):</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {availableTopics.map((topic, index) => (
                   <label key={index} className="inline-flex items-center cursor-pointer bg-gray-100 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-200 transition duration-150 ease-in-out">
@@ -1090,7 +1307,7 @@ const App = () => {
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
           </h2>
           <p className="text-sm text-gray-600 mb-6">
-            Generate AI-powered budget estimates based on your trip details, or manually enter your own.
+            Generate AI-powered budget estimates based on your trip details, or manually enter your own. Track actual costs for comparison.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -1152,7 +1369,7 @@ const App = () => {
               </select>
             </div>
             <div>
-              <label htmlFor="moneyAvailable" className={labelClass}>Money Available ({currency}):</label>
+              <label htmlFor="moneyAvailable" className={labelClass}>Money Available ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
                 id="moneyAvailable"
@@ -1163,7 +1380,7 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="moneySaved" className={labelClass}>Money Saved ({currency}):</label>
+              <label htmlFor="moneySaved" className={labelClass}>Money Saved ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
                 id="moneySaved"
@@ -1194,7 +1411,7 @@ const App = () => {
             <button
               onClick={generateBudgetEstimates}
               className={buttonClass}
-              disabled={isGeneratingBudget || ((countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1)}
+              disabled={isGeneratingBudget || ((countries.length === 0 && cities.length === 0) || overallDuration < 1 || numberOfPeople < 1)}
             >
               {isGeneratingBudget ? (
                 <span className="flex items-center justify-center">
@@ -1208,8 +1425,9 @@ const App = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Estimated Costs */}
             <div>
-              <label htmlFor="estimatedFlightCost" className={labelClass}>Estimated Flight Cost ({currency}):</label>
+              <label htmlFor="estimatedFlightCost" className={labelClass}>Estimated Flight Cost ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
                 id="estimatedFlightCost"
@@ -1220,7 +1438,19 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedHotelCost" className={labelClass}>Estimated Hotel Cost ({currency}):</label>
+              <label htmlFor="actualFlightCost" className={labelClass}>Actual Flight Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+              <input
+                type="number"
+                id="actualFlightCost"
+                value={actualFlightCost}
+                onChange={(e) => setActualFlightCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="estimatedHotelCost" className={labelClass}>Estimated Hotel Cost ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
                 id="estimatedHotelCost"
@@ -1231,7 +1461,19 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedActivityCost" className={labelClass}>Estimated Activity Cost ({currency}):</label>
+              <label htmlFor="actualHotelCost" className={labelClass}>Actual Hotel Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+              <input
+                type="number"
+                id="actualHotelCost"
+                value={actualHotelCost}
+                onChange={(e) => setActualHotelCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="estimatedActivityCost" className={labelClass}>Estimated Activity Cost ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
                 id="estimatedActivityCost"
@@ -1242,23 +1484,35 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedTransportCost" className={labelClass}>Estimated Transport Cost ({currency}):</label>
+              <label htmlFor="actualActivityCost" className={labelClass}>Actual Activity Cost ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
-                id="estimatedTransportCost"
-                value={estimatedTransportCost}
-                onChange={(e) => setEstimatedTransportCost(parseFloat(e.target.value) || 0)}
+                id="actualActivityCost"
+                value={actualActivityCost}
+                onChange={(e) => setActualActivityCost(parseFloat(e.target.value) || 0)}
                 min="0"
                 className={`${inputClass} w-full`}
               />
             </div>
+
             <div>
-              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost ({currency}):</label>
+              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
                 type="number"
                 id="estimatedMiscellaneousCost"
                 value={estimatedMiscellaneousCost}
                 onChange={(e) => setEstimatedMiscellaneousCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
+             <div>
+              <label htmlFor="actualMiscellaneousCost" className={labelClass}>Actual Miscellaneous Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+              <input
+                type="number"
+                id="actualMiscellaneousCost"
+                value={actualMiscellaneousCost}
+                onChange={(e) => setActualMiscellaneousCost(parseFloat(e.target.value) || 0)}
                 min="0"
                 className={`${inputClass} w-full`}
               />
@@ -1269,7 +1523,7 @@ const App = () => {
         {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
-            <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person, {currency})
+            <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person, {getFormattedCurrency(0).charAt(0)})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -1316,6 +1570,17 @@ const App = () => {
                 className={`${inputClass} w-full`}
               />
             </div>
+            <div className="md:col-span-2">
+              <label htmlFor="actualFoodCost" className={labelClass}>Actual Total Food Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+              <input
+                type="number"
+                id="actualFoodCost"
+                value={actualFoodCost}
+                onChange={(e) => setActualFoodCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
           </div>
         </div>
 
@@ -1324,52 +1589,230 @@ const App = () => {
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
           </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Select transport modes and enter their estimated costs.
+          </p>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="inline-flex items-center cursor-pointer">
+            {/* AI Estimated Total Transport */}
+            <div className="md:col-span-2 mb-4">
+              <label htmlFor="estimatedTransportCost" className={labelClass}>AI Estimated Total Transport Cost ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={carRental}
-                onChange={(e) => setCarRental(e.target.checked)}
+                type="number"
+                id="estimatedTransportCost"
+                value={estimatedTransportCost}
+                onChange={(e) => setEstimatedTransportCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
               />
-              <span className="ml-2 text-gray-800">Car Rental</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
+            </div>
+
+            {/* Car Rental */}
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={carRental}
+                  onChange={(e) => { setCarRental(e.target.checked); if (!e.target.checked) setCarRentalCost(0); }}
+                />
+                <span className="ml-2 text-gray-800">Car Rental (for trip)</span>
+              </label>
+              {carRental && (
+                <div className="mt-2 ml-7">
+                  <label htmlFor="carRentalCost" className={labelClass}>Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+                  <input
+                    type="number"
+                    id="carRentalCost"
+                    value={carRentalCost}
+                    onChange={(e) => setCarRentalCost(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    className={`${inputClass} w-full`}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Shuttle */}
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={shuttle}
+                  onChange={(e) => { setShuttle(e.target.checked); if (!e.target.checked) setShuttleCost(0); }}
+                />
+                <span className="ml-2 text-gray-800">Shuttle Service</span>
+              </label>
+              {shuttle && (
+                <div className="mt-2 ml-7">
+                  <label htmlFor="shuttleCost" className={labelClass}>Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+                  <input
+                    type="number"
+                    id="shuttleCost"
+                    value={shuttleCost}
+                    onChange={(e) => setShuttleCost(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    className={`${inputClass} w-full`}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Airport Transfers */}
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={airportTransfers}
+                  onChange={(e) => { setAirportTransfers(e.target.checked); if (!e.target.checked) setAirportTransfersCost(0); }}
+                />
+                <span className="ml-2 text-gray-800">Airport Transfers (Home/Dest)</span>
+              </label>
+              {airportTransfers && (
+                <div className="mt-2 ml-7">
+                  <label htmlFor="airportTransfersCost" className={labelClass}>Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+                  <input
+                    type="number"
+                    id="airportTransfersCost"
+                    value={airportTransfersCost}
+                    onChange={(e) => setAirportTransfersCost(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    className={`${inputClass} w-full`}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Airport Parking */}
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={airportParking}
+                  onChange={(e) => { setAirportParking(e.target.checked); if (!e.target.checked) setAirportParkingCost(0); }}
+                />
+                <span className="ml-2 text-gray-800">Airport Parking (Home)</span>
+              </label>
+              {airportParking && (
+                <div className="mt-2 ml-7">
+                  <label htmlFor="airportParkingCost" className={labelClass}>Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+                  <input
+                    type="number"
+                    id="airportParkingCost"
+                    value={airportParkingCost}
+                    onChange={(e) => setAirportParkingCost(parseFloat(e.target.value) || 0)}
+                    min="0"
+                    className={`${inputClass} w-full`}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Inter-City Transport */}
+            <div className="col-span-1">
+              <label htmlFor="estimatedInterCityFlightCost" className={labelClass}>Inter-City Flights ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={shuttle}
-                onChange={(e) => setShuttle(e.target.checked)}
+                type="number"
+                id="estimatedInterCityFlightCost"
+                value={estimatedInterCityFlightCost}
+                onChange={(e) => setEstimatedInterCityFlightCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
               />
-              <span className="ml-2 text-gray-800">Shuttle</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="estimatedInterCityTrainCost" className={labelClass}>Inter-City Trains ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={airportTransfers}
-                onChange={(e) => setAirportTransfers(e.target.checked)}
+                type="number"
+                id="estimatedInterCityTrainCost"
+                value={estimatedInterCityTrainCost}
+                onChange={(e) => setEstimatedInterCityTrainCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
               />
-              <span className="ml-2 text-gray-800">Airport Transfers</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="estimatedInterCityBusCost" className={labelClass}>Inter-City Buses ({getFormattedCurrency(0).charAt(0)}):</label>
               <input
-                type="checkbox"
-                className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
-                checked={airportParking}
-                onChange={(e) => setAirportParking(e.target.checked)}
+                type="number"
+                id="estimatedInterCityBusCost"
+                value={estimatedInterCityBusCost}
+                onChange={(e) => setEstimatedInterCityBusCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
               />
-              <span className="ml-2 text-gray-800">Airport Parking</span>
-            </label>
+            </div>
+
+            {/* Local In-City Transport */}
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={localPublicTransport}
+                  onChange={(e) => setLocalPublicTransport(e.target.checked)}
+                />
+                <span className="ml-2 text-gray-800">Local Public Transport</span>
+              </label>
+            </div>
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={taxiRideShare}
+                  onChange={(e) => setTaxiRideShare(e.target.checked)}
+                />
+                <span className="ml-2 text-gray-800">Taxis / Ride-Share</span>
+              </label>
+            </div>
+            <div className="col-span-1">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
+                  checked={walking}
+                  onChange={(e) => setWalking(e.target.checked)}
+                />
+                <span className="ml-2 text-gray-800">Walking</span>
+              </label>
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="dailyLocalTransportAllowance" className={labelClass}>Daily Local Transport Allowance ({getFormattedCurrency(0).charAt(0)}):</label>
+              <input
+                type="number"
+                id="dailyLocalTransportAllowance"
+                value={dailyLocalTransportAllowance}
+                onChange={(e) => setDailyLocalTransportAllowance(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
+
+            {/* Actual Total Transport Cost */}
+            <div className="md:col-span-2 mt-4">
+              <label htmlFor="actualTransportCost" className={labelClass}>Actual Total Transport Cost ({getFormattedCurrency(0).charAt(0)}):</label>
+              <input
+                type="number"
+                id="actualTransportCost"
+                value={actualTransportCost}
+                onChange={(e) => setActualTransportCost(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
           </div>
         </div>
 
         {/* --- GENERATE TRAVEL PLAN BUTTON --- */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-10 print:hidden">
           <button
             onClick={calculateTravelPlan}
             className={buttonClass}
-            disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || duration < 1 || numberOfPeople < 1}
+            disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || numberOfPeople < 1}
           >
             Generate Travel Plan
           </button>
@@ -1378,9 +1821,14 @@ const App = () => {
         {travelPlanSummary && (
           <div className={summarySectionClass}>
             <h2 className={summaryTitleClass}>
-              <CheckCircle className="inline-block mr-3 text-indigo-700" size={32} /> Your Travel Plan Summary
+              <CheckCircle className="inline-block mr-3 text-indigo-700 print:text-black" size={32} /> Your Travel Plan Summary
             </h2>
-            <div className="mb-6 pb-4 border-b border-indigo-200">
+            <div className="text-right print:hidden mb-4">
+                <button onClick={handlePrint} className={`${buttonClass} bg-gray-500 hover:bg-gray-600 flex items-center float-right`}>
+                    <Printer className="mr-2" size={20} /> Print / Save PDF
+                </button>
+            </div>
+            <div className="mb-6 pb-4 border-b border-indigo-200 print:border-gray-300">
               <h3 className={summarySubTitleClass}>Your Trip Details:</h3>
               <p className={summaryItemClass}>
                 <strong>Home Location:</strong>{' '}
@@ -1403,18 +1851,30 @@ const App = () => {
                   </span>
                 ) : 'Not specified'}
               </p>
-              <p className={summaryItemClass}><strong>Destination Cities:</strong> {travelPlanSummary.cities.length > 0 ? travelPlanSummary.cities.join(', ') : 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Duration:</strong> {travelPlanSummary.duration} days</p>
+              <p className={summaryItemClass}>
+                <strong>Destination Cities:</strong>{' '}
+                {travelPlanSummary.cities.length > 0 ? (
+                  <ul className="list-disc list-inside ml-4">
+                    {travelPlanSummary.cities.map(city => (
+                      <li key={city.name}>
+                        {city.name} ({city.duration} days){city.starRating && `, ${city.starRating} Star`}{city.topics.length > 0 && ` [${city.topics.join(', ')}]`}
+                      </li>
+                    ))}
+                  </ul>
+                ) : 'Not specified'}
+              </p>
+              <p className={summaryItemClass}><strong>Overall Duration:</strong> {travelPlanSummary.overallDuration} days</p>
               <p className={summaryItemClass}>
                 <strong>Travel Dates:</strong> {travelPlanSummary.startDate} - {travelPlanSummary.endDate}
               </p>
             </div>
 
-            <div className="mb-6 pb-4 border-b border-indigo-200">
+            <div className="mb-6 pb-4 border-b border-indigo-200 print:border-gray-300">
               <h3 className={summarySubTitleClass}>Preferences & Itinerary:</h3>
-              <p className={summaryItemClass}><strong>Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
+              <p className={summaryItemClass}><strong>Overall Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Travel Style:</strong> {travelPlanSummary.travelStyle || 'Not specified'}</p>
-              <p className={summaryItemClass}><strong>Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
+              <p className={summaryItemClass}><strong>Hotel Amenities:</strong> {travelPlanSummary.hotelAmenities.length > 0 ? travelPlanSummary.hotelAmenities.join(', ') : 'Not specified'}</p>
+              <p className={summaryItemClass}><strong>Overall Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Activities:</strong> {travelPlanSummary.activities || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Food Locations:</strong> {travelPlanSummary.foodLocations || 'Not specified'}</p>
@@ -1423,54 +1883,106 @@ const App = () => {
               <p className={summaryItemClass}><strong>Tours:</strong> {travelPlanSummary.tours || 'Not specified'}</p>
             </div>
 
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Estimated Costs ({travelPlanSummary.currency}):</h3>
+            <div className="mb-6 pb-4 border-b border-indigo-200 print:border-gray-300">
+              <h3 className={summarySubTitleClass}>Estimated vs. Actual Costs ({travelPlanSummary.currency}):</h3>
               <p className={summaryItemClass}><strong>Calculation Basis:</strong> {travelPlanSummary.isPerPerson ? `Per Person (${travelPlanSummary.numberOfPeople} people)` : 'Per Party'}</p>
+              <table className="min-w-full bg-white rounded-lg shadow-sm mt-3">
+                <thead>
+                  <tr className="bg-indigo-100 print:bg-gray-100">
+                    <th className="py-2 px-4 text-left text-sm font-semibold text-indigo-700 print:text-gray-800">Category</th>
+                    <th className="py-2 px-4 text-right text-sm font-semibold text-indigo-700 print:text-gray-800">Estimated</th>
+                    <th className="py-2 px-4 text-right text-sm font-semibold text-indigo-700 print:text-gray-800">Actual</th>
+                    <th className="py-2 px-4 text-right text-sm font-semibold text-indigo-700 print:text-gray-800">Variance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="py-2 px-4 border-t border-gray-200">Flights</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.estimatedFlightCost)}</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.actualFlightCost)}</td>
+                    <td className={`py-2 px-4 border-t border-gray-200 text-right ${varianceClass(travelPlanSummary.actualFlightCost - travelPlanSummary.estimatedFlightCost)}`}>
+                      {getFormattedCurrency(travelPlanSummary.actualFlightCost - travelPlanSummary.estimatedFlightCost)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-4 border-t border-gray-200">Hotels</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.estimatedHotelCost)}</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.actualHotelCost)}</td>
+                    <td className={`py-2 px-4 border-t border-gray-200 text-right ${varianceClass(travelPlanSummary.actualHotelCost - travelPlanSummary.estimatedHotelCost)}`}>
+                      {getFormattedCurrency(travelPlanSummary.actualHotelCost - travelPlanSummary.estimatedHotelCost)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-4 border-t border-gray-200">Activities</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.estimatedActivityCost)}</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.actualActivityCost)}</td>
+                    <td className={`py-2 px-4 border-t border-gray-200 text-right ${varianceClass(travelPlanSummary.actualActivityCost - travelPlanSummary.estimatedActivityCost)}`}>
+                      {getFormattedCurrency(travelPlanSummary.actualActivityCost - travelPlanSummary.estimatedActivityCost)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-4 border-t border-gray-200">Transport</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.combinedEstimatedTransportCost)}</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.actualTransportCost)}</td>
+                    <td className={`py-2 px-4 border-t border-gray-200 text-right ${varianceClass(travelPlanSummary.actualTransportCost - travelPlanSummary.combinedEstimatedTransportCost)}`}>
+                      {getFormattedCurrency(travelPlanSummary.actualTransportCost - travelPlanSummary.combinedEstimatedTransportCost)}
+                    </td>
+                  </tr>
+                   <tr>
+                    <td className="py-2 px-4 border-t border-gray-200">Food</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.totalFoodCost)}</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.actualFoodCost)}</td>
+                    <td className={`py-2 px-4 border-t border-gray-200 text-right ${varianceClass(travelPlanSummary.actualFoodCost - travelPlanSummary.totalFoodCost)}`}>
+                      {getFormattedCurrency(travelPlanSummary.actualFoodCost - travelPlanSummary.totalFoodCost)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-4 border-t border-gray-200">Miscellaneous</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.estimatedMiscellaneousCost)}</td>
+                    <td className="py-2 px-4 border-t border-gray-200 text-right">{getFormattedCurrency(travelPlanSummary.actualMiscellaneousCost)}</td>
+                    <td className={`py-2 px-4 border-t border-gray-200 text-right ${varianceClass(travelPlanSummary.actualMiscellaneousCost - travelPlanSummary.estimatedMiscellaneousCost)}`}>
+                      {getFormattedCurrency(travelPlanSummary.actualMiscellaneousCost - travelPlanSummary.estimatedMiscellaneousCost)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mb-6 pb-4 border-b border-indigo-200 print:border-gray-300">
+              <h3 className={summarySubTitleClass}>Detailed Transport Options:</h3>
               <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedFlightCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedHotelCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Activity Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Transport Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food & Contingency): <span className="text-blue-700">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
+                {travelPlanSummary.carRental && <li>Car Rental: {getFormattedCurrency(travelPlanSummary.carRentalCost)}</li>}
+                {travelPlanSummary.shuttle && <li>Shuttle Service: {getFormattedCurrency(travelPlanSummary.shuttleCost)}</li>}
+                {travelPlanSummary.airportTransfers && <li>Airport Transfers: {getFormattedCurrency(travelPlanSummary.airportTransfersCost)}</li>}
+                {travelPlanSummary.airportParking && <li>Airport Parking: {getFormattedCurrency(travelPlanSummary.airportParkingCost)}</li>}
+                {travelPlanSummary.estimatedInterCityFlightCost > 0 && <li>Inter-City Flights: {getFormattedCurrency(travelPlanSummary.estimatedInterCityFlightCost)}</li>}
+                {travelPlanSummary.estimatedInterCityTrainCost > 0 && <li>Inter-City Trains: {getFormattedCurrency(travelPlanSummary.estimatedInterCityTrainCost)}</li>}
+                {travelPlanSummary.estimatedInterCityBusCost > 0 && <li>Inter-City Buses: {getFormattedCurrency(travelPlanSummary.estimatedInterCityBusCost)}</li>}
+                {travelPlanSummary.localPublicTransport && <li>Local Public Transport</li>}
+                {travelPlanSummary.taxiRideShare && <li>Taxis / Ride-Share</li>}
+                {travelPlanSummary.walking && <li>Walking</li>}
+                {(travelPlanSummary.localPublicTransport || travelPlanSummary.taxiRideShare) && travelPlanSummary.dailyLocalTransportAllowance > 0 &&
+                  <li>Daily Local Transport Allowance: {getFormattedCurrency(travelPlanSummary.dailyLocalTransportAllowance)}</li>
+                }
+                {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking &&
+                 travelPlanSummary.estimatedInterCityFlightCost === 0 && travelPlanSummary.estimatedInterCityTrainCost === 0 && travelPlanSummary.estimatedInterCityBusCost === 0 &&
+                 !travelPlanSummary.localPublicTransport && !travelPlanSummary.taxiRideShare && !travelPlanSummary.walking &&
+                 <li>No specific transport options selected.</li>}
               </ul>
             </div>
 
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Food Allowances ({travelPlanSummary.currency}):</h3>
-              <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Daily Breakfast Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.breakfastAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Lunch Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.lunchAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Dinner Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.dinnerAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Snacks Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.snacksAllowance.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Total Daily Food Allowance: <span className="text-blue-700">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.totalDailyFoodAllowance.toFixed(2)}</span></li>
-                <li className="mt-1 text-lg font-bold text-indigo-800">Total Food Cost for Trip: <span className="text-blue-700">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.totalFoodCost.toFixed(2)}</span></li>
-              </ul>
-            </div>
-
-            <div className="mb-6 pb-4 border-b border-indigo-200">
+            <div className="mb-6 pb-4 border-b border-indigo-200 print:border-gray-300">
               <h3 className={summarySubTitleClass}>Budget Overview ({travelPlanSummary.currency}):</h3>
               <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Money Available: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.moneyAvailable.toFixed(2)}</span></li>
-                <li className="mb-1">Money Saved: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.moneySaved.toFixed(2)}</span></li>
-                <li className="mb-1">Contingency/Buffer ({travelPlanSummary.contingencyPercentage}%): <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.contingencyAmount.toFixed(2)}</span></li>
+                <li className="mb-1">Money Available: <span className="font-semibold">{getFormattedCurrency(travelPlanSummary.moneyAvailable)}</span></li>
+                <li className="mb-1">Money Saved: <span className="font-semibold">{getFormattedCurrency(travelPlanSummary.moneySaved)}</span></li>
+                <li className="mb-1">Contingency/Buffer ({travelPlanSummary.contingencyPercentage}%): <span className="font-semibold">{getFormattedCurrency(travelPlanSummary.contingencyAmount)}</span></li>
               </ul>
             </div>
 
-            <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Transport Options Selected:</h3>
-              <ul className="list-disc list-inside ml-6 text-gray-700">
-                {travelPlanSummary.carRental && <li>Car Rental</li>}
-                {travelPlanSummary.shuttle && <li>Shuttle</li>}
-                {travelPlanSummary.airportTransfers && <li>Airport Transfers</li>}
-                {travelPlanSummary.airportParking && <li>Airport Parking</li>}
-                {!travelPlanSummary.carRental && !travelPlanSummary.shuttle && !travelPlanSummary.airportTransfers && !travelPlanSummary.airportParking && <li>No specific transport options selected.</li>}
-              </ul>
-            </div>
-
-            <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
-              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
-              <h3 className={totalCostClass}>Remaining Budget: <span className={remainingBudgetClass(travelPlanSummary.remainingBudget)}>{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.remainingBudget.toFixed(2)}</span></h3>
+            <div className="mt-8 pt-6 border-t-2 border-indigo-300 print:border-gray-400 text-right">
+              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>{getFormattedCurrency(travelPlanSummary.grandTotal)}</span></h3>
+              <h3 className={totalCostClass}>Remaining Budget: <span className={remainingBudgetClass(travelPlanSummary.remainingBudget)}>{getFormattedCurrency(travelPlanSummary.remainingBudget)}</span></h3>
             </div>
           </div>
         )}
