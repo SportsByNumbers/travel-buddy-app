@@ -9,15 +9,10 @@ import { useCountrySearch } from '../hooks/useCountrySearch';
 import { fetchCountryData } from '../services/apiService';
 
 const DestinationsSection = () => {
-    const { countries, setCountries, cities, setCities, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
+    const { countries, setCountries, cities, setCities, newCountry, setNewCountry, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
     const destCountryInputRef = useRef(null);
 
     const { inputValue: destCountryInputValue, setInputValue: setDestCountryInputValue, filteredSuggestions: filteredDestCountrySuggestions, handleInputChange: handleDestCountryInputChange, clearSuggestions: clearDestCountrySuggestions } = useCountrySearch(allCountries, countries);
-
-    // This useEffect was removed in a previous step, so its import is no longer needed.
-    // useEffect(() => {
-    //     setNewCountry(destCountryInputValue);
-    // }, [destCountryInputValue, setNewCountry]);
 
     const addCountry = async () => {
         const trimmedCountry = destCountryInputValue.trim();
