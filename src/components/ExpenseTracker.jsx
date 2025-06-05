@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { TripContext } from '../App.jsx'; // Explicit .jsx
+import { TripContext } from '../App.js'; // Explicit .jsx
 import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx
 import InputField from './InputField.jsx'; // Explicit .jsx
 import { PlusCircle, DollarSign, XCircle } from 'lucide-react';
