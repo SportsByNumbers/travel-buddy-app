@@ -1,26 +1,26 @@
 import React from 'react';
-// Removed Info import from here.
 
-const InputField = ({ label, id, value, onChange, type = 'text', placeholder = '', error = '', required = false, min, max, icon: Icon, children }) => {
-    const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
-    const labelClass = "block text-sm font-medium text-gray-700 mb-1";
-    const requiredLabelClass = "block text-sm font-medium text-gray-700 mb-1 after:content-['*'] after:ml-0.5 after:text-red-500";
-    const errorClass = "text-red-500 text-xs mt-1";
+const InputField = ({ id, label, type = 'text', value, onChange, placeholder, min, max, error, options = [] }) => {
+    const inputClasses = `mt-1 block w-full px-3 py-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`;
+    const labelClasses = `block text-sm font-medium text-gray-700 ${!label.includes('(Optional)') ? 'after:content-[\'*\'] after:ml-0.5 after:text-red-500' : ''}`;
 
     return (
-        <div>
-            <label htmlFor={id} className={required ? requiredLabelClass : labelClass}>
-                {label}
-                {Icon && <Icon className="inline-block ml-1 text-gray-500 cursor-help" size={16} title={label} />}
-            </label>
+        <div className="mb-4">
+            {label && <label htmlFor={id} className={labelClasses}>{label}</label>}
             {type === 'select' ? (
                 <select
                     id={id}
+                    name={id}
                     value={value}
                     onChange={onChange}
-                    className={`${inputClass} w-full ${error ? 'border-red-500' : ''}`}
+                    className={inputClasses}
+                    required={!label.includes('(Optional)')}
                 >
-                    {children}
+                    {options.map(option => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
                 </select>
             ) : (
                 <input
@@ -31,10 +31,11 @@ const InputField = ({ label, id, value, onChange, type = 'text', placeholder = '
                     placeholder={placeholder}
                     min={min}
                     max={max}
-                    className={`${inputClass} w-full ${error ? 'border-red-500' : ''}`}
+                    className={inputClasses}
+                    required={!label.includes('(Optional)')}
                 />
             )}
-            {error && <p className={errorClass}>{error}</p>}
+            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
         </div>
     );
 };
