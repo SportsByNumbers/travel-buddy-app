@@ -1,14 +1,12 @@
+// components/BudgetPlanningSection.jsx
 import React, { useContext } from 'react';
-import { TripContext } from '../App.js'; // Explicit .jsx
-import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx
-import InputField from './InputField.jsx'; // Explicit .jsx
-import { DollarSign } from 'lucide-react';
+import { TripContext } from '../App'; // Adjust path if necessary
+import Section from './Section.jsx';
+import InputField from './InputField.jsx'; // Assuming this is your general input field
+import { PlusCircle, XCircle } from 'lucide-react'; // For add/remove icons
 
 const BudgetPlanningSection = () => {
     const {
-        isPerPerson, setIsPerPerson,
-        numberOfAdults, setNumberOfAdults, numberOfChildren, setNumberOfChildren, // New states
-        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError, // New error states
         currency, setCurrency,
         moneyAvailable, setMoneyAvailable,
         moneySaved, setMoneySaved,
@@ -17,154 +15,194 @@ const BudgetPlanningSection = () => {
         estimatedHotelCost, setEstimatedHotelCost,
         estimatedActivityCost, setEstimatedActivityCost,
         estimatedMiscellaneousCost, setEstimatedMiscellaneousCost,
+        estimatedTransportCost, setEstimatedTransportCost,
+        isPerPerson, setIsPerPerson,
+        travelingParties, setTravelingParties, // MODIFIED: Get travelingParties from context
+        numberOfPeople, // MODIFIED: Get derived numberOfPeople
+        numberOfAdultsError, setNumberOfAdultsError, // Keep for overall validation message
+        numberOfChildrenError, setNumberOfChildrenError, // Keep for overall validation message
     } = useContext(TripContext);
 
-    const handleAdultsChange = (e) => {
-        const value = parseInt(e.target.value);
-        setNumberOfAdults(value < 1 ? 1 : value); // Ensure at least 1 adult
-        setNumberOfAdultsError(''); // Clear error on change
+    // Handler to update a specific party's details
+    const handlePartyChange = (id, field, value) => {
+        setTravelingParties(prevParties =>
+            prevParties.map(party =>
+                party.id === id ? { ...party, [field]: value } : party
+            )
+        );
     };
 
-    const handleChildrenChange = (e) => {
-        const value = parseInt(e.target.value);
-        setNumberOfChildren(value < 0 ? 0 : value); // Ensure non-negative children
-        setNumberOfChildrenError(''); // Clear error on change
+    // Handler to add a new party
+    const addParty = () => {
+        const newId = travelingParties.length > 0 ? Math.max(...travelingParties.map(p => p.id)) + 1 : 1;
+        setTravelingParties(prevParties => [
+            ...prevParties,
+            { id: newId, name: `Group ${newId}`, adults: 0, children: 0 }
+        ]);
+    };
+
+    // Handler to remove a party
+    const removeParty = (idToRemove) => {
+        setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
 
     return (
-        <SectionWrapper title="Budget Planning" icon={DollarSign}>
+        <Section
+            icon={<span className="text-xl">💰</span>}
+            title="Budget Planning"
+            description="Plan your trip's finances. Estimate costs and track savings."
+        >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Party Size Inputs */}
-                <div className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Party Size</h3>
-                    <div className="flex items-center mb-3">
-                        <input
-                            type="checkbox"
-                            id="isPerPerson"
-                            checked={isPerPerson}
-                            onChange={(e) => setIsPerPerson(e.target.checked)}
-                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="isPerPerson" className="ml-2 block text-sm text-gray-900">
-                            Costs are per person
-                        </label>
-                    </div>
-                    <InputField
-                        id="numberOfAdults"
-                        label="Adults (18+)"
-                        type="number"
-                        value={numberOfAdults}
-                        onChange={handleAdultsChange}
-                        placeholder="e.g., 2"
-                        min="1"
-                        error={numberOfAdultsError}
-                        required
-                    />
-                    <InputField
-                        id="numberOfChildren"
-                        label="Children (Under 17)"
-                        type="number"
-                        value={numberOfChildren}
-                        onChange={handleChildrenChange}
-                        placeholder="e.g., 1"
-                        min="0"
-                        error={numberOfChildrenError}
-                        required
-                    />
-                </div>
-
-                {/* Currency and Available Money */}
-                <div className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Available Funds</h3>
-                    <InputField
+                <div>
+                    <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                    <select
                         id="currency"
-                        label="Currency"
-                        type="select"
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        options={[
-                            { value: 'USD', label: 'USD - United States Dollar' },
-                            { value: 'EUR', label: 'EUR - Euro' },
-                            { value: 'GBP', label: 'GBP - British Pound' },
-                            { value: 'JPY', label: 'JPY - Japanese Yen' },
-                            { value: 'AUD', label: 'AUD - Australian Dollar' },
-                            { value: 'CAD', label: 'CAD - Canadian Dollar' },
-                        ]}
-                    />
-                    <InputField
-                        id="moneyAvailable"
-                        label="Money Available"
-                        type="number"
-                        value={moneyAvailable}
-                        onChange={(e) => setMoneyAvailable(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 5000"
-                        min="0"
-                    />
-                    <InputField
-                        id="moneySaved"
-                        label="Money Already Saved"
-                        type="number"
-                        value={moneySaved}
-                        onChange={(e) => setMoneySaved(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 1000"
-                        min="0"
-                    />
-                    <InputField
-                        id="contingencyPercentage"
-                        label="Contingency (%)"
-                        type="number"
-                        value={contingencyPercentage}
-                        onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 10"
-                        min="0"
-                        max="100"
-                    />
+                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                        <option value="USD">USD ($) - US Dollar</option>
+                        <option value="EUR">EUR (€) - Euro</option>
+                        <option value="GBP">GBP (£) - British Pound</option>
+                        <option value="JPY">JPY (¥) - Japanese Yen</option>
+                        <option value="AUD">AUD ($) - Australian Dollar</option>
+                        <option value="CAD">CAD ($) - Canadian Dollar</option>
+                        {/* Add more currencies as needed */}
+                    </select>
                 </div>
+
+                <InputField
+                    label="Money Available for Trip"
+                    type="number"
+                    value={moneyAvailable}
+                    onChange={(e) => setMoneyAvailable(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 5000"
+                />
+                <InputField
+                    label="Money Already Saved"
+                    type="number"
+                    value={moneySaved}
+                    onChange={(e) => setMoneySaved(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 1000"
+                />
+                <InputField
+                    label="Contingency Percentage (%)"
+                    type="number"
+                    value={contingencyPercentage}
+                    onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 10"
+                    min="0"
+                    max="100"
+                />
             </div>
 
-            {/* Estimated Major Costs */}
-            <div className="mt-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Estimated Major Costs</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InputField
-                        id="estimatedFlightCost"
-                        label="Flight Cost"
-                        type="number"
-                        value={estimatedFlightCost}
-                        onChange={(e) => setEstimatedFlightCost(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 800"
-                        min="0"
+            <h3 className="text-lg font-semibold text-indigo-800 mt-8 mb-4">Travel Party Details</h3>
+            <div className="mb-4">
+                <label className="inline-flex items-center">
+                    <input
+                        type="checkbox"
+                        className="form-checkbox h-5 w-5 text-indigo-600"
+                        checked={isPerPerson}
+                        onChange={(e) => setIsPerPerson(e.target.checked)}
                     />
-                    <InputField
-                        id="estimatedHotelCost"
-                        label="Hotel Cost"
-                        type="number"
-                        value={estimatedHotelCost}
-                        onChange={(e) => setEstimatedHotelCost(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 1200"
-                        min="0"
-                    />
-                    <InputField
-                        id="estimatedActivityCost"
-                        label="Activities Cost"
-                        type="number"
-                        value={estimatedActivityCost}
-                        onChange={(e) => setEstimatedActivityCost(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 300"
-                        min="0"
-                    />
-                    <InputField
-                        id="estimatedMiscellaneousCost"
-                        label="Miscellaneous Cost"
-                        type="number"
-                        value={estimatedMiscellaneousCost}
-                        onChange={(e) => setEstimatedMiscellaneousCost(parseFloat(e.target.value) || 0)}
-                        placeholder="e.g., 150"
-                        min="0"
-                    />
-                </div>
+                    <span className="ml-2 text-gray-700">Apply costs per person</span>
+                </label>
             </div>
-        </SectionWrapper>
+
+            {/* Display overall validation error messages */}
+            {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
+            {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
+
+            <div className="space-y-4">
+                {travelingParties.map(party => (
+                    <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
+                        <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            <InputField
+                                label={`Group Name`}
+                                type="text"
+                                value={party.name}
+                                onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
+                                placeholder={`e.g., Family A`}
+                            />
+                            <InputField
+                                label={`Adults (${party.name})`}
+                                type="number"
+                                value={party.adults}
+                                onChange={(e) => handlePartyChange(party.id, 'adults', parseInt(e.target.value) || 0)}
+                                min="0"
+                            />
+                            <InputField
+                                label={`Children (${party.name})`}
+                                type="number"
+                                value={party.children}
+                                onChange={(e) => handlePartyChange(party.id, 'children', parseInt(e.target.value) || 0)}
+                                min="0"
+                            />
+                        </div>
+                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
+                            <button
+                                onClick={() => removeParty(party.id)}
+                                className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
+                                title="Remove group"
+                            >
+                                <XCircle size={20} />
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-4 flex justify-between items-center">
+                <button
+                    onClick={addParty}
+                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-sm"
+                >
+                    <PlusCircle size={16} className="mr-1" /> Add Another Group
+                </button>
+                <p className="text-md font-semibold text-gray-800">
+                    Total Travelers: <span className="text-indigo-600 text-lg">{numberOfPeople}</span>
+                </p>
+            </div>
+
+            <h3 className="text-lg font-semibold text-indigo-800 mt-8 mb-4">Estimated Costs</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InputField
+                    label="Estimated Flight Cost"
+                    type="number"
+                    value={estimatedFlightCost}
+                    onChange={(e) => setEstimatedFlightCost(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 800"
+                />
+                <InputField
+                    label="Estimated Hotel/Accommodation Cost"
+                    type="number"
+                    value={estimatedHotelCost}
+                    onChange={(e) => setEstimatedHotelCost(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 1500"
+                />
+                <InputField
+                    label="Estimated Activity & Sightseeing Cost"
+                    type="number"
+                    value={estimatedActivityCost}
+                    onChange={(e) => setEstimatedActivityCost(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 500"
+                />
+                <InputField
+                    label="Estimated Miscellaneous Cost (shopping, souvenirs, etc.)"
+                    type="number"
+                    value={estimatedMiscellaneousCost}
+                    onChange={(e) => setEstimatedMiscellaneousCost(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 300"
+                />
+                <InputField
+                    label="Estimated Transport Cost (AI generated, if applicable)"
+                    type="number"
+                    value={estimatedTransportCost}
+                    onChange={(e) => setEstimatedTransportCost(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 200"
+                />
+            </div>
+        </Section>
     );
 };
 
