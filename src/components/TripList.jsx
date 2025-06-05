@@ -4,7 +4,8 @@ import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { doc, deleteDoc } from 'firebase/firestore';
 
 const TripList = () => {
-    const { trips, loadTrip, currentTripId, db, userId, /* Removed: setTravelPlanSummary, */ createNewTrip } = useContext(TripContext);
+    // FIX: Added 'appId' to destructuring from TripContext
+    const { trips, loadTrip, currentTripId, db, userId, /* Removed: setTravelPlanSummary, */ createNewTrip, appId } = useContext(TripContext);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // Stores trip ID to confirm deletion
 
@@ -13,7 +14,8 @@ const TripList = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // FIX: Removed this line as appId is now correctly sourced from context
+        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         try {
             await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/trips`, tripId));
             console.log("Trip successfully deleted:", tripId);
@@ -71,7 +73,7 @@ const TripList = () => {
                                         </button>
                                         <button
                                             onClick={() => handleConfirmDelete(trip.id)}
-                                            className="p-1 rounded-full text-red-500 hover:bg-red-100 transition-colors duration-200"
+                                            className="p-1 rounded-full text-red-500 hover:text-red-700 transition-colors duration-200"
                                             title="Delete Trip"
                                         >
                                             <Trash2 size={16} />
