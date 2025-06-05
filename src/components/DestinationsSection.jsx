@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react'; // MapPin is used here
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 import TagInput from './TagInput';
@@ -9,14 +9,18 @@ import { useCountrySearch } from '../hooks/useCountrySearch';
 import { fetchCountryData } from '../services/apiService';
 
 const DestinationsSection = () => {
-    const { countries, setCountries, cities, setCities, newCountry, setNewCountry, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
+    // Removed newCountry as it's redundant with destCountryInputValue
+    const { countries, setCountries, cities, setCities, newCityName, setNewCityName, newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics, destCountryError, setDestCountryError, destCityError, setDestCityError, newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError, allCountries, availableTopics } = useContext(TripContext);
     const destCountryInputRef = useRef(null);
 
     const { inputValue: destCountryInputValue, setInputValue: setDestCountryInputValue, filteredSuggestions: filteredDestCountrySuggestions, handleInputChange: handleDestCountryInputChange, clearSuggestions: clearDestCountrySuggestions } = useCountrySearch(allCountries, countries);
 
-    useEffect(() => {
-        setNewCountry(destCountryInputValue);
-    }, [destCountryInputValue, setNewCountry]);
+    // This useEffect setting setNewCountry(destCountryInputValue) was the only use of setNewCountry here,
+    // and newCountry itself wasn't directly used. If you intend to use newCountry in App.js for something else,
+    // then this assignment is fine, but if not, this state can be removed from App.js entirely.
+    // For now, removing this useEffect and the corresponding newCountry state in App.js context,
+    // as destCountryInputValue directly serves the purpose for TagInput.
+    // If setNewCountry is *only* meant to reflect the input value here, it's not needed.
 
     const addCountry = async () => {
         const trimmedCountry = destCountryInputValue.trim();
