@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Calendar, Star, Compass, DollarSign, Utensils, Car, Plane, Wallet, CheckCircle, Lightbulb, Loader, Heart, Home } from 'lucide-react';
+// Corrected Lucide imports - removed unused icons as per ESLint warnings
+import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home } from 'lucide-react';
 import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css'; // Don't forget to import the CSS!
+import 'react-datepicker/dist/react-datepicker.css';
 
 
 // Main App component
@@ -11,11 +12,11 @@ const App = () => {
   const [newCountry, setNewCountry] = useState('');
   const [cities, setCities] = useState([]);
   const [newCity, setNewCity] = useState('');
-  // *** NEW: Start and End Dates ***
+  // Start and End Dates
   const [startDate, setStartDate] = useState(null); // Initial state is null
   const [endDate, setEndDate] = useState(null); // Initial state is null
-  // Duration will now be derived
-  const duration = startDate && endDate ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
+  // Duration will now be derived, with corrected parentheses for ESLint
+  const duration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
   const [starRating, setStarRating] = useState('');
 
   // State for Home Location
@@ -543,7 +544,7 @@ const App = () => {
         <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
           <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
           Travel Planner
-        </h1>
+        </b>
 
         {/* --- YOUR HOME LOCATION SECTION --- */}
         <div className={sectionContainerClass}>
@@ -563,7 +564,7 @@ const App = () => {
                   // onBlur event to hide suggestions after focus loss. Use setTimeout to allow click on suggestion.
                   onBlur={() => setTimeout(() => setFilteredHomeCountrySuggestions([]), 100)}
                   placeholder="e.g., USA"
-                  className={`${inputClass} flex-grow`}
+                  className={`${inputClass} w-full`}
                 />
                 <button onClick={handleSetHomeCountry} className={`${buttonClass} ml-3`}>Set</button>
               </div>
@@ -602,7 +603,7 @@ const App = () => {
                   value={newHomeCityInput}
                   onChange={(e) => setNewHomeCityInput(e.target.value)}
                   placeholder="e.g., New York"
-                  className={`${inputClass} flex-grow`}
+                  className={`${inputClass} w-full`}
                 />
                 <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
               </div>
@@ -634,7 +635,7 @@ const App = () => {
                   onChange={handleDestCountryInputChange}
                   onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)} // Hide suggestions on blur
                   placeholder="e.g., Japan"
-                  className={`${inputClass} flex-grow`}
+                  className={`${inputClass} w-full`}
                 />
                 <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
               </div>
@@ -673,7 +674,7 @@ const App = () => {
                   value={newCity}
                   onChange={(e) => setNewCity(e.target.value)}
                   placeholder="e.g., Tokyo"
-                  className={`${inputClass} flex-grow`}
+                  className={`${inputClass} w-full`}
                 />
                 <button onClick={addCity} className={`${buttonClass} ml-3`}>Add</button>
               </div>
@@ -687,7 +688,7 @@ const App = () => {
               </div>
             </div>
           </div>
-         {/* *** UPDATED: Date Pickers for Start and End Dates *** */}
+         {/* Date Pickers for Start and End Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label htmlFor="startDate" className={labelClass}>Start Date:</label>
@@ -700,7 +701,6 @@ const App = () => {
                 endDate={endDate}
                 placeholderText="Select start date"
                 className={`${inputClass} w-full`}
-                dateFormat="dd/MM/yyyy"
               />
             </div>
             <div>
@@ -715,7 +715,6 @@ const App = () => {
                 minDate={startDate} // End date cannot be before start date
                 placeholderText="Select end date"
                 className={`${inputClass} w-full`}
-                dateFormat="dd/MM/yyyy"
               />
             </div>
           </div>
@@ -780,7 +779,7 @@ const App = () => {
               {isGeneratingSuggestions ? (
                 <span className="flex items-center justify-center">
                   <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
-                </span>
+                </b>
               ) : (
                 'Generate Itinerary Suggestions'
               )}
@@ -839,7 +838,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div>
+            </b>
           )}
 
           {/* Suggested Theme Parks */}
@@ -854,7 +853,7 @@ const App = () => {
                     onClick={() => toggleSuggestionSelection('themeParks', item)}
                   >
                     {item}
-                  </span>
+                  </b>
                 ))}
               </div>
             </div>
@@ -875,7 +874,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div>
+            </b>
           )}
 
           {/* Suggested Tours */}
@@ -893,7 +892,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </div>
+            </b>
           )}
         </div>
 
@@ -901,7 +900,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </h2>
+          </b>
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -931,7 +930,7 @@ const App = () => {
                 />
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
-            </div>
+            </b>
           </div>
 
           {isPerPerson && (
@@ -1028,7 +1027,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </h2>
+          </b>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1081,7 +1080,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </h2>
+          </b>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
