@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info } from 'lucide-react'; // Example Icon for info tooltips - now explicitly used
+// Removed Info import from here.
 
 const InputField = ({ label, id, value, onChange, type = 'text', placeholder = '', error = '', required = false, min, max, icon: Icon, children }) => {
     const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
@@ -11,7 +11,7 @@ const InputField = ({ label, id, value, onChange, type = 'text', placeholder = '
         <div>
             <label htmlFor={id} className={required ? requiredLabelClass : labelClass}>
                 {label}
-                {Icon && <Icon className="inline-block ml-1 text-gray-500 cursor-help" size={16} title={label} />} {/* Info icon used here */}
+                {Icon && <Icon className="inline-block ml-1 text-gray-500 cursor-help" size={16} title={label} />}
             </label>
             {type === 'select' ? (
                 <select
