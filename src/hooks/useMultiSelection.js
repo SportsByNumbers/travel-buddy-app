@@ -1,15 +1,17 @@
 import { useState } from 'react';
 
-export const useMultiSelection = (initial = []) => {
-    const [selectedItems, setSelectedItems] = useState(initial);
+export const useMultiSelection = (initialState = []) => {
+    const [selectedItems, setSelectedItems] = useState(initialState);
 
-    const toggleSelection = (item) => {
-        setSelectedItems(prev =>
-            prev.includes(item)
-                ? prev.filter(s => s !== item)
-                : [...prev, item]
-        );
+    const toggleItem = (item) => {
+        setSelectedItems((prevSelectedItems) => {
+            if (prevSelectedItems.includes(item)) {
+                return prevSelectedItems.filter((i) => i !== item);
+            } else {
+                return [...prevSelectedItems, item];
+            }
+        });
     };
 
-    return [selectedItems, toggleSelection, setSelectedItems]; // Return the setter for external resets if needed
+    return [selectedItems, toggleItem, setSelectedItems];
 };
