@@ -1,3 +1,5 @@
+// App.js
+
 import React, { useState, useEffect, createContext } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
@@ -57,10 +59,16 @@ const App = () => {
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
     const [isPerPerson, setIsPerPerson] = useState(true);
 
-    // Updated: numberOfPeople replaced by numberOfAdults and numberOfChildren
-    const [numberOfAdults, setNumberOfAdults] = useState(1);
-    const [numberOfChildren, setNumberOfChildren] = useState(0);
-    const numberOfPeople = numberOfAdults + numberOfChildren; // Derived total
+    // MODIFIED: numberOfAdults and numberOfChildren are now part of travelingParties
+    // The previous numberOfAdults and numberOfChildren states can be removed if they are solely replaced by travelingParties.
+    // If you need a fallback or a default for initial new trips, you can initialize travelingParties with one default group.
+    const [travelingParties, setTravelingParties] = useState([
+        { id: 1, name: 'Main Group', adults: 1, children: 0 } // Initialize with one default group
+    ]);
+
+    // Derived total numberOfPeople from all groups
+    const numberOfPeople = travelingParties.reduce((sum, party) => sum + party.adults + party.children, 0);
+
 
     const [currency, setCurrency] = useState('USD');
     const [moneyAvailable, setMoneyAvailable] = useState(0);
@@ -99,8 +107,8 @@ const App = () => {
     const [snacksAllowance, setSnacksAllowance] = useState(0);
     const [carRental, setCarRental] = useState(false);
     const [shuttle, setShuttle] = useState(false);
-    const [airportTransfers, setAirportTransfers] = useState(false); // CORRECTED: Use useState
-    const [airportParking, setAirportParking] = useState(false);     // CORRECTED: Use useState
+    const [airportTransfers, setAirportTransfers] = useState(false);
+    const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
     const [suggestedActivities, setSuggestedActivities] = useState([]);
     const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
@@ -142,6 +150,7 @@ const App = () => {
     const [destCityError, setDestCityError] = useState('');
     const [dateError, setDateError] = useState('');
     // Updated: numberOfPeopleError replaced with more specific errors
+    // These specific errors might now be handled within the BudgetPlanningSection per group
     const [numberOfAdultsError, setNumberOfAdultsError] = useState('');
     const [numberOfChildrenError, setNumberOfChildrenError] = useState('');
 
@@ -183,9 +192,6 @@ const App = () => {
                 } else {
                     console.log("No Firebase user, signing in anonymously...");
                     try {
-                        // If you still need __initial_auth_token, ensure it's defined
-                        // For typical React apps, you might not use a custom token unless specifically needed for backend auth.
-                        // If not used, you can remove this block.
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await signInWithCustomToken(authInstance, __initial_auth_token);
                             console.log("Signed in with custom token.");
@@ -210,10 +216,9 @@ const App = () => {
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         if (isAuthReady && userId && db) {
-            // Use process.env.REACT_APP_FIREBASE_APP_ID or a default if __app_id is truly a global variable
-            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
-            const tripsRef = collection(db, `artifacts/${appId}/users/${userId}/trips`); //
-            const q = query(tripsRef); //
+            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+            const tripsRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
+            const q = query(tripsRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const fetchedTrips = snapshot.docs.map(doc => ({
@@ -233,9 +238,9 @@ const App = () => {
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
-            const expensesRef = collection(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`); //
-            const q = query(expensesRef); //
+            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+            const expensesRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips/${currentTripId}/expenses`);
+            const q = query(expensesRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const fetchedExpenses = snapshot.docs.map(doc => ({
@@ -306,11 +311,11 @@ const App = () => {
     useEffect(() => {
         const fetchAllCountries = async () => {
             try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags'); //
-                const data = await response.json(); //
-                setAllCountries(data.map(country => ({ //
-                    name: country.name.common, //
-                    flag: country.flags.svg //
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags');
+                const data = await response.json();
+                setAllCountries(data.map(country => ({
+                    name: country.name.common,
+                    flag: country.flags.svg
                 })));
             } catch (error) {
                 console.error("Error fetching all countries for suggestions:", error);
@@ -332,8 +337,9 @@ const App = () => {
         setTravelStyle('');
         setHotelAmenities([]);
         setIsPerPerson(true);
-        setNumberOfAdults(1); // Reset to 1 adult
-        setNumberOfChildren(0); // Reset to 0 children
+        // MODIFIED: Reset travelingParties
+        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Reset to default group
+        // Removed old numberOfAdults and numberOfChildren resets
         setCurrency('USD');
         setMoneyAvailable(0);
         setMoneySaved(0);
@@ -398,45 +404,46 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
-        const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/trips`, tripId); //
+        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+        const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, tripId);
         try {
-            const tripDocSnap = await getDoc(tripDocRef); //
-            if (tripDocSnap.exists()) { //
-                const tripData = tripDocSnap.data(); //
-                console.log("Loading trip data:", tripData); //
+            const tripDocSnap = await getDoc(tripDocRef);
+            if (tripDocSnap.exists()) {
+                const tripData = tripDocSnap.data();
+                console.log("Loading trip data:", tripData);
 
                 // Reset all states first to avoid stale data
-                resetTripStates(); //
+                resetTripStates();
 
                 // Populate states with loaded data (handle potential undefined/null)
-                setCountries(tripData.countries || []); //
-                setCities(tripData.cities || []); //
-                setStartDate(tripData.startDate ? new Date(tripData.startDate) : null); //
-                setEndDate(tripData.endDate ? new Date(tripData.endDate) : null); //
-                setStarRating(tripData.starRating || ''); //
-                setHomeCountry(tripData.homeCountry || { name: '', flag: '' }); //
-                setHomeCity(tripData.homeCity || ''); //
-                setTopicsOfInterest(tripData.topicsOfInterest || []); //
-                setTravelStyle(tripData.travelStyle || ''); //
-                setHotelAmenities(tripData.hotelAmenities || []); //
-                setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true); //
-                setNumberOfAdults(tripData.numberOfAdults || 1); // Load adults
-                setNumberOfChildren(tripData.numberOfChildren || 0); // Load children
-                setCurrency(tripData.currency || 'USD'); //
-                setMoneyAvailable(tripData.moneyAvailable || 0); //
-                setMoneySaved(tripData.moneySaved || 0); //
-                setContingencyPercentage(tripData.contingencyPercentage || 10); //
-                setEstimatedFlightCost(tripData.estimatedFlightCost || 0); //
-                setEstimatedHotelCost(tripData.estimatedHotelCost || 0); //
-                setEstimatedActivityCost(tripData.estimatedActivityCost || 0); //
-                setEstimatedMiscellaneousCost(tripData.estimatedMiscellaneousCost || 0); //
-                setEstimatedTransportCost(tripData.estimatedTransportCost || 0); //
-                setCarRentalCost(tripData.carRentalCost || 0); //
-                setShuttleCost(tripData.shuttleCost || 0); //
-                setAirportTransfersCost(tripData.airportTransfersCost || 0); //
-                setAirportParkingCost(tripData.airportParkingCost || 0); //
-                setEstimatedInterCityFlightCost(tripData.estimatedInterCityFlightCost || 0); //
+                setCountries(tripData.countries || []);
+                setCities(tripData.cities || []);
+                setStartDate(tripData.startDate ? new Date(tripData.startDate) : null);
+                setEndDate(tripData.endDate ? new Date(tripData.endDate) : null);
+                setStarRating(tripData.starRating || '');
+                setHomeCountry(tripData.homeCountry || { name: '', flag: '' });
+                setHomeCity(tripData.homeCity || '');
+                setTopicsOfInterest(tripData.topicsOfInterest || []);
+                setTravelStyle(tripData.travelStyle || '');
+                setHotelAmenities(tripData.hotelAmenities || []);
+                setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
+                // MODIFIED: Load travelingParties
+                setTravelingParties(tripData.travelingParties || [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Load groups or default
+                // Removed old numberOfAdults and numberOfChildren loads
+                setCurrency(tripData.currency || 'USD');
+                setMoneyAvailable(tripData.moneyAvailable || 0);
+                setMoneySaved(tripData.moneySaved || 0);
+                setContingencyPercentage(tripData.contingencyPercentage || 10);
+                setEstimatedFlightCost(tripData.estimatedFlightCost || 0);
+                setEstimatedHotelCost(tripData.estimatedHotelCost || 0);
+                setEstimatedActivityCost(tripData.estimatedActivityCost || 0);
+                setEstimatedMiscellaneousCost(tripData.estimatedMiscellaneousCost || 0);
+                setEstimatedTransportCost(tripData.estimatedTransportCost || 0);
+                setCarRentalCost(tripData.carRentalCost || 0);
+                setShuttleCost(tripData.shuttleCost || 0);
+                setAirportTransfersCost(tripData.airportTransfersCost || 0);
+                setAirportParkingCost(tripData.airportParkingCost || 0);
+                setEstimatedInterCityFlightCost(tripData.estimatedInterCityFlightCost || 0);
                 setEstimatedInterCityTrainCost(tripData.estimatedInterCityTrainCost || 0);
                 setEstimatedInterCityBusCost(tripData.estimatedInterCityBusCost || 0);
                 setLocalPublicTransport(tripData.localPublicTransport || false);
@@ -454,16 +461,16 @@ const App = () => {
                 setTravelPlanSummary(tripData.travelPlanSummary || null);
 
                 // Load selected AI suggestions (ensure they exist and handle defaults)
-                setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []); //
-                setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []); //
-                setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []); //
-                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []); //
-                setSelectedSuggestedTours(tripData.selectedSuggestedTours || []); //
-                setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []); //
+                setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []);
+                setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []);
+                setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []);
+                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []);
+                setSelectedSuggestedTours(tripData.selectedSuggestedTours || []);
+                setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
 
                 setCurrentTripId(tripId); // Set the current trip ID after loading
                 setIsNewTripStarted(false); // EXISTING TRIP: Set to false
-                console.log(`Trip ${tripId} loaded successfully.`); //
+                console.log(`Trip ${tripId} loaded successfully.`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 console.warn("No such trip document!");
@@ -496,7 +503,7 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; //
+        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
 
         try {
             const tripDataToSave = {
@@ -508,7 +515,8 @@ const App = () => {
                 updatedAt: serverTimestamp(),
                 // Include all form states that make up the trip
                 countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
-                travelStyle, hotelAmenities, isPerPerson, numberOfAdults, numberOfChildren, // Save adult/children counts
+                travelStyle, hotelAmenities, isPerPerson,
+                travelingParties, // MODIFIED: Save travelingParties
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
                 estimatedHotelCost, estimatedActivityCost, estimatedMiscellaneousCost,
@@ -523,15 +531,15 @@ const App = () => {
 
             if (currentTripId) {
                 // Update existing trip
-                const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/trips`, currentTripId); //
-                await setDoc(tripDocRef, tripDataToSave, { merge: true }); //
-                console.log("Trip updated with ID:", currentTripId); //
+                const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, currentTripId);
+                await setDoc(tripDocRef, tripDataToSave, { merge: true });
+                console.log("Trip updated with ID:", currentTripId);
             } else {
                 // Create new trip
-                const tripsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/trips`); //
-                const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave); //
+                const tripsCollectionRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
+                const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id); // Set the newly created trip as current
-                console.log("New trip created with ID:", newTripDocRef.id); //
+                console.log("New trip created with ID:", newTripDocRef.id);
             }
             // After saving, generate summary again to refresh UI with latest data, and scroll to summary
             setTravelPlanSummary(summaryData);
@@ -556,14 +564,17 @@ const App = () => {
         if (homeCity === '') { setHomeCityError("Please set your home city."); hasError = true; } else { setHomeCityError(''); }
         if (countries.length === 0 && cities.length === 0) { setDestCountryError("Please add at least one destination country or city."); setDestCityError("Please add at least one destination country or city."); hasError = true; } else { setDestCountryError(''); setDestCityError(''); }
         if (!startDate || !endDate || overallDuration < 1) { setDateError("Please select valid start and end dates."); hasError = true; } else { setDateError(''); }
-        // Updated validation for adults/children
-        if (numberOfAdults < 1) { setNumberOfAdultsError("Number of adults must be at least 1."); hasError = true; } else { setNumberOfAdultsError(''); }
-        if (numberOfChildren < 0) { setNumberOfChildrenError("Number of children cannot be negative."); hasError = true; } else { setNumberOfChildrenError(''); }
+
+        // MODIFIED Validation for adults/children based on travelingParties
+        const totalAdults = travelingParties.reduce((sum, party) => sum + party.adults, 0);
+        const totalChildren = travelingParties.reduce((sum, party) => sum + party.children, 0);
+
+        if (totalAdults < 1) { setNumberOfAdultsError("Total adults must be at least 1."); hasError = true; } else { setNumberOfAdultsError(''); }
+        if (totalChildren < 0) { setNumberOfChildrenError("Total children cannot be negative."); hasError = true; } else { setNumberOfChildrenError(''); }
         if (numberOfPeople < 1) { // Ensure total people is at least 1
             setNumberOfAdultsError("Total number of people (adults + children) must be at least 1.");
             hasError = true;
         }
-
 
         if (hasError) {
             setTravelPlanSummary(null); // Clear previous summary if there are errors
@@ -639,8 +650,7 @@ const App = () => {
             touristSpots: finalTouristSpots,
             tours: finalTours,
             isPerPerson,
-            numberOfAdults, // Include in summary data
-            numberOfChildren, // Include in summary data
+            travelingParties, // MODIFIED: Include travelingParties in summary data
             numberOfPeople, // Total derived people
             currency,
             moneyAvailable,
@@ -696,12 +706,12 @@ const App = () => {
             remainingBudgetActual, // New: Remaining budget based on actual spending
             topicsOfInterest,
             // Include selected AI suggestions for persistence
-            selectedSuggestedActivities, //
-            selectedSuggestedFoodLocations, //
-            selectedSuggestedThemeParks, //
-            selectedSuggestedTouristSpots, //
-            selectedSuggestedTours, //
-            selectedSuggestedSportingEvents, //
+            selectedSuggestedActivities,
+            selectedSuggestedFoodLocations,
+            selectedSuggestedThemeParks,
+            selectedSuggestedTouristSpots,
+            selectedSuggestedTours,
+            selectedSuggestedSportingEvents,
         };
 
         saveCurrentTrip(summaryData); // Save/update the trip in Firestore
@@ -729,7 +739,8 @@ const App = () => {
         startDate, setStartDate, endDate, setEndDate, overallDuration, starRating, setStarRating, travelStyle,
         setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
         homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
-        availableAmenities, isPerPerson, setIsPerPerson, numberOfAdults, setNumberOfAdults, numberOfChildren, setNumberOfChildren, // New states
+        availableAmenities, isPerPerson, setIsPerPerson,
+        travelingParties, setTravelingParties, // MODIFIED: Include travelingParties in context
         numberOfPeople, // Pass derived total
         currency, setCurrency,
         moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
@@ -821,7 +832,7 @@ const App = () => {
                                 <button
                                     onClick={calculateTravelPlan}
                                     className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || (numberOfAdults + numberOfChildren) < 1}
+                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || numberOfPeople < 1}
                                 >
                                     {isGeneratingSuggestions ? (
                                         <span className="flex items-center justify-center">
@@ -855,4 +866,4 @@ const App = () => {
     );
 };
 
-export default App;
+export default App
