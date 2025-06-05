@@ -32,6 +32,7 @@ const App = () => {
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [trips, setTrips] = useState([]);
     const [currentTripId, setCurrentTripId] = useState(null);
+    const [isNewTripStarted, setIsNewTripStarted] = useState(false); // NEW STATE: To control initial display
 
     // State variables for various inputs (keep existing)
     const [countries, setCountries] = useState([]);
@@ -98,8 +99,8 @@ const App = () => {
     const [snacksAllowance, setSnacksAllowance] = useState(0);
     const [carRental, setCarRental] = useState(false);
     const [shuttle, setShuttle] = useState(false);
-    const [airportTransfers, setAirportTransfers] = useState(false); // FIXED: Changed to useState
-    const [airportParking, setAirportParking] = useState(false);     // FIXED: Changed to useState
+    const [airportTransfers, setAirportTransfers] = useState(false); // CORRECTED: Use useState
+    const [airportParking, setAirportParking] = useState(false);     // CORRECTED: Use useState
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
     const [suggestedActivities, setSuggestedActivities] = useState([]);
     const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
@@ -344,8 +345,8 @@ const App = () => {
         setSnacksAllowance(0);
         setCarRental(false);
         setShuttle(false);
-        setAirportTransfers(false); // Correctly reset to false
-        setAirportParking(false);     // Correctly reset to false
+        setAirportTransfers(false);
+        setAirportParking(false);
         setTravelPlanSummary(null);
         setSuggestedActivities([]);
         setSuggestedFoodLocations([]);
@@ -428,8 +429,8 @@ const App = () => {
                 setSnacksAllowance(tripData.snacksAllowance || 0);
                 setCarRental(tripData.carRental || false);
                 setShuttle(tripData.shuttle || false);
-                setAirportTransfers(tripData.airportTransfers || false); // Corrected: Load into state
-                setAirportParking(tripData.airportParking || false);     // Corrected: Load into state
+                setAirportTransfers(tripData.airportTransfers || false);
+                setAirportParking(tripData.airportParking || false);
                 setTravelPlanSummary(tripData.travelPlanSummary || null);
 
                 // Load selected AI suggestions (ensure they exist and handle defaults)
@@ -441,19 +442,22 @@ const App = () => {
                 setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
 
                 setCurrentTripId(tripId); // Set the current trip ID after loading
+                setIsNewTripStarted(false); // EXISTING TRIP: Set to false
                 console.log(`Trip ${tripId} loaded successfully.`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 console.warn("No such trip document!");
                 setTravelPlanSummary(null);
                 setCurrentTripId(null);
-                resetTripStates(); // Clear form if trip not found
+                resetTripStates();
+                setIsNewTripStarted(false); // Reset to false if not found
             }
         } catch (error) {
             console.error("Error loading trip:", error);
             setTravelPlanSummary(null);
             setCurrentTripId(null);
-            resetTripStates(); // Clear form on error
+            resetTripStates();
+            setIsNewTripStarted(false); // Reset to false on error
         }
     };
 
@@ -462,6 +466,7 @@ const App = () => {
         setCurrentTripId(null); // Deselect any active trip
         resetTripStates(); // Clear all form data
         setTravelPlanSummary(null); // Clear summary
+        setIsNewTripStarted(true); // NEW: Set to true when a new trip is initiated
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -693,6 +698,7 @@ const App = () => {
     const contextValue = {
         db, auth, userId, isAuthReady, // Firebase related
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
+        isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
 
         countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
         newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics,
@@ -714,7 +720,7 @@ const App = () => {
         setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
         setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
-        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking, // FIXED: Now passing state setters
+        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
         setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
         setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
@@ -774,8 +780,8 @@ const App = () => {
                     )}
 
 
-                    {/* Only show sections if a trip is being planned (either new or loaded) */}
-                    {currentTripId !== null || (homeCountry.name || homeCity || countries.length > 0 || cities.length > 0 || startDate) ? (
+                    {/* MODIFIED: Only show sections if a trip is being planned (either new or loaded) */}
+                    {currentTripId !== null || isNewTripStarted ? (
                         <>
                             <HomeLocationSection />
                             <DestinationsSection />
@@ -791,7 +797,7 @@ const App = () => {
                                 <button
                                     onClick={calculateTravelPlan}
                                     className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || (numberOfAdults + numberOfChildren) < 1} // Updated disabled logic
+                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || (numberOfAdults + numberOfChildren) < 1}
                                 >
                                     {isGeneratingSuggestions ? (
                                         <span className="flex items-center justify-center">
