@@ -901,7 +901,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </b>
+          </div>
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -945,7 +945,7 @@ const App = () => {
                 min="1"
                 className={`${inputClass} w-full`}
               />
-          </b>
+          </div>
           </div>
           <div className="text-center mb-6">
             <button
@@ -1027,7 +1027,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </b>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1158,7 +1158,7 @@ const App = () => {
               <p className={summaryItemClass}>
                 <strong>Travel Dates:</strong> {travelPlanSummary.startDate} - {travelPlanSummary.endDate}
               </p>
-            </b>
+            </div>
           </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
