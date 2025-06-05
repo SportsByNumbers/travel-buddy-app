@@ -1,21 +1,16 @@
-import React, { useContext, useRef, useEffect } from 'react';
-import { Home } from 'lucide-react'; // Home is used here
-import { TripContext } from '../App';
+import React, { useContext, useRef } from 'react'; // Removed useEffect
+import { Home } from 'lucide-react';
+import { TripContext } from '../App'; // Adjust path if needed
 import SectionWrapper from './SectionWrapper';
 import TagInput from './TagInput';
 import InputField from './InputField';
 import { useCountrySearch } from '../hooks/useCountrySearch';
-import { fetchCountryData } from '../services/apiService';
+import { fetchCountryData } from '../services/apiService'; // Assuming you create apiService.js
 
 const HomeLocationSection = () => {
-    // Removed newHomeCountryInput as it's redundant with countryInputValue
     const { homeCountry, setHomeCountry, homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, allCountries } = useContext(TripContext);
     const homeCountryInputRef = useRef(null);
     const { inputValue: countryInputValue, setInputValue: setCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleCountryInputChange, clearSuggestions: clearCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
-
-    // Removed this useEffect as newHomeCountryInput is no longer used here.
-    // If newHomeCountryInput is needed in App.js for some other purpose, it should be set there,
-    // but its role as a direct input for TagInput is superseded by countryInputValue.
 
     const handleSetHomeCountry = async () => {
         const trimmedHomeCountry = countryInputValue.trim();
