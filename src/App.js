@@ -201,15 +201,15 @@ const App = () => {
 
         // Calculate total estimated transport costs (AI estimate + manual inputs)
         const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
-                                                (carRental ? parseFloat(carRentalCost) : 0) +
-                                                (shuttle ? parseFloat(shuttleCost) : 0) +
-                                                (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
-                                                (airportParking ? parseFloat(airportParkingCost) : 0) +
-                                                parseFloat(estimatedInterCityFlightCost) +
-                                                parseFloat(estimatedInterCityTrainCost) +
-                                                parseFloat(estimatedInterCityBusCost) +
-                                                (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) + // Daily local transport cost
-                                                (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0); // Assuming taxi/ride-share would also have a daily allowance. This could be more granular.
+                                                 (carRental ? parseFloat(carRentalCost) : 0) +
+                                                 (shuttle ? parseFloat(shuttleCost) : 0) +
+                                                 (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+                                                 (airportParking ? parseFloat(airportParkingCost) : 0) +
+                                                 parseFloat(estimatedInterCityFlightCost) +
+                                                 parseFloat(estimatedInterCityTrainCost) +
+                                                 parseFloat(estimatedInterCityBusCost) +
+                                                 (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) + // Daily local transport cost
+                                                 (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0); // Assuming taxi/ride-share would also have a daily allowance. This could be more granular.
 
 
         // Calculate total estimated costs (excluding food for now, as food has its own calculation)
@@ -343,7 +343,7 @@ const App = () => {
         setAirportTransfersCost, airportParkingCost, setAirportParkingCost, estimatedInterCityFlightCost,
         setEstimatedInterCityFlightCost, estimatedInterCityTrainCost, setEstimatedInterCityTrainCost,
         estimatedInterCityBusCost, setEstimatedInterCityBusCost, localPublicTransport, setLocalPublicTransport,
-        taxiRideShare, setTaxiShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
+        taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance, // Fix: Changed setTaxiShare to setTaxiRideShare
         actualFlightCost, setActualFlightCost, actualHotelCost, setActualHotelCost, actualActivityCost,
         setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
         setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
@@ -398,7 +398,13 @@ const App = () => {
                             className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
                             disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || numberOfPeople < 1}
                         >
-                            Generate Travel Plan
+                            {isGeneratingSuggestions ? (
+                                <span className="flex items-center justify-center">
+                                    <Loader className="animate-spin mr-2" size={20} /> Generating Plan...
+                                </span>
+                            ) : (
+                                'Generate Travel Plan'
+                            )}
                         </button>
                     </div>
 
