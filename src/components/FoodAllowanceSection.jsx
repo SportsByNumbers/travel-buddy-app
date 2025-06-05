@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Utensils } from 'lucide-react';
-import { TripContext } from '../App.jsx';
+import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 
