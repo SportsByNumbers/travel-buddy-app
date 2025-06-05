@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home } from 'lucide-react';
+import { MapPin, Compass, Utensils, Car, Wallet, CheckCircle, Loader, Home, Info } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -35,6 +35,13 @@ const App = () => {
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
   const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
+
+  // New Budget Features
+  const [currency, setCurrency] = useState('USD'); // Default currency
+  const [moneyAvailable, setMoneyAvailable] = useState(0);
+  const [moneySaved, setMoneySaved] = useState(0);
+  const [contingencyPercentage, setContingencyPercentage] = useState(10); // Default 10%
+  const [travelStyle, setTravelStyle] = useState(''); // New state for travel style
 
   // Food allowances
   const [breakfastAllowance, setBreakfastAllowance] = useState(0);
@@ -79,6 +86,14 @@ const App = () => {
   const [filteredDestCountrySuggestions, setFilteredDestCountrySuggestions] = useState([]);
   const homeCountryInputRef = useRef(null); // Ref for home country input
   const destCountryInputRef = useRef(null); // Ref for destination country input
+
+  // Input validation states
+  const [homeCountryError, setHomeCountryError] = useState('');
+  const [homeCityError, setHomeCityError] = useState('');
+  const [destCountryError, setDestCountryError] = useState('');
+  const [destCityError, setDestCityError] = useState('');
+  const [dateError, setDateError] = useState('');
+  const [numberOfPeopleError, setNumberOfPeopleError] = useState('');
 
 
   // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -140,33 +155,43 @@ const App = () => {
     } else {
       setFilteredHomeCountrySuggestions([]);
     }
+    setHomeCountryError(''); // Clear error on input
   };
 
   const selectHomeCountrySuggestion = async (country) => {
     setNewHomeCountryInput(country.name); // Set input text to selected country name
     setHomeCountry(country); // Set home country state with selected country object
     setFilteredHomeCountrySuggestions([]); // Clear suggestions
+    setHomeCountryError('');
     homeCountryInputRef.current.focus(); // Keep focus on input after selection
   };
 
   const handleSetHomeCountry = async () => {
     const trimmedHomeCountry = newHomeCountryInput.trim();
-    if (trimmedHomeCountry !== '') {
-      const countryData = await fetchCountryFlag(trimmedHomeCountry);
-      if (countryData.name) { // Only set if a valid country name was found/matched
-        setHomeCountry(countryData);
-      }
+    if (trimmedHomeCountry === '') {
+      setHomeCountryError("Home country cannot be empty.");
+      return;
+    }
+    const countryData = await fetchCountryFlag(trimmedHomeCountry);
+    if (countryData.name) { // Only set if a valid country name was found/matched
+      setHomeCountry(countryData);
       setNewHomeCountryInput(''); // Clear input after setting
       setFilteredHomeCountrySuggestions([]); // Clear suggestions
+      setHomeCountryError('');
+    } else {
+      setHomeCountryError("Could not find a valid country for the entered name.");
     }
   };
 
   const handleSetHomeCity = () => {
     const trimmedHomeCity = newHomeCityInput.trim();
-    if (trimmedHomeCity !== '') {
-      setHomeCity(trimmedHomeCity);
-      setNewHomeCityInput('');
+    if (trimmedHomeCity === '') {
+      setHomeCityError("Home city cannot be empty.");
+      return;
     }
+    setHomeCity(trimmedHomeCity);
+    setNewHomeCityInput('');
+    setHomeCityError('');
   };
 
   // --- HANDLERS FOR DESTINATION INPUTS AND PREDICTIVE TEXT ---
@@ -183,6 +208,7 @@ const App = () => {
     } else {
       setFilteredDestCountrySuggestions([]);
     }
+    setDestCountryError('');
   };
 
   const selectDestCountrySuggestion = async (country) => {
@@ -191,37 +217,72 @@ const App = () => {
       setCountries([...countries, country]); // Add selected country object to destinations
     }
     setFilteredDestCountrySuggestions([]); // Clear suggestions
+    setNewCountry(''); // Clear input after selection
+    setDestCountryError('');
     destCountryInputRef.current.focus(); // Keep focus on input after selection
   };
 
   const addCountry = async () => {
     const trimmedCountry = newCountry.trim();
-    if (trimmedCountry !== '') {
-      const existingCountry = countries.find(c => c.name.toLowerCase() === trimmedCountry.toLowerCase());
-      if (!existingCountry) {
-        const countryData = await fetchCountryFlag(trimmedCountry);
-        if (countryData.name) { // Only add if a valid country name was found/matched
-          setCountries([...countries, countryData]);
-        }
-      }
-      setNewCountry(''); // Clear input after adding
-      setFilteredDestCountrySuggestions([]); // Clear suggestions
+    if (trimmedCountry === '') {
+      setDestCountryError("Destination country cannot be empty.");
+      return;
     }
+    const existingCountry = countries.find(c => c.name.toLowerCase() === trimmedCountry.toLowerCase());
+    if (!existingCountry) {
+      const countryData = await fetchCountryFlag(trimmedCountry);
+      if (countryData.name) { // Only add if a valid country name was found/matched
+        setCountries([...countries, countryData]);
+        setDestCountryError('');
+      } else {
+        setDestCountryError("Could not find a valid country for the entered name.");
+      }
+    } else {
+      setDestCountryError("This country has already been added.");
+    }
+    setNewCountry(''); // Clear input after adding
+    setFilteredDestCountrySuggestions([]); // Clear suggestions
   };
 
   const removeCountry = (countryToRemove) => {
     setCountries(countries.filter(country => country.name !== countryToRemove.name));
+    if (countries.filter(country => country.name !== countryToRemove.name).length === 0 && cities.length === 0) {
+      setDestCountryError("Please add at least one destination country or city.");
+    }
   };
 
   const addCity = () => {
-    if (newCity.trim() !== '' && !cities.includes(newCity.trim())) {
-      setCities([...cities, newCity.trim()]);
-      setNewCity('');
+    if (newCity.trim() === '') {
+      setDestCityError("Destination city cannot be empty.");
+      return;
     }
+    if (!cities.includes(newCity.trim())) {
+      setCities([...cities, newCity.trim()]);
+      setDestCityError('');
+    } else {
+      setDestCityError("This city has already been added.");
+    }
+    setNewCity('');
   };
 
   const removeCity = (cityToRemove) => {
     setCities(cities.filter(city => city !== cityToRemove));
+    if (cities.filter(city => city !== cityToRemove).length === 0 && countries.length === 0) {
+      setDestCityError("Please add at least one destination country or city.");
+    }
+  };
+
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    setDateError(''); // Clear error on change
+    if (endDate && date && date > endDate) {
+      setEndDate(null); // Reset end date if start date is after it
+    }
+  };
+
+  const handleEndDateChange = (date) => {
+    setEndDate(date);
+    setDateError(''); // Clear error on change
   };
 
   // --- HANDLERS FOR ITINERARY SUGGESTIONS AND TOPICS ---
@@ -286,7 +347,6 @@ const App = () => {
     setSelectedSuggestedTours([]);
     setSelectedSuggestedSportingEvents([]);
 
-    // Corrected logic for destinationPrompt to use parentheses
     const destinationPrompt = (countries.length > 0 && cities.length > 0)
       ? `in the countries: ${countries.map(c => c.name).join(', ')} and cities: ${cities.join(', ')}`
       : (countries.length > 0)
@@ -297,9 +357,18 @@ const App = () => {
       ? `with a focus on topics such as: ${topicsOfInterest.join(', ')}`
       : '';
 
-    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
+    const homeLocationContext = (homeCountry.name && homeCity)
+      ? `suitable for a trip from ${homeCity}, ${homeCountry.name}`
+      : homeCountry.name
+        ? `suitable for a trip from ${homeCountry.name}`
+        : '';
 
-    // IMPORTANT: Use environment variable for API key
+    const dateContext = (startDate && endDate)
+      ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
+      : 'at any time of year';
+
+    const prompt = `Suggest 5-7 popular activities, 5-7 popular food locations (e.g., specific restaurants, food markets), 2-3 popular theme parks, 5-7 popular tourist spots, 3-5 popular tours, and 3-5 popular sporting events ${destinationPrompt} ${homeLocationContext} ${dateContext} ${topicsPrompt}. Provide the response as a JSON object with keys: "activities", "foodLocations", "themeParks", "touristSpots", "tours", "sportingEvents". Each key's value should be an array of strings.`;
+
     const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
     if (!apiKey) {
       setSuggestionError("Gemini API Key is not configured. Please set REACT_APP_GEMINI_API_KEY environment variable.");
@@ -320,7 +389,6 @@ const App = () => {
       if (result.candidates && result.candidates.length > 0 &&
           result.candidates[0].content && result.candidates[0].content.parts &&
           result.candidates[0].content.parts.length > 0) {
-        // This is a robust way to extract JSON even if it's wrapped in markdown
         const jsonString = result.candidates[0].content.parts[0].text.replace(/```json\n|\n```/g, '');
         const parsedJson = JSON.parse(jsonString);
 
@@ -343,16 +411,32 @@ const App = () => {
   };
 
   const generateBudgetEstimates = async () => {
-    // Corrected condition: added parentheses for clarity
-    if ((countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1) {
-      setBudgetError("Please ensure countries/cities, duration, and number of people are set to generate budget estimates.");
-      return;
+    // Initial validation check
+    let hasError = false;
+    if (countries.length === 0 && cities.length === 0) {
+      setBudgetError("Please specify destination countries/cities.");
+      hasError = true;
+    } else {
+      setBudgetError('');
     }
+    if (duration < 1) {
+      setDateError("Please select valid start and end dates.");
+      hasError = true;
+    } else {
+      setDateError('');
+    }
+    if (numberOfPeople < 1) {
+      setNumberOfPeopleError("Number of people must be at least 1.");
+      hasError = true;
+    } else {
+      setNumberOfPeopleError('');
+    }
+    if (hasError) return;
+
 
     setIsGeneratingBudget(true);
     setBudgetError('');
 
-    // Corrected logic for destinationPrompt to use parentheses
     const destinationPrompt = (countries.length > 0 && cities.length > 0)
       ? `for a trip to ${countries.map(c => c.name).join(' and ')} (cities: ${cities.join(', ')})`
       : (countries.length > 0)
@@ -381,9 +465,10 @@ const App = () => {
       airportParking ? 'airport parking' : ''
     ].filter(Boolean).join(', ');
 
-    const prompt = `Estimate the following costs in USD for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
+    const prompt = `Estimate the following costs in ${currency} for a ${duration}-day trip ${destinationPrompt} ${homeLocationPrompt} for ${numberOfPeople} ${isPerPerson ? 'person' : 'party'}.
     Consider these itinerary items: ${itineraryPrompt || 'general sightseeing'}.
     Preferred hotel star rating: ${starRating || 'any'}.
+    Travel style: ${travelStyle || 'standard'}.
     Transport options: ${transportOptions || 'standard public transport'}.
     Provide the response as a JSON object with keys: "estimatedFlightCost", "estimatedHotelCost", "estimatedActivityCost", "estimatedTransportCost", "estimatedMiscellaneousCost", "breakfastAllowance", "lunchAllowance", "dinnerAllowance", "snacksAllowance". All values should be numbers.`;
 
@@ -416,7 +501,6 @@ const App = () => {
       }
     };
 
-    // IMPORTANT: Use environment variable for API key
     const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
     if (!apiKey) {
       setBudgetError("Gemini API Key is not configured. Please set REACT_APP_GEMINI_API_KEY environment variable.");
@@ -437,11 +521,9 @@ const App = () => {
       if (result.candidates && result.candidates.length > 0 &&
           result.candidates[0].content && result.candidates[0].content.parts &&
           result.candidates[0].content.parts.length > 0) {
-        // This is a robust way to extract JSON even if it's wrapped in markdown
         const jsonString = result.candidates[0].content.parts[0].text.replace(/```json\n|\n```/g, '');
         const parsedJson = JSON.parse(jsonString);
 
-        // Auto-populate fields with AI-generated values
         setEstimatedFlightCost(parsedJson.estimatedFlightCost || 0);
         setEstimatedHotelCost(parsedJson.estimatedHotelCost || 0);
         setEstimatedActivityCost(parsedJson.estimatedActivityCost || 0);
@@ -466,7 +548,22 @@ const App = () => {
 
   // --- MAIN TRAVEL PLAN CALCULATION ---
   const calculateTravelPlan = () => {
-    // Combine selected suggested items (as manual input fields are removed for these)
+    // Validation before generating summary
+    let hasError = false;
+    if (homeCountry.name === '') { setHomeCountryError("Please set your home country."); hasError = true; }
+    if (homeCity === '') { setHomeCityError("Please set your home city."); hasError = true; }
+    if (countries.length === 0 && cities.length === 0) { setDestCountryError("Please add at least one destination country or city."); setDestCityError("Please add at least one destination country or city."); hasError = true; }
+    if (!startDate || !endDate || duration < 1) { setDateError("Please select valid start and end dates."); hasError = true; }
+    if (numberOfPeople < 1) { setNumberOfPeopleError("Number of people must be at least 1."); hasError = true; }
+
+    if (hasError) {
+      setTravelPlanSummary(null); // Clear previous summary if there are errors
+      // Scroll to top or specific error location
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+
     const finalActivities = selectedSuggestedActivities.filter(Boolean).join(', ');
     const finalFoodLocations = selectedSuggestedFoodLocations.filter(Boolean).join(', ');
     const finalThemeParks = selectedSuggestedThemeParks.filter(Boolean).join(', ');
@@ -477,7 +574,7 @@ const App = () => {
 
     // Calculate total food allowance per day
     const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
-    const totalFoodCost = totalDailyFoodAllowance * duration; // Use derived duration
+    const totalFoodCost = totalDailyFoodAllowance * duration;
 
     // Calculate total estimated costs
     const totalEstimatedCost =
@@ -488,16 +585,25 @@ const App = () => {
       parseFloat(estimatedMiscellaneousCost);
 
     // Adjust costs based on per person/per party
-    const finalTotalCost = isPerPerson ? totalEstimatedCost * parseInt(numberOfPeople) : totalEstimatedCost;
+    const subTotalEstimatedCost = isPerPerson ? totalEstimatedCost * parseInt(numberOfPeople) : totalEstimatedCost;
     const finalTotalFoodCost = isPerPerson ? totalFoodCost * parseInt(numberOfPeople) : totalFoodCost;
+
+    // Calculate contingency
+    const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
+
+    const grandTotal = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
+
+    // Calculate budget surplus/deficit
+    const remainingBudget = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotal;
+
 
     setTravelPlanSummary({
       homeCountry,
       homeCity,
       countries,
       cities,
-      duration, // Still pass duration in summary
-      startDate: startDate ? startDate.toLocaleDateString() : 'Not set', // Pass formatted dates
+      duration,
+      startDate: startDate ? startDate.toLocaleDateString() : 'Not set',
       endDate: endDate ? endDate.toLocaleDateString() : 'Not set',
       starRating,
       activities: finalActivities,
@@ -505,7 +611,7 @@ const App = () => {
       foodLocations: finalFoodLocations,
       themeParks: finalThemeParks,
       touristSpots: finalTouristSpots,
-      tours: finalTours, // Include tours in summary
+      tours: finalTours,
       isPerPerson,
       numberOfPeople,
       estimatedFlightCost,
@@ -513,7 +619,7 @@ const App = () => {
       estimatedActivityCost,
       estimatedTransportCost,
       estimatedMiscellaneousCost,
-      totalEstimatedCost: finalTotalCost, // This is the sum of estimated costs before food
+      totalEstimatedCost: subTotalEstimatedCost, // This is the sum of estimated costs before food & contingency
       breakfastAllowance,
       lunchAllowance,
       dinnerAllowance,
@@ -524,14 +630,25 @@ const App = () => {
       shuttle,
       airportTransfers,
       airportParking,
-      grandTotal: finalTotalCost + finalTotalFoodCost, // Grand total including food
-      topicsOfInterest, // Include topics of interest in summary
+      currency, // Include currency in summary
+      moneyAvailable,
+      moneySaved,
+      contingencyPercentage,
+      contingencyAmount,
+      grandTotal,
+      remainingBudget,
+      topicsOfInterest,
+      travelStyle, // Include travel style in summary
     });
   };
 
   // --- TAILWIND CSS CLASSES FOR CONSISTENT STYLING ---
   const inputClass = "p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out shadow-sm";
+  // Added required field indicator to labelClass
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const requiredLabelClass = "block text-sm font-medium text-gray-700 mb-1 after:content-['*'] after:ml-0.5 after:text-red-500";
+  const errorClass = "text-red-500 text-xs mt-1"; // For input-specific errors
+
   const sectionContainerClass = "mb-8 p-6 bg-white rounded-xl shadow-md";
   const sectionTitleClass = "text-2xl font-bold text-indigo-700 mb-6 border-b-2 border-indigo-200 pb-3 flex items-center";
   const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
@@ -552,6 +669,8 @@ const App = () => {
   const summaryItemClass = "text-gray-700 mb-1";
   const totalCostClass = "text-2xl font-bold text-indigo-800";
   const grandTotalAmountClass = "text-green-700 text-3xl font-extrabold";
+  const remainingBudgetClass = (amount) =>
+    `text-2xl font-extrabold ${amount >= 0 ? 'text-green-700' : 'text-red-700'}`;
 
 
   return (
@@ -568,8 +687,8 @@ const App = () => {
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="relative"> {/* Added relative for dropdown positioning */}
-              <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
+            <div className="relative">
+              <label htmlFor="newHomeCountryInput" className={requiredLabelClass}>Home Country:</label>
               <div className="flex items-center">
                 <input
                   type="text"
@@ -577,20 +696,18 @@ const App = () => {
                   ref={homeCountryInputRef}
                   value={newHomeCountryInput}
                   onChange={handleHomeCountryInputChange}
-                  // onBlur event to hide suggestions after focus loss. Use setTimeout to allow click on suggestion.
                   onBlur={() => setTimeout(() => setFilteredHomeCountrySuggestions([]), 100)}
                   placeholder="e.g., USA"
-                  className={`${inputClass} w-full`}
+                  className={`${inputClass} w-full ${homeCountryError ? 'border-red-500' : ''}`}
                 />
                 <button onClick={handleSetHomeCountry} className={`${buttonClass} ml-3`}>Set</button>
               </div>
-              {/* Country Suggestions Dropdown */}
+              {homeCountryError && <p className={errorClass}>{homeCountryError}</p>}
               {filteredHomeCountrySuggestions.length > 0 && (
                 <ul className={suggestionListClass}>
                   {filteredHomeCountrySuggestions.map((country) => (
                     <li
                       key={country.name}
-                      // onMouseDown to prevent onBlur from firing before onClick/select
                       onMouseDown={() => selectHomeCountrySuggestion(country)}
                       className={suggestionItemClass}
                     >
@@ -600,28 +717,29 @@ const App = () => {
                   ))}
                 </ul>
               )}
-              {/* Display selected home country */}
               {homeCountry.name && (
                 <div className="mt-4 flex flex-wrap gap-3">
                   <span className={tagClass}>
                     {homeCountry.name}
+                    {homeCountry.flag && <img src={homeCountry.flag} alt={`${homeCountry.name} flag`} className="w-6 h-4 ml-2 rounded-sm" />}
                   </span>
                 </div>
               )}
             </div>
             <div>
-              <label htmlFor="newHomeCityInput" className={labelClass}>Home City:</label>
+              <label htmlFor="newHomeCityInput" className={requiredLabelClass}>Home City:</label>
               <div className="flex items-center">
                 <input
                   type="text"
                   id="newHomeCityInput"
                   value={newHomeCityInput}
-                  onChange={(e) => setNewHomeCityInput(e.target.value)}
+                  onChange={(e) => { setNewHomeCityInput(e.target.value); setHomeCityError(''); }}
                   placeholder="e.g., New York"
-                  className={`${inputClass} w-full`}
+                  className={`${inputClass} w-full ${homeCityError ? 'border-red-500' : ''}`}
                 />
                 <button onClick={handleSetHomeCity} className={`${buttonClass} ml-3`}>Set</button>
               </div>
+              {homeCityError && <p className={errorClass}>{homeCityError}</p>}
               {homeCity && (
                 <div className="mt-4 flex flex-wrap gap-3">
                   <span className={tagClass}>
@@ -639,8 +757,8 @@ const App = () => {
             <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="relative"> {/* Added relative for dropdown positioning */}
-              <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
+            <div className="relative">
+              <label htmlFor="newCountry" className={requiredLabelClass}>Add Destination Country:</label>
               <div className="flex items-center">
                 <input
                   type="text"
@@ -648,19 +766,19 @@ const App = () => {
                   ref={destCountryInputRef}
                   value={newCountry}
                   onChange={handleDestCountryInputChange}
-                  onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)} // Hide suggestions on blur
+                  onBlur={() => setTimeout(() => setFilteredDestCountrySuggestions([]), 100)}
                   placeholder="e.g., Japan"
-                  className={`${inputClass} w-full`}
+                  className={`${inputClass} w-full ${destCountryError && countries.length === 0 ? 'border-red-500' : ''}`}
                 />
                 <button onClick={addCountry} className={`${buttonClass} ml-3`}>Add</button>
               </div>
-              {/* Destination Country Suggestions Dropdown */}
+              {destCountryError && countries.length === 0 && <p className={errorClass}>{destCountryError}</p>}
               {filteredDestCountrySuggestions.length > 0 && (
                 <ul className={suggestionListClass}>
                   {filteredDestCountrySuggestions.map((country) => (
                     <li
                       key={country.name}
-                      onMouseDown={() => selectDestCountrySuggestion(country)} // Use onMouseDown to prevent blur
+                      onMouseDown={() => selectDestCountrySuggestion(country)}
                       className={suggestionItemClass}
                     >
                       {country.flag && <img src={country.flag} alt="" className="w-6 h-4 mr-2 rounded-sm" />}
@@ -669,7 +787,6 @@ const App = () => {
                   ))}
                 </ul>
               )}
-              {/* Display selected destination countries */}
               <div className="mt-4 flex flex-wrap gap-3">
                 {countries.map((country) => (
                   <span key={country.name} className={flagTagClass}>
@@ -681,18 +798,19 @@ const App = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="newCity" className={labelClass}>Add Destination City:</label>
+              <label htmlFor="newCity" className={requiredLabelClass}>Add Destination City:</label>
               <div className="flex items-center">
                 <input
                   type="text"
                   id="newCity"
                   value={newCity}
-                  onChange={(e) => setNewCity(e.target.value)}
+                  onChange={(e) => { setNewCity(e.target.value); setDestCityError(''); }}
                   placeholder="e.g., Tokyo"
-                  className={`${inputClass} w-full`}
+                  className={`${inputClass} w-full ${destCityError && cities.length === 0 ? 'border-red-500' : ''}`}
                 />
                 <button onClick={addCity} className={`${buttonClass} ml-3`}>Add</button>
               </div>
+              {destCityError && cities.length === 0 && <p className={errorClass}>{destCityError}</p>}
               <div className="mt-4 flex flex-wrap gap-3">
                 {cities.map((city) => (
                   <span key={city} className="bg-green-100 text-green-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
@@ -706,32 +824,33 @@ const App = () => {
           {/* Date Pickers for Start and End Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="startDate" className={labelClass}>Start Date:</label>
+              <label htmlFor="startDate" className={requiredLabelClass}>Start Date:</label>
               <DatePicker
                 id="startDate"
                 selected={startDate}
-                onChange={(date) => setStartDate(date)}
+                onChange={handleStartDateChange}
                 selectsStart
                 startDate={startDate}
                 endDate={endDate}
                 placeholderText="Select start date"
-                className={`${inputClass} w-full`}
+                className={`${inputClass} w-full ${dateError ? 'border-red-500' : ''}`}
               />
             </div>
             <div>
-              <label htmlFor="endDate" className={labelClass}>End Date:</label>
+              <label htmlFor="endDate" className={requiredLabelClass}>End Date:</label>
               <DatePicker
                 id="endDate"
                 selected={endDate}
-                onChange={(date) => setEndDate(date)}
+                onChange={handleEndDateChange}
                 selectsEnd
                 startDate={startDate}
                 endDate={endDate}
-                minDate={startDate} // End date cannot be before start date
+                minDate={startDate}
                 placeholderText="Select end date"
-                className={`${inputClass} w-full`}
+                className={`${inputClass} w-full ${dateError ? 'border-red-500' : ''}`}
               />
             </div>
+            {dateError && <p className={`${errorClass} md:col-span-2`}>{dateError}</p>}
           </div>
           <div>
             <p className={labelClass}>Calculated Duration:</p>
@@ -759,11 +878,29 @@ const App = () => {
                 className={`${inputClass} w-full`}
               >
                 <option value="">Select a rating</option>
-                <option value="1">1 Star</option>
-                <option value="2">2 Star</option>
-                <option value="3">3 Star</option>
-                <option value="4">4 Star</option>
-                <option value="5">5 Star</option>
+                <option value="1">1 Star (Budget)</option>
+                <option value="2">2 Star (Economy)</option>
+                <option value="3">3 Star (Mid-Range)</option>
+                <option value="4">4 Star (First Class)</option>
+                <option value="5">5 Star (Luxury)</option>
+              </select>
+            </div>
+             {/* Travel Style */}
+            <div>
+              <label htmlFor="travelStyle" className={labelClass}>Travel Style:</label>
+              <select
+                id="travelStyle"
+                value={travelStyle}
+                onChange={(e) => setTravelStyle(e.target.value)}
+                className={`${inputClass} w-full`}
+              >
+                <option value="">Select a style</option>
+                <option value="Budget">Budget</option>
+                <option value="Mid-Range">Mid-Range</option>
+                <option value="Luxury">Luxury</option>
+                <option value="Family-Friendly">Family-Friendly</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Relaxation">Relaxation</option>
               </select>
             </div>
             {/* Topics of Interest */}
@@ -807,15 +944,21 @@ const App = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Activities:</h3>
               <div className="flex flex-wrap gap-2">
-                {suggestedActivities.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedActivities.includes(item))}
-                    onClick={() => toggleSuggestionSelection('activities', item)}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {isGeneratingSuggestions ? (
+                    <div className="flex items-center text-gray-500">
+                        <Loader className="animate-spin mr-2" size={16} /> Loading activities...
+                    </div>
+                ) : (
+                    suggestedActivities.map((item, index) => (
+                    <span
+                        key={index}
+                        className={suggestionTagClass(selectedSuggestedActivities.includes(item))}
+                        onClick={() => toggleSuggestionSelection('activities', item)}
+                    >
+                        {item}
+                    </span>
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -825,15 +968,21 @@ const App = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Sporting Events:</h3>
               <div className="flex flex-wrap gap-2">
-                {suggestedSportingEvents.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedSportingEvents.includes(item))}
-                    onClick={() => toggleSuggestionSelection('sportingEvents', item)}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {isGeneratingSuggestions ? (
+                    <div className="flex items-center text-gray-500">
+                        <Loader className="animate-spin mr-2" size={16} /> Loading sporting events...
+                    </div>
+                ) : (
+                    suggestedSportingEvents.map((item, index) => (
+                    <span
+                        key={index}
+                        className={suggestionTagClass(selectedSuggestedSportingEvents.includes(item))}
+                        onClick={() => toggleSuggestionSelection('sportingEvents', item)}
+                    >
+                        {item}
+                    </span>
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -843,15 +992,21 @@ const App = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Food Locations:</h3>
               <div className="flex flex-wrap gap-2">
-                {suggestedFoodLocations.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedFoodLocations.includes(item))}
-                    onClick={() => toggleSuggestionSelection('foodLocations', item)}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {isGeneratingSuggestions ? (
+                    <div className="flex items-center text-gray-500">
+                        <Loader className="animate-spin mr-2" size={16} /> Loading food locations...
+                    </div>
+                ) : (
+                    suggestedFoodLocations.map((item, index) => (
+                    <span
+                        key={index}
+                        className={suggestionTagClass(selectedSuggestedFoodLocations.includes(item))}
+                        onClick={() => toggleSuggestionSelection('foodLocations', item)}
+                    >
+                        {item}
+                    </span>
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -861,15 +1016,21 @@ const App = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Theme Parks:</h3>
               <div className="flex flex-wrap gap-2">
-                {suggestedThemeParks.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedThemeParks.includes(item))}
-                    onClick={() => toggleSuggestionSelection('themeParks', item)}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {isGeneratingSuggestions ? (
+                    <div className="flex items-center text-gray-500">
+                        <Loader className="animate-spin mr-2" size={16} /> Loading theme parks...
+                    </div>
+                ) : (
+                    suggestedThemeParks.map((item, index) => (
+                    <span
+                        key={index}
+                        className={suggestionTagClass(selectedSuggestedThemeParks.includes(item))}
+                        onClick={() => toggleSuggestionSelection('themeParks', item)}
+                    >
+                        {item}
+                    </span>
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -879,15 +1040,21 @@ const App = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tourist Spots:</h3>
               <div className="flex flex-wrap gap-2">
-                {suggestedTouristSpots.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedTouristSpots.includes(item))}
-                    onClick={() => toggleSuggestionSelection('touristSpots', item)}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {isGeneratingSuggestions ? (
+                    <div className="flex items-center text-gray-500">
+                        <Loader className="animate-spin mr-2" size={16} /> Loading tourist spots...
+                    </div>
+                ) : (
+                    suggestedTouristSpots.map((item, index) => (
+                    <span
+                        key={index}
+                        className={suggestionTagClass(selectedSuggestedTouristSpots.includes(item))}
+                        onClick={() => toggleSuggestionSelection('touristSpots', item)}
+                    >
+                        {item}
+                    </span>
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -897,15 +1064,21 @@ const App = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-indigo-700 mb-3">Tours:</h3>
               <div className="flex flex-wrap gap-2">
-                {suggestedTours.map((item, index) => (
-                  <span
-                    key={index}
-                    className={suggestionTagClass(selectedSuggestedTours.includes(item))}
-                    onClick={() => toggleSuggestionSelection('tours', item)}
-                  >
-                    {item}
-                  </span>
-                ))}
+                {isGeneratingSuggestions ? (
+                    <div className="flex items-center text-gray-500">
+                        <Loader className="animate-spin mr-2" size={16} /> Loading tours...
+                    </div>
+                ) : (
+                    suggestedTours.map((item, index) => (
+                    <span
+                        key={index}
+                        className={suggestionTagClass(selectedSuggestedTours.includes(item))}
+                        onClick={() => toggleSuggestionSelection('tours', item)}
+                    >
+                        {item}
+                    </span>
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -920,52 +1093,107 @@ const App = () => {
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
 
-          <div className="mb-6">
-            <label className={labelClass}>Cost Calculation Basis:</label>
-            <div className="flex space-x-6">
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
-                  name="costBasis"
-                  value="perPerson"
-                  checked={isPerPerson}
-                  onChange={() => setIsPerPerson(true)}
-                />
-                <span className="ml-2 text-gray-800">Per Person</span>
-              </label>
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
-                  name="costBasis"
-                  value="perParty"
-                  checked={!isPerPerson}
-                  onChange={() => setIsPerPerson(false)}
-                />
-                <span className="ml-2 text-gray-800">Per Party</span>
-              </label>
-            </div>
-          </div>
-
-          {isPerPerson && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="mb-6">
-              <label htmlFor="numberOfPeople" className={labelClass}>Number of People:</label>
+              <label className={labelClass}>Cost Calculation Basis:</label>
+              <div className="flex space-x-6">
+                <label className="inline-flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                    name="costBasis"
+                    value="perPerson"
+                    checked={isPerPerson}
+                    onChange={() => setIsPerPerson(true)}
+                  />
+                  <span className="ml-2 text-gray-800">Per Person</span>
+                </label>
+                <label className="inline-flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    className="form-radio h-5 w-5 text-indigo-600 transition duration-150 ease-in-out"
+                    name="costBasis"
+                    value="perParty"
+                    checked={!isPerPerson}
+                    onChange={() => setIsPerPerson(false)}
+                  />
+                  <span className="ml-2 text-gray-800">Per Party</span>
+                </label>
+              </div>
+            </div>
+
+            {isPerPerson && (
+              <div>
+                <label htmlFor="numberOfPeople" className={requiredLabelClass}>Number of People:</label>
+                <input
+                  type="number"
+                  id="numberOfPeople"
+                  value={numberOfPeople}
+                  onChange={(e) => {setNumberOfPeople(Math.max(1, parseInt(e.target.value) || 1)); setNumberOfPeopleError('');}}
+                  min="1"
+                  className={`${inputClass} w-full ${numberOfPeopleError ? 'border-red-500' : ''}`}
+                />
+                {numberOfPeopleError && <p className={errorClass}>{numberOfPeopleError}</p>}
+              </div>
+            )}
+            <div>
+              <label htmlFor="currency" className={labelClass}>Currency:</label>
+              <select
+                id="currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className={`${inputClass} w-full`}
+              >
+                <option value="USD">USD ($)</option>
+                <option value="AUD">AUD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="JPY">JPY (¥)</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="moneyAvailable" className={labelClass}>Money Available ({currency}):</label>
               <input
                 type="number"
-                id="numberOfPeople"
-                value={numberOfPeople}
-                onChange={(e) => setNumberOfPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                min="1"
+                id="moneyAvailable"
+                value={moneyAvailable}
+                onChange={(e) => setMoneyAvailable(parseFloat(e.target.value) || 0)}
+                min="0"
                 className={`${inputClass} w-full`}
               />
             </div>
-          )}
+            <div>
+              <label htmlFor="moneySaved" className={labelClass}>Money Saved ({currency}):</label>
+              <input
+                type="number"
+                id="moneySaved"
+                value={moneySaved}
+                onChange={(e) => setMoneySaved(parseFloat(e.target.value) || 0)}
+                min="0"
+                className={`${inputClass} w-full`}
+              />
+            </div>
+             <div>
+              <label htmlFor="contingencyPercentage" className={labelClass}>
+                Contingency/Buffer (%):
+                <Info size={16} className="inline-block ml-1 text-gray-500 cursor-help" title="An extra percentage added to cover unforeseen expenses." />
+              </label>
+              <input
+                type="number"
+                id="contingencyPercentage"
+                value={contingencyPercentage}
+                onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
+                min="0"
+                max="100"
+                className={`${inputClass} w-full`}
+              />
+            </div>
+          </div>
+
           <div className="text-center mb-6">
             <button
               onClick={generateBudgetEstimates}
               className={buttonClass}
-              // Corrected condition: added parentheses for clarity
               disabled={isGeneratingBudget || ((countries.length === 0 && cities.length === 0) || duration < 1 || numberOfPeople < 1)}
             >
               {isGeneratingBudget ? (
@@ -981,7 +1209,7 @@ const App = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="estimatedFlightCost" className={labelClass}>Estimated Flight Cost:</label>
+              <label htmlFor="estimatedFlightCost" className={labelClass}>Estimated Flight Cost ({currency}):</label>
               <input
                 type="number"
                 id="estimatedFlightCost"
@@ -992,7 +1220,7 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedHotelCost" className={labelClass}>Estimated Hotel Cost:</label>
+              <label htmlFor="estimatedHotelCost" className={labelClass}>Estimated Hotel Cost ({currency}):</label>
               <input
                 type="number"
                 id="estimatedHotelCost"
@@ -1003,7 +1231,7 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedActivityCost" className={labelClass}>Estimated Activity Cost:</label>
+              <label htmlFor="estimatedActivityCost" className={labelClass}>Estimated Activity Cost ({currency}):</label>
               <input
                 type="number"
                 id="estimatedActivityCost"
@@ -1014,7 +1242,7 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedTransportCost" className={labelClass}>Estimated Transport Cost:</label>
+              <label htmlFor="estimatedTransportCost" className={labelClass}>Estimated Transport Cost ({currency}):</label>
               <input
                 type="number"
                 id="estimatedTransportCost"
@@ -1025,7 +1253,7 @@ const App = () => {
               />
             </div>
             <div>
-              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost:</label>
+              <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost ({currency}):</label>
               <input
                 type="number"
                 id="estimatedMiscellaneousCost"
@@ -1041,7 +1269,7 @@ const App = () => {
         {/* --- DAILY FOOD ALLOWANCES SECTION --- */}
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
-            <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
+            <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person, {currency})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -1138,7 +1366,11 @@ const App = () => {
 
         {/* --- GENERATE TRAVEL PLAN BUTTON --- */}
         <div className="text-center mt-10">
-          <button onClick={calculateTravelPlan} className={buttonClass}>
+          <button
+            onClick={calculateTravelPlan}
+            className={buttonClass}
+            disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || duration < 1 || numberOfPeople < 1}
+          >
             Generate Travel Plan
           </button>
         </div>
@@ -1181,6 +1413,7 @@ const App = () => {
             <div className="mb-6 pb-4 border-b border-indigo-200">
               <h3 className={summarySubTitleClass}>Preferences & Itinerary:</h3>
               <p className={summaryItemClass}><strong>Hotel Star Rating:</strong> {travelPlanSummary.starRating ? `${travelPlanSummary.starRating} Star` : 'Not specified'}</p>
+              <p className={summaryItemClass}><strong>Travel Style:</strong> {travelPlanSummary.travelStyle || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Topics of Interest:</strong> {travelPlanSummary.topicsOfInterest.length > 0 ? travelPlanSummary.topicsOfInterest.join(', ') : 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Activities:</strong> {travelPlanSummary.activities || 'Not specified'}</p>
               <p className={summaryItemClass}><strong>Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'Not specified'}</p>
@@ -1191,27 +1424,36 @@ const App = () => {
             </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Estimated Costs:</h3>
+              <h3 className={summarySubTitleClass}>Estimated Costs ({travelPlanSummary.currency}):</h3>
               <p className={summaryItemClass}><strong>Calculation Basis:</strong> {travelPlanSummary.isPerPerson ? `Per Person (${travelPlanSummary.numberOfPeople} people)` : 'Per Party'}</p>
               <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">${travelPlanSummary.estimatedFlightCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">${travelPlanSummary.estimatedHotelCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Activity Cost: <span className="font-semibold">${travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Transport Cost: <span className="font-semibold">${travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
-                <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
+                <li className="mb-1">Estimated Flight Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedFlightCost.toFixed(2)}</span></li>
+                <li className="mb-1">Estimated Hotel Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedHotelCost.toFixed(2)}</span></li>
+                <li className="mb-1">Estimated Activity Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedActivityCost.toFixed(2)}</span></li>
+                <li className="mb-1">Estimated Transport Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedTransportCost.toFixed(2)}</span></li>
+                <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
+                <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food & Contingency): <span className="text-blue-700">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
               </ul>
             </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
-              <h3 className={summarySubTitleClass}>Food Allowances:</h3>
+              <h3 className={summarySubTitleClass}>Food Allowances ({travelPlanSummary.currency}):</h3>
               <ul className="list-disc list-inside ml-6 text-gray-700">
-                <li className="mb-1">Daily Breakfast Allowance: <span className="font-semibold">${travelPlanSummary.breakfastAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Lunch Allowance: <span className="font-semibold">${travelPlanSummary.lunchAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Dinner Allowance: <span className="font-semibold">${travelPlanSummary.dinnerAllowance.toFixed(2)}</span></li>
-                <li className="mb-1">Daily Snacks Allowance: <span className="font-semibold">${travelPlanSummary.snacksAllowance.toFixed(2)}</span></li>
-                <li className="mt-2 text-lg font-bold text-indigo-800">Total Daily Food Allowance: <span className="text-blue-700">${travelPlanSummary.totalDailyFoodAllowance.toFixed(2)}</span></li>
-                <li className="mt-1 text-lg font-bold text-indigo-800">Total Food Cost for Trip: <span className="text-blue-700">${travelPlanSummary.totalFoodCost.toFixed(2)}</span></li>
+                <li className="mb-1">Daily Breakfast Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.breakfastAllowance.toFixed(2)}</span></li>
+                <li className="mb-1">Daily Lunch Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.lunchAllowance.toFixed(2)}</span></li>
+                <li className="mb-1">Daily Dinner Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.dinnerAllowance.toFixed(2)}</span></li>
+                <li className="mb-1">Daily Snacks Allowance: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.snacksAllowance.toFixed(2)}</span></li>
+                <li className="mt-2 text-lg font-bold text-indigo-800">Total Daily Food Allowance: <span className="text-blue-700">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.totalDailyFoodAllowance.toFixed(2)}</span></li>
+                <li className="mt-1 text-lg font-bold text-indigo-800">Total Food Cost for Trip: <span className="text-blue-700">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.totalFoodCost.toFixed(2)}</span></li>
+              </ul>
+            </div>
+
+            <div className="mb-6 pb-4 border-b border-indigo-200">
+              <h3 className={summarySubTitleClass}>Budget Overview ({travelPlanSummary.currency}):</h3>
+              <ul className="list-disc list-inside ml-6 text-gray-700">
+                <li className="mb-1">Money Available: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.moneyAvailable.toFixed(2)}</span></li>
+                <li className="mb-1">Money Saved: <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.moneySaved.toFixed(2)}</span></li>
+                <li className="mb-1">Contingency/Buffer ({travelPlanSummary.contingencyPercentage}%): <span className="font-semibold">{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.contingencyAmount.toFixed(2)}</span></li>
               </ul>
             </div>
 
@@ -1227,7 +1469,8 @@ const App = () => {
             </div>
 
             <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
-              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
+              <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
+              <h3 className={totalCostClass}>Remaining Budget: <span className={remainingBudgetClass(travelPlanSummary.remainingBudget)}>{travelPlanSummary.currency === 'JPY' ? '¥' : '$'}{travelPlanSummary.remainingBudget.toFixed(2)}</span></h3>
             </div>
           </div>
         )}
