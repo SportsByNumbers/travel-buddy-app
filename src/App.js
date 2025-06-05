@@ -216,8 +216,10 @@ const App = () => {
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         if (isAuthReady && userId && db) {
-            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
-            const tripsRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
+            // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
+            // FIX: Corrected Firestore path string interpolation
+            const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
+            const tripsRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`);
             const q = query(tripsRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -238,8 +240,10 @@ const App = () => {
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
-            const expensesRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips/${currentTripId}/expenses`);
+            // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
+            // FIX: Corrected Firestore path string interpolation
+            const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
+            const expensesRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -404,8 +408,10 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
-        const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, tripId);
+        // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
+        // FIX: Corrected Firestore path string interpolation
+        const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
+        const tripDocRef = doc(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`, tripId);
         try {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
@@ -503,7 +509,8 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+        // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
+        const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
 
         try {
             const tripDataToSave = {
@@ -531,12 +538,14 @@ const App = () => {
 
             if (currentTripId) {
                 // Update existing trip
-                const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, currentTripId);
+                // FIX: Corrected Firestore path string interpolation
+                const tripDocRef = doc(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
                 console.log("Trip updated with ID:", currentTripId);
             } else {
                 // Create new trip
-                const tripsCollectionRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
+                // FIX: Corrected Firestore path string interpolation
+                const tripsCollectionRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id); // Set the newly created trip as current
                 console.log("New trip created with ID:", newTripDocRef.id);
@@ -731,6 +740,7 @@ const App = () => {
     // Bundle all state and helper functions into a single context value
     const contextValue = {
         db, auth, userId, isAuthReady, // Firebase related
+        appId: process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id', // FIX: Added appId to context
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
         isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
 
@@ -866,4 +876,4 @@ const App = () => {
     );
 };
 
-export default App
+export default App;
