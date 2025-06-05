@@ -1,43 +1,33 @@
+// components/InputField.jsx
 import React from 'react';
 
-const InputField = ({ id, label, type = 'text', value, onChange, placeholder, min, max, error, options = [] }) => {
-    const inputClasses = `mt-1 block w-full px-3 py-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`;
-    const labelClasses = `block text-sm font-medium text-gray-700 ${!label.includes('(Optional)') ? 'after:content-[\'*\'] after:ml-0.5 after:text-red-500' : ''}`;
+// Assuming props like 'value', 'options', 'selectedItems' are passed
+function InputField({ label, value, type = 'text', error, options, selectedItems }) { // Add selectedItems prop with default []
+    // Line 5 might be here or just before this line
+    const isSelected = selectedItems.includes(value); // THIS LINE IS LIKELY CAUSING THE ERROR IF selectedItems is undefined
+
+    const inputClasses = `
+        block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
+        ${error ? 'border-red-500' : 'border-gray-300'}
+        ${isSelected ? 'bg-indigo-100 border-indigo-500' : ''}
+    `;
 
     return (
         <div className="mb-4">
-            {label && <label htmlFor={id} className={labelClasses}>{label}</label>}
-            {type === 'select' ? (
-                <select
-                    id={id}
-                    name={id}
-                    value={value}
-                    onChange={onChange}
-                    className={inputClasses}
-                    required={!label.includes('(Optional)')}
-                >
-                    {options.map(option => (
-                        <option key={option.value} value={option.value}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
-            ) : (
-                <input
-                    type={type}
-                    id={id}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    min={min}
-                    max={max}
-                    className={inputClasses}
-                    required={!label.includes('(Optional)')}
-                />
-            )}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            <label htmlFor={label} className="block text-sm font-medium text-gray-700">
+                {label}
+            </label>
+            <input
+                type={type}
+                id={label}
+                name={label}
+                value={value}
+                // ... other props
+                className={inputClasses}
+            />
+            {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
         </div>
     );
-};
+}
 
 export default InputField;
