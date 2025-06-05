@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { CalendarDays } from 'lucide-react'; // Changed icon from MapPin to CalendarDays for dates
+import { CalendarDays } from 'lucide-react';
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 
