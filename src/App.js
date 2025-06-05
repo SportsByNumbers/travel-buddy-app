@@ -151,23 +151,20 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            let firebaseConfig = {};
-            // Check if __firebase_config exists and is a string, then parse it
-            if (typeof __firebase_config !== 'undefined' && typeof __firebase_config === 'string') {
-                try {
-                    firebaseConfig = JSON.parse(__firebase_config);
-                } catch (parseError) {
-                    console.error("Error parsing __firebase_config JSON:", parseError);
-                    // Fallback to empty config or handle as appropriate
-                    firebaseConfig = {};
-                }
-            } else {
-                console.warn("__firebase_config is undefined or not a string. Using empty config.");
-            }
+            // Define firebaseConfig directly from environment variables
+            const firebaseConfig = {
+                apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+                authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+                projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+                storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+                appId: process.env.REACT_APP_FIREBASE_APP_ID,
+                measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID // Optional
+            };
 
             // Ensure apiKey is present for initialization
             if (!firebaseConfig.apiKey) {
-                console.error("Firebase config is missing apiKey. Cannot initialize Firebase.");
+                console.error("Firebase config is missing apiKey. Please check your .env variables (e.g., REACT_APP_FIREBASE_API_KEY). Cannot initialize Firebase.");
                 setIsAuthReady(true); // Allow app to proceed, but Firebase won't work
                 return;
             }
@@ -186,7 +183,9 @@ const App = () => {
                 } else {
                     console.log("No Firebase user, signing in anonymously...");
                     try {
-                        // Use __initial_auth_token if available, otherwise sign in anonymously
+                        // If you still need __initial_auth_token, ensure it's defined
+                        // For typical React apps, you might not use a custom token unless specifically needed for backend auth.
+                        // If not used, you can remove this block.
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await signInWithCustomToken(authInstance, __initial_auth_token);
                             console.log("Signed in with custom token.");
@@ -211,8 +210,9 @@ const App = () => {
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         if (isAuthReady && userId && db) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const tripsRef = collection(db, `artifacts/${appId}/users/${userId}/trips`);
+            // Use process.env.REACT_APP_FIREBASE_APP_ID or a default if __app_id is truly a global variable
+            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+            const tripsRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
             const q = query(tripsRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -233,8 +233,8 @@ const App = () => {
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const expensesRef = collection(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`);
+            const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+            const expensesRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -398,8 +398,8 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/trips`, tripId);
+        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+        const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, tripId);
         try {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
@@ -496,7 +496,7 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
 
         try {
             const tripDataToSave = {
@@ -523,12 +523,12 @@ const App = () => {
 
             if (currentTripId) {
                 // Update existing trip
-                const tripDocRef = doc(db, `artifacts/${appId}/users/${userId}/trips`, currentTripId);
+                const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
                 console.log("Trip updated with ID:", currentTripId);
             } else {
                 // Create new trip
-                const tripsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/trips`);
+                const tripsCollectionRef = collection(db, `artifacts/<span class="math-inline">\{appId\}/users/</span>{userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id); // Set the newly created trip as current
                 console.log("New trip created with ID:", newTripDocRef.id);
@@ -696,159 +696,4 @@ const App = () => {
             remainingBudgetActual, // New: Remaining budget based on actual spending
             topicsOfInterest,
             // Include selected AI suggestions for persistence
-            selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-            selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
-        };
-
-        saveCurrentTrip(summaryData); // Save/update the trip in Firestore
-    };
-
-    const getFormattedCurrency = (amount) => {
-        const numAmount = parseFloat(amount);
-        if (isNaN(numAmount)) return `${currency}0.00`;
-        switch (currency) {
-            case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
-            case 'GBP': return `£${numAmount.toFixed(2)}`;
-            case 'EUR': return `€${numAmount.toFixed(2)}`;
-            default: return `$${numAmount.toFixed(2)}`;
-        }
-    };
-
-    // Bundle all state and helper functions into a single context value
-    const contextValue = {
-        db, auth, userId, isAuthReady, // Firebase related
-        trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
-        isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
-
-        countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
-        newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics,
-        startDate, setStartDate, endDate, setEndDate, overallDuration, starRating, setStarRating, travelStyle,
-        setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
-        homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
-        availableAmenities, isPerPerson, setIsPerPerson, numberOfAdults, setNumberOfAdults, numberOfChildren, setNumberOfChildren, // New states
-        numberOfPeople, // Pass derived total
-        currency, setCurrency,
-        moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
-        estimatedFlightCost, setEstimatedFlightCost, estimatedHotelCost, setEstimatedHotelCost, estimatedActivityCost,
-        setEstimatedActivityCost, estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, estimatedTransportCost,
-        setEstimatedTransportCost, carRentalCost, setCarRentalCost, shuttleCost, setShuttleCost, airportTransfersCost,
-        setAirportTransfersCost, airportParkingCost, setAirportParkingCost, estimatedInterCityFlightCost,
-        setEstimatedInterCityFlightCost, estimatedInterCityTrainCost, setEstimatedInterCityTrainCost,
-        estimatedInterCityBusCost, setEstimatedInterCityBusCost, localPublicTransport, setLocalPublicTransport,
-        taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
-        actualFlightCost, setActualFlightCost, actualHotelCost, setActualHotelCost, actualActivityCost,
-        setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
-        setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
-        lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
-        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
-        travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
-        setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
-        setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
-        setSuggestionError, allCountries,
-        isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
-        expenses, setExpenses, // Pass expenses state
-
-        selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities,
-        selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations,
-        selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks,
-        selectedSuggestedTouristSpots, toggleSuggestedTouristSpots, setSelectedSuggestedTouristSpots,
-        selectedSuggestedTours, toggleSuggestedTours, setSelectedSuggestedTours,
-        selectedSuggestedSportingEvents, toggleSuggestedSportingEvents, setSelectedSuggestedSportingEvents,
-
-        homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, destCountryError, setDestCountryError,
-        destCityError, setDestCityError, dateError, setDateError,
-        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError, // New error states
-        newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
-
-        getFormattedCurrency, toggleSuggestionSelection
-    };
-
-    if (!isAuthReady) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-                <Loader className="animate-spin text-indigo-600" size={48} />
-                <p className="ml-4 text-indigo-800 text-lg">Loading application...</p>
-            </div>
-        );
-    }
-
-    return (
-        <TripContext.Provider value={contextValue}>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased print:bg-white print:p-0">
-                <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl print:shadow-none print:rounded-none print:p-4">
-                    <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-6 tracking-tight print:text-black">
-                        <span className="block text-indigo-600 text-xl mb-1 print:text-gray-700">Your Ultimate</span>
-                        Travel Planner
-                    </h1>
-
-                    {userId && ( // Display userId and trip management only when authenticated
-                        <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
-                            <p className="text-sm text-gray-600 mb-2 sm:mb-0">
-                                User ID: <span className="font-mono text-indigo-700 break-all">{userId}</span>
-                            </p>
-                            <div className="flex space-x-3">
-                                <button
-                                    onClick={createNewTrip}
-                                    className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md"
-                                >
-                                    <PlusCircle size={16} className="mr-1" /> New Trip
-                                </button>
-                                <TripList /> {/* New TripList component */}
-                            </div>
-                        </div>
-                    )}
-
-
-                    {/* MODIFIED: Only show sections if a trip is being planned (either new or loaded) */}
-                    {currentTripId !== null || isNewTripStarted ? (
-                        <>
-                            <HomeLocationSection />
-                            <DestinationsSection />
-                            <TripDatesSection />
-                            <PreferencesSection />
-                            <ItinerarySuggestions />
-                            <BudgetPlanningSection />
-                            <FoodAllowanceSection />
-                            <TransportOptionsSection />
-
-                            {/* Generate Travel Plan Button */}
-                            <div className="text-center mt-10 print:hidden">
-                                <button
-                                    onClick={calculateTravelPlan}
-                                    className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || (numberOfAdults + numberOfChildren) < 1}
-                                >
-                                    {isGeneratingSuggestions ? (
-                                        <span className="flex items-center justify-center">
-                                            <Loader className="animate-spin mr-2" size={24} /> Generating Plan & Saving...
-                                        </span>
-                                    ) : (
-                                        currentTripId ? 'Update Travel Plan' : 'Generate & Save Travel Plan'
-                                    )}
-                                </button>
-                            </div>
-
-                            {/* Travel Plan Summary */}
-                            <TravelPlanSummary />
-                            {/* Expense Tracker Section */}
-                            <ExpenseTracker /> {/* New ExpenseTracker component */}
-                        </>
-                    ) : (
-                        <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
-                            <p className="text-lg mb-4">Start by creating a new trip or loading an existing one!</p>
-                            <button
-                                onClick={createNewTrip}
-                                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
-                            >
-                                <PlusCircle size={20} className="mr-2" /> Start New Travel Plan
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </TripContext.Provider>
-    );
-};
-
-export default App;
+            selected
