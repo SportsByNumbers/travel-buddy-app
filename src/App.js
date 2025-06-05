@@ -1,8 +1,8 @@
 import React, { useState, useEffect, createContext } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged /* Removed: signOut */ } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp /* Removed: deleteDoc */ } from 'firebase/firestore';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
@@ -151,7 +151,27 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            let firebaseConfig = {};
+            // Check if __firebase_config exists and is a string, then parse it
+            if (typeof __firebase_config !== 'undefined' && typeof __firebase_config === 'string') {
+                try {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } catch (parseError) {
+                    console.error("Error parsing __firebase_config JSON:", parseError);
+                    // Fallback to empty config or handle as appropriate
+                    firebaseConfig = {};
+                }
+            } else {
+                console.warn("__firebase_config is undefined or not a string. Using empty config.");
+            }
+
+            // Ensure apiKey is present for initialization
+            if (!firebaseConfig.apiKey) {
+                console.error("Firebase config is missing apiKey. Cannot initialize Firebase.");
+                setIsAuthReady(true); // Allow app to proceed, but Firebase won't work
+                return;
+            }
+
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
             const firestoreInstance = getFirestore(app);
