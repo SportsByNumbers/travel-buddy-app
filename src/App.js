@@ -544,13 +544,13 @@ const App = () => {
         <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-10 tracking-tight">
           <span className="block text-indigo-600 text-xl mb-2">Your Ultimate</span>
           Travel Planner
-        </b>
+        </h1> {/* CORRECTED: Changed </b> to </h1> */}
 
         {/* --- YOUR HOME LOCATION SECTION --- */}
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Home className="mr-3 text-indigo-600" size={28} /> Your Home Location
-          </h2>
+          </b>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newHomeCountryInput" className={labelClass}>Home Country:</label>
@@ -612,7 +612,7 @@ const App = () => {
                   <span className={tagClass}>
                     {homeCity}
                   </span>
-                </div>
+                </b>
               )}
             </div>
           </div>
@@ -716,7 +716,7 @@ const App = () => {
                 placeholderText="Select end date"
                 className={`${inputClass} w-full`}
               />
-            </div>
+            </b>
           </div>
           <div>
             <p className={labelClass}>Calculated Duration:</p>
@@ -779,7 +779,7 @@ const App = () => {
               {isGeneratingSuggestions ? (
                 <span className="flex items-center justify-center">
                   <Loader className="animate-spin mr-2" size={20} /> Generating Suggestions...
-                </b>
+                </span> // CORRECTED: Changed </b> to </span>
               ) : (
                 'Generate Itinerary Suggestions'
               )}
@@ -838,7 +838,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div> // CORRECTED: Changed </b> to </div>
           )}
 
           {/* Suggested Theme Parks */}
@@ -853,10 +853,10 @@ const App = () => {
                     onClick={() => toggleSuggestionSelection('themeParks', item)}
                   >
                     {item}
-                  </b>
+                  </span>
                 ))}
               </div>
-            </div>
+            </div> // CORRECTED: Changed </b> to </div>
           )}
 
           {/* Suggested Tourist Spots */}
@@ -874,7 +874,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div> // CORRECTED: Changed </b> to </div>
           )}
 
           {/* Suggested Tours */}
@@ -892,7 +892,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div> // CORRECTED: Changed </b> to </div>
           )}
         </div>
 
@@ -900,7 +900,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Wallet className="mr-3 text-indigo-600" size={28} /> Budget Planning
-          </b>
+          </h2> {/* CORRECTED: Changed </b> to </h2> */}
           <p className="text-sm text-gray-600 mb-6">
             Generate AI-powered budget estimates based on your trip details, or manually enter your own.
           </p>
@@ -930,7 +930,7 @@ const App = () => {
                 />
                 <span className="ml-2 text-gray-800">Per Party</span>
               </label>
-            </b>
+            </div> {/* CORRECTED: Changed </b> to </div> */}
           </div>
 
           {isPerPerson && (
@@ -1008,7 +1008,8 @@ const App = () => {
                 min="0"
                 className={`${inputClass} w-full`}
               />
-            </div>
+            </b>
+          </div>
             <div>
               <label htmlFor="estimatedMiscellaneousCost" className={labelClass}>Estimated Miscellaneous Cost:</label>
               <input
@@ -1072,7 +1073,7 @@ const App = () => {
                 min="0"
                 className={`${inputClass} w-full`}
               />
-            </div>
+            </b>
           </div>
         </div>
 
