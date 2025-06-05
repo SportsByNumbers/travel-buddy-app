@@ -98,8 +98,8 @@ const App = () => {
     const [snacksAllowance, setSnacksAllowance] = useState(0);
     const [carRental, setCarRental] = useState(false);
     const [shuttle, setShuttle] = useState(false);
-    const [airportTransfers, setAirportTransfers] = false;
-    const [airportParking, setAirportParking] = false;
+    const [airportTransfers, setAirportTransfers] = useState(false); // FIXED: Changed to useState
+    const [airportParking, setAirportParking] = useState(false);     // FIXED: Changed to useState
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
     const [suggestedActivities, setSuggestedActivities] = useState([]);
     const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
@@ -344,8 +344,8 @@ const App = () => {
         setSnacksAllowance(0);
         setCarRental(false);
         setShuttle(false);
-        setAirportTransfers(false);
-        setAirportParking(false);
+        setAirportTransfers(false); // Correctly reset to false
+        setAirportParking(false);     // Correctly reset to false
         setTravelPlanSummary(null);
         setSuggestedActivities([]);
         setSuggestedFoodLocations([]);
@@ -428,8 +428,8 @@ const App = () => {
                 setSnacksAllowance(tripData.snacksAllowance || 0);
                 setCarRental(tripData.carRental || false);
                 setShuttle(tripData.shuttle || false);
-                setAirportTransfers(tripData.airportTransfers || false);
-                setAirportParking(tripData.airportParking || false);
+                setAirportTransfers(tripData.airportTransfers || false); // Corrected: Load into state
+                setAirportParking(tripData.airportParking || false);     // Corrected: Load into state
                 setTravelPlanSummary(tripData.travelPlanSummary || null);
 
                 // Load selected AI suggestions (ensure they exist and handle defaults)
@@ -714,7 +714,7 @@ const App = () => {
         setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
         setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
-        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
+        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking, // FIXED: Now passing state setters
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
         setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
         setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
