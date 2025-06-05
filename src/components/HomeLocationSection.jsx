@@ -1,25 +1,25 @@
 import React, { useContext, useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { TripContext } from '../App'; // Removed .jsx
-import SectionWrapper from './SectionWrapper'; // Removed .jsx
-import TagInput from './TagInput'; // Removed .jsx
-import InputField from './InputField'; // Removed .jsx
-import { useCountrySearch } from '../hooks/useCountrySearch'; // Removed .js
-import { fetchCountryData } from '../services/apiService'; // Removed .js
+import { TripContext } from '../App.js'; // Explicit .js extension
+import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx extension
+import TagInput from './TagInput.jsx'; // Explicit .jsx extension
+import InputField from './InputField.jsx'; // Explicit .jsx extension
+import { useCountrySearch } from '../hooks/useCountrySearch.js'; // Explicit .js extension
+import { fetchCountryData } from '../services/apiService.js'; // Explicit .js extension
 
 const HomeLocationSection = () => {
     const {
         homeCountry, setHomeCountry,
         homeCity, setHomeCity,
-        newHomeCountryInput, setNewHomeCountryInput,
-        newHomeCityInput, setNewHomeCityInput,
+        // Removed: newHomeCountryInput, setNewHomeCountryInput, // Marked as unused
+        // Removed: newHomeCityInput, setNewHomeCityInput,     // Marked as unused
         homeCountryError, setHomeCountryError,
         homeCityError, setHomeCityError,
         allCountries // From App.js context
     } = useContext(TripContext);
 
     const homeCountryInputRef = useRef(null);
-    const homeCityInputRef = useRef(null);
+    // Removed: const homeCityInputRef = useRef(null); // Marked as unused
 
     const { inputValue: homeCountryInputValue, setInputValue: setHomeCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleHomeCountryInputChange, clearSuggestions: clearHomeCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
 
