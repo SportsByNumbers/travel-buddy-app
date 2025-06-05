@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Compass, Info } from 'lucide-react';
+import { Compass } from 'lucide-react'; // Only Compass is used
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 import InputField from './InputField';
