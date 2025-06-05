@@ -33,10 +33,11 @@ const App = () => {
   const [isPerPerson, setIsPerPerson] = useState(true); // true for per person, false for per party
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [estimatedFlightCost, setEstimatedFlightCost] = useState(0);
-  const [estimatedHotelCost, setEstimatedHotelCost, ] = useState(0);
+  const [estimatedHotelCost, setEstimatedHotelCost] = useState(0); // Corrected: removed extra comma
   const [estimatedActivityCost, setEstimatedActivityCost] = useState(0);
   const [estimatedTransportCost, setEstimatedTransportCost] = useState(0);
-  const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost = useState(0)];
+  // CORRECTED LINE: Removed '= useState(0)' from the destructuring of setEstimatedMiscellaneousCost
+  const [estimatedMiscellaneousCost, setEstimatedMiscellaneousCost] = useState(0);
 
   // Food allowances
   const [breakfastAllowance, setBreakfastAllowance] = useState(0);
@@ -621,7 +622,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <MapPin className="mr-3 text-indigo-600" size={28} /> Travel Destinations & Duration
-          </b>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative"> {/* Added relative for dropdown positioning */}
               <label htmlFor="newCountry" className={labelClass}>Add Destination Country:</label>
@@ -686,7 +687,7 @@ const App = () => {
                 ))}
               </div>
             </div>
-          </b>
+          </div>
          {/* Date Pickers for Start and End Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -701,7 +702,8 @@ const App = () => {
                 placeholderText="Select start date"
                 className={`${inputClass} w-full`}
               />
-            </div>
+            </b>
+          </div>
             <div>
               <label htmlFor="endDate" className={labelClass}>End Date:</label>
               <DatePicker
@@ -819,7 +821,7 @@ const App = () => {
                   </span>
                 ))}
               </div>
-            </b>
+            </div>
           )}
 
           {/* Suggested Food Locations */}
@@ -854,7 +856,7 @@ const App = () => {
                     {item}
                   </span>
                 ))}
-              </div>
+              </b>
             </div>
           )}
 
@@ -1026,7 +1028,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Utensils className="mr-3 text-indigo-600" size={28} /> Daily Food Allowances (Per Person)
-          </h2> {/* CORRECTED: Changed </b> to <h2> */}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="breakfastAllowance" className={labelClass}>Breakfast:</label>
@@ -1072,6 +1074,7 @@ const App = () => {
                 className={`${inputClass} w-full`}
               />
             </div>
+          </b>
           </div>
         </div>
 
@@ -1079,7 +1082,7 @@ const App = () => {
         <div className={sectionContainerClass}>
           <h2 className={sectionTitleClass}>
             <Car className="mr-3 text-indigo-600" size={28} /> Transport Options
-          </h2> {/* CORRECTED: Changed </b> to </h2> */}
+          </b>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -1185,8 +1188,7 @@ const App = () => {
                 <li className="mb-1">Estimated Miscellaneous Cost: <span className="font-semibold">${travelPlanSummary.estimatedMiscellaneousCost.toFixed(2)}</span></li>
                 <li className="mt-2 text-lg font-bold text-indigo-800">Subtotal (Excluding Food): <span className="text-blue-700">${travelPlanSummary.totalEstimatedCost.toFixed(2)}</span></li>
               </ul>
-            </b>
-          </div>
+            </div>
 
             <div className="mb-6 pb-4 border-b border-indigo-200">
               <h3 className={summarySubTitleClass}>Food Allowances:</h3>
@@ -1213,7 +1215,7 @@ const App = () => {
 
             <div className="mt-8 pt-6 border-t-2 border-indigo-300 text-right">
               <h3 className={totalCostClass}>Grand Total Estimated Trip Cost: <span className={grandTotalAmountClass}>${travelPlanSummary.grandTotal.toFixed(2)}</span></h3>
-            </div>
+          </b>
           </div>
         )}
       </div>
