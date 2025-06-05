@@ -1,12 +1,10 @@
 import React, { useContext } from 'react';
-import { Car } from 'lucide-react'; // Car icon is used here
+import { Car } from 'lucide-react';
 import { TripContext } from '../App';
 import SectionWrapper from './SectionWrapper';
 import InputField from './InputField';
 
 const TransportOptionsSection = () => {
-    // Removed estimatedTransportCost, setEstimatedTransportCost, actualTransportCost, setActualTransportCost
-    // as their primary display/input is handled in BudgetPlanningSection.
     const {
             carRental, setCarRental, carRentalCost, setCarRentalCost, shuttle, setShuttle, shuttleCost, setShuttleCost,
             airportTransfers, setAirportTransfers, airportTransfersCost, setAirportTransfersCost, airportParking, setAirportParking, airportParkingCost, setAirportParkingCost,
@@ -105,7 +103,7 @@ const TransportOptionsSection = () => {
                             type="checkbox"
                             className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500 transition duration-150 ease-in-out"
                             checked={taxiRideShare}
-                            onChange={(e) => setTaxiRideShare(e.target.checked)} {/* Fixed typo here */}
+                            onChange={(e) => setTaxiRideShare(e.target.checked)} // The problematic comment is removed or correctly placed
                         />
                         <span className="ml-2 text-gray-800">Taxis / Ride-Share</span>
                     </label>
