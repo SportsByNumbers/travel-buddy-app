@@ -14,7 +14,14 @@ const ItinerarySuggestions = () => {
             suggestedTouristSpots, setSuggestedTouristSpots, selectedSuggestedTouristSpots,
             suggestedTours, setSuggestedTours, selectedSuggestedTours,
             suggestedSportingEvents, setSuggestedSportingEvents, selectedSuggestedSportingEvents,
-            toggleSuggestionSelection
+            toggleSuggestionSelection,
+            // ADDED: Destructure the individual setSelected functions from context
+            setSelectedSuggestedActivities,
+            setSelectedSuggestedFoodLocations,
+            setSelectedSuggestedThemeParks,
+            setSelectedSuggestedTouristSpots,
+            setSelectedSuggestedTours,
+            setSelectedSuggestedSportingEvents
     } = useContext(TripContext);
 
     const buttonClass = "px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md";
@@ -28,31 +35,22 @@ const ItinerarySuggestions = () => {
         setIsGeneratingSuggestions(true);
         setSuggestionError('');
 
-        // Clear previous suggestions and selections
+        // Clear previous AI-generated suggestions
         setSuggestedActivities([]);
         setSuggestedFoodLocations([]);
         setSuggestedThemeParks([]);
         setSuggestedTouristSpots([]);
         setSuggestedTours([]);
         setSuggestedSportingEvents([]);
-        // The setSelected* functions are provided by useMultiSelection hook.
-        // It's crucial to call them directly when clearing suggestions,
-        // as the toggleSuggestionSelection only toggles one by one.
-        if (typeof selectedSuggestedActivities.length === 'number') { // Check if it's the array, not the toggle function
-             toggleSuggestionSelection('activities', null); // This is a trick to clear, if toggle accepts null or empty
-        } else { // Fallback if the above doesn't work as expected with toggle
-             // This assumes setSelected* functions are directly available from context or useMultiSelection hook
-             // If not, you might need to adjust App.js context to expose setSelected* functions directly.
-             // For now, let's assume they are exposed as part of the context or the hook works this way.
-             // A more robust way: expose setSelected* directly from the hook in App.js context.
-             // Or, better, just reset them all here using the setter functions from context:
-             if (setSelectedSuggestedActivities) setSelectedSuggestedActivities([]);
-             if (setSelectedSuggestedFoodLocations) setSelectedSuggestedFoodLocations([]);
-             if (setSelectedSuggestedThemeParks) setSelectedSuggestedThemeParks([]);
-             if (setSelectedSuggestedTouristSpots) setSelectedSuggestedTouristSpots([]);
-             if (setSelectedSuggestedTours) setSelectedSuggestedTours([]);
-             if (setSelectedSuggestedSportingEvents) setSelectedSuggestedSportingEvents([]);
-        }
+
+        // Clear previous user selections for these suggestions
+        // Now that these are destructured from context, you can directly use them.
+        setSelectedSuggestedActivities([]);
+        setSelectedSuggestedFoodLocations([]);
+        setSelectedSuggestedThemeParks([]);
+        setSelectedSuggestedTouristSpots([]);
+        setSelectedSuggestedTours([]);
+        setSelectedSuggestedSportingEvents([]);
 
 
         const destinationPromptCountries = countries.length > 0 ? `countries: ${countries.map(c => c.name).join(', ')}` : '';
@@ -78,6 +76,7 @@ const ItinerarySuggestions = () => {
                 : '';
 
         const dateContext = (startDate && endDate)
+            ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
             ? `between ${startDate.toDateString()} and ${endDate.toDateString()}`
             : 'at any time of year';
 
