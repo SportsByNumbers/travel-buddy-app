@@ -1,8 +1,8 @@
 // components/BudgetPlanningSection.jsx
 import React, { useContext } from 'react';
 import { TripContext } from '../App'; // Adjust path if necessary
-import Section from './Section.jsx';
-import InputField from './InputField.jsx'; // Assuming this is your general input field
+import SectionWrapper from './SectionWrapper.jsx'; // CORRECTED: Import SectionWrapper
+import InputField from './InputField.jsx';
 import { PlusCircle, XCircle } from 'lucide-react'; // For add/remove icons
 
 const BudgetPlanningSection = () => {
@@ -17,10 +17,10 @@ const BudgetPlanningSection = () => {
         estimatedMiscellaneousCost, setEstimatedMiscellaneousCost,
         estimatedTransportCost, setEstimatedTransportCost,
         isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties, // MODIFIED: Get travelingParties from context
-        numberOfPeople, // MODIFIED: Get derived numberOfPeople
-        numberOfAdultsError, setNumberOfAdultsError, // Keep for overall validation message
-        numberOfChildrenError, setNumberOfChildrenError, // Keep for overall validation message
+        travelingParties, setTravelingParties,
+        numberOfPeople,
+        numberOfAdultsError, setNumberOfAdultsError,
+        numberOfChildrenError, setNumberOfChildrenError,
     } = useContext(TripContext);
 
     // Handler to update a specific party's details
@@ -47,7 +47,7 @@ const BudgetPlanningSection = () => {
     };
 
     return (
-        <Section
+        <SectionWrapper // CORRECTED: Use SectionWrapper here
             icon={<span className="text-xl">💰</span>}
             title="Budget Planning"
             description="Plan your trip's finances. Estimate costs and track savings."
@@ -202,7 +202,7 @@ const BudgetPlanningSection = () => {
                     placeholder="e.g., 200"
                 />
             </div>
-        </Section>
+        </SectionWrapper>
     );
 };
 
