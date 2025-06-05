@@ -1,92 +1,95 @@
-import React, { useContext, useRef } from 'react'; // Removed useEffect
-import { Home } from 'lucide-react';
-import { TripContext } from '../App'; // Adjust path if needed
-import SectionWrapper from './SectionWrapper';
-import TagInput from './TagInput';
-import InputField from './InputField';
-import { useCountrySearch } from '../hooks/useCountrySearch';
-import { fetchCountryData } from '../services/apiService'; // Assuming you create apiService.js
+import React, { useContext, useRef } from 'react';
+import { MapPin } from 'lucide-react';
+import { TripContext } from '../App'; // Removed .jsx
+import SectionWrapper from './SectionWrapper'; // Removed .jsx
+import TagInput from './TagInput'; // Removed .jsx
+import InputField from './InputField'; // Removed .jsx
+import { useCountrySearch } from '../hooks/useCountrySearch'; // Removed .js
+import { fetchCountryData } from '../services/apiService'; // Removed .js
 
 const HomeLocationSection = () => {
-    const { homeCountry, setHomeCountry, homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, allCountries } = useContext(TripContext);
-    const homeCountryInputRef = useRef(null);
-    const { inputValue: countryInputValue, setInputValue: setCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleCountryInputChange, clearSuggestions: clearCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
+    const {
+        homeCountry, setHomeCountry,
+        homeCity, setHomeCity,
+        newHomeCountryInput, setNewHomeCountryInput,
+        newHomeCityInput, setNewHomeCityInput,
+        homeCountryError, setHomeCountryError,
+        homeCityError, setHomeCityError,
+        allCountries // From App.js context
+    } = useContext(TripContext);
 
-    const handleSetHomeCountry = async () => {
-        const trimmedHomeCountry = countryInputValue.trim();
-        if (trimmedHomeCountry === '') {
+    const homeCountryInputRef = useRef(null);
+    const homeCityInputRef = useRef(null);
+
+    const { inputValue: homeCountryInputValue, setInputValue: setHomeCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleHomeCountryInputChange, clearSuggestions: clearHomeCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
+
+    const addHomeCountry = async () => {
+        const trimmedCountry = homeCountryInputValue.trim();
+        if (trimmedCountry === '') {
             setHomeCountryError("Home country cannot be empty.");
             return;
         }
-        const countryData = await fetchCountryData(trimmedHomeCountry, allCountries);
+        if (homeCountry.name.toLowerCase() === trimmedCountry.toLowerCase()) {
+            setHomeCountryError("This is already your home country.");
+            return;
+        }
+        const countryData = await fetchCountryData(trimmedCountry, allCountries);
         if (countryData.name) {
             setHomeCountry(countryData);
-            setCountryInputValue('');
             setHomeCountryError('');
         } else {
             setHomeCountryError("Could not find a valid country for the entered name.");
         }
-        clearCountrySuggestions();
+        setHomeCountryInputValue('');
+        clearHomeCountrySuggestions();
+    };
+
+    const removeHomeCountry = () => {
+        setHomeCountry({ name: '', flag: '' });
+        setHomeCountryError("Please set your home country.");
     };
 
     const selectHomeCountrySuggestion = (country) => {
-        setCountryInputValue(country.name);
         setHomeCountry(country);
+        setHomeCountryInputValue(''); // Clear input after selection
+        clearHomeCountrySuggestions();
         setHomeCountryError('');
-        clearCountrySuggestions();
         homeCountryInputRef.current.focus();
     };
 
-    const handleSetHomeCity = () => {
-        const trimmedHomeCity = newHomeCityInput.trim();
-        if (trimmedHomeCity === '') {
-            setHomeCityError("Home city cannot be empty.");
-            return;
-        }
-        setHomeCity(trimmedHomeCity);
-        setNewHomeCityInput('');
-        setHomeCityError('');
+    const handleHomeCityChange = (e) => {
+        setHomeCity(e.target.value);
+        setHomeCityError(''); // Clear error on change
     };
 
     return (
-        <SectionWrapper title="Your Home Location" icon={Home}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <SectionWrapper title="Your Home Location" icon={MapPin}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <TagInput
                     label="Home Country"
                     inputRef={homeCountryInputRef}
-                    inputValue={countryInputValue}
-                    onInputChange={handleCountryInputChange}
-                    onInputBlur={clearCountrySuggestions}
-                    onAdd={handleSetHomeCountry}
+                    inputValue={homeCountryInputValue}
+                    onInputChange={handleHomeCountryInputChange}
+                    onInputBlur={clearHomeCountrySuggestions}
+                    onAdd={addHomeCountry}
                     suggestions={filteredHomeCountrySuggestions}
                     onSelectSuggestion={selectHomeCountrySuggestion}
                     items={homeCountry.name ? [homeCountry] : []}
-                    onRemove={() => setHomeCountry({ name: '', flag: '' })}
-                    placeholder="e.g., USA"
+                    onRemove={removeHomeCountry}
+                    placeholder="e.g., Australia"
                     error={homeCountryError}
                     showFlags
                     required
                 />
-                <div>
-                    <InputField
-                        label="Home City"
-                        id="newHomeCityInput"
-                        value={newHomeCityInput}
-                        onChange={(e) => { setNewHomeCityInput(e.target.value); setHomeCityError(''); }}
-                        placeholder="e.g., New York"
-                        error={homeCityError}
-                        required
-                    />
-                     <button type="button" onClick={handleSetHomeCity} className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md mt-3 w-full">Set Home City</button>
-                    {homeCity && (
-                        <div className="mt-4 flex flex-wrap gap-3">
-                            <span className="bg-indigo-100 text-indigo-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium shadow-sm">
-                                {homeCity}
-                                <button type="button" onClick={() => setHomeCity('')} className="ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out">&times;</button>
-                            </span>
-                        </div>
-                    )}
-                </div>
+                <InputField
+                    id="homeCity"
+                    label="Home City"
+                    value={homeCity}
+                    onChange={handleHomeCityChange}
+                    placeholder="e.g., Sydney"
+                    error={homeCityError}
+                    required
+                />
             </div>
         </SectionWrapper>
     );
