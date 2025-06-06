@@ -1,10 +1,11 @@
 // App.js
 
-import React, { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect, createContext, useCallback } from 'react'; // Added useCallback
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'; // Added for new auth
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
@@ -78,17 +79,15 @@ const App = () => {
     ]);
 
     // Derived total numberOfPeople from all groups
-    // FIX: Added robust check to ensure travelingParties is an array before reduce, and added optional chaining for safety.
     console.log('travelingParties (before numberOfPeople calc):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     let calculatedPeople = 0;
-    // Ensure travelingParties is an array before iterating
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
         console.log('travelingParties is array, attempting loop for numberOfPeople...');
         for (const party of partiesToProcess) {
             console.log('Party object in travelingParties loop:', party, 'Type:', typeof party, 'IsNull:', party === null);
-            if (typeof party === 'object' && party !== null) { // Ensure party is an object
+            if (typeof party === 'object' && party !== null) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
             } else {
                 console.warn('Non-object or null found in travelingParties array, skipping:', party);
@@ -141,7 +140,7 @@ const App = () => {
     const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
 
-    // These are the ACTUAL states returned by useMultiSelection
+    // These are the ACTUAL states and setters returned by useMultiSelection
     const [selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities] = useMultiSelection([]);
     const [selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useMultiSelection([]);
     const [selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks] = useMultiSelection([]);
@@ -186,19 +185,6 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            // Define firebaseConfig directly (hardcoded for direct implementation as requested)
-            // It's still recommended to use environment variables for security in production.
-            const firebaseConfig = {
-                apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
-                authDomain: "travelbuddy-e050f.firebaseapp.com",
-                projectId: "travelbuddy-e050f",
-                storageBucket: "travelbuddy-e050f.firebasestorage.app",
-                messagingSenderId: "625134272046",
-                appId: "1:625134272046:web:a18883626fcfbb2df329bf",
-                measurementId: "G-Y5RGMDS33E"
-            };
-
-            // This check will now always pass as apiKey is hardcoded
             if (!firebaseConfig.apiKey) {
                 console.error("Firebase config is missing apiKey. This theoretical error should not appear with hardcoded values.");
                 setIsAuthReady(true);
@@ -242,11 +228,9 @@ const App = () => {
 
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
-        // FIX: Added console.log for Firebase init state
         console.log('Firebase init state (for trips effect):', { isAuthReady, userId, db });
         if (isAuthReady && userId && db) {
-            // FIX: Corrected to use projectId for paths
-            const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+            const projectIdForPaths = firebaseConfig.projectId;
             const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
             const q = query(tripsRef);
 
@@ -261,7 +245,7 @@ const App = () => {
                 console.error("Error fetching trips:", error);
             });
 
-            return () => unsubscribe(); // Cleanup snapshot listener
+            return () => unsubscribe();
         }
     }, [isAuthReady, userId, db, firebaseConfig.projectId]);
 
@@ -269,8 +253,7 @@ const App = () => {
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            // FIX: Corrected to use projectId for paths
-            const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+            const projectIdForPaths = firebaseConfig.projectId;
             const expensesRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
 
@@ -283,7 +266,6 @@ const App = () => {
                 setExpenses(fetchedExpenses);
                 console.log("Fetched expenses for trip", currentTripId, ":", fetchedExpenses);
 
-                // Aggregate actual costs from expenses
                 let totalActualFood = 0;
                 let totalActualTransport = 0;
                 let totalActualActivity = 0;
@@ -328,7 +310,7 @@ const App = () => {
 
             return () => unsubscribe();
         } else {
-            setExpenses([]); // Clear expenses if no trip is selected or not authenticated
+            setExpenses([]);
             setActualFoodCost(0);
             setActualTransportCost(0);
             setActualActivityCost(0);
@@ -357,7 +339,7 @@ const App = () => {
     }, []);
 
     // --- Helper to reset all trip-related states for a new trip ---
-    const resetTripStates = () => {
+    const resetTripStates = useCallback(() => { // Wrapped in useCallback
         setCountries([]);
         setCities([]);
         setStartDate(null);
@@ -369,9 +351,7 @@ const App = () => {
         setTravelStyle('');
         setHotelAmenities([]);
         setIsPerPerson(true);
-        // MODIFIED: Reset travelingParties
-        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Reset to default group
-        // Removed old numberOfAdults and numberOfChildren resets
+        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
         setCurrency('USD');
         setMoneyAvailable(0);
         setMoneySaved(0);
@@ -403,25 +383,73 @@ const App = () => {
         setTravelPlanSummary(null);
 
         // FIX: Corrected to use setSelectedSuggested... setters, ensuring they are functions before calling
-        // Use optional chaining to safely call the setter if it exists
-        setSelectedSuggestedActivities?.([]);
-        setSelectedSuggestedFoodLocations?.([]);
-        setSelectedSuggestedThemeParks?.([]);
-        setSelectedSuggestedTouristSpots?.([]);
-        setSelectedSuggestedTours?.([]);
-        setSelectedSuggestedSportingEvents?.([]);
+        // Added specific logging for debugging if any setter is still problematic
+        console.log('Debugging setSelectedSuggested... setters before reset (inside resetTripStates):');
+        console.log('setSelectedSuggestedActivities:', setSelectedSuggestedActivities, typeof setSelectedSuggestedActivities);
+        console.log('setSelectedSuggestedFoodLocations:', setSelectedSuggestedFoodLocations, typeof setSelectedSuggestedFoodLocations);
+        console.log('setSelectedSuggestedThemeParks:', setSelectedSuggestedThemeParks, typeof setSelectedSuggestedThemeParks);
+        console.log('setSelectedSuggestedTouristSpots:', setSelectedSuggestedTouristSpots, typeof setSelectedSuggestedTouristSpots);
+        console.log('setSelectedSuggestedTours:', setSelectedSuggestedTours, typeof setSelectedSuggestedTours);
+        console.log('setSelectedSuggestedSportingEvents:', setSelectedSuggestedSportingEvents, typeof setSelectedSuggestedSportingEvents);
+
+        // Applying the reset using the setters returned from useMultiSelection
+        // These calls are now wrapped in individual try...catch for maximum resilience
+        try {
+            setSelectedSuggestedActivities([]);
+        } catch (e) {
+            console.error('Error resetting selectedSuggestedActivities:', e);
+        }
+        try {
+            setSelectedSuggestedFoodLocations([]);
+        } catch (e) {
+            console.error('Error resetting selectedSuggestedFoodLocations:', e);
+        }
+        try {
+            setSelectedSuggestedThemeParks([]);
+        } catch (e) {
+            console.error('Error resetting selectedSuggestedThemeParks:', e);
+        }
+        try {
+            setSelectedSuggestedTouristSpots([]);
+        } catch (e) {
+            console.error('Error resetting selectedSuggestedTouristSpots:', e);
+        }
+        try {
+            setSelectedSuggestedTours([]);
+        } catch (e) {
+            console.error('Error resetting selectedSuggestedTours:', e);
+        }
+        try {
+            setSelectedSuggestedSportingEvents([]);
+        } catch (e) {
+            console.error('Error resetting selectedSuggestedSportingEvents:', e);
+        }
 
         setHomeCountryError('');
         setHomeCityError('');
         setDestCountryError('');
         setDestCityError('');
         setDateError('');
-        setNumberOfAdultsError(''); // Reset new errors
-        setNumberOfChildrenError(''); // Reset new errors
+        setNumberOfAdultsError('');
+        setNumberOfChildrenError('');
         setNewCityNameError('');
         setNewCityDurationError('');
-        setExpenses([]); // Clear expenses for new trip
-    };
+        setExpenses([]);
+    }, [
+        setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
+        setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
+        setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
+        setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
+        setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
+        setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
+        setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
+        setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
+        setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
+        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
+        setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
+        setNumberOfAdultsError, setNumberOfChildrenError, setNewCityNameError, setNewCityDurationError, setExpenses
+    ]);
+
 
     // --- Function to load a selected trip ---
     const loadTrip = async (tripId) => {
@@ -429,22 +457,17 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        // FIX: Corrected to use projectId for paths
-        const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+        const projectIdForPaths = firebaseConfig.projectId;
         const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, tripId);
         try {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
                 console.log("Loading trip data:", tripData);
-                // FIX: Added console.log to inspect the value of tripData.travelingParties
                 console.log('tripData.travelingParties in loadTrip (from Firestore):', tripData.travelingParties, 'Type:', typeof tripData.travelingParties, 'IsArray:', Array.isArray(tripData.travelingParties));
 
+                resetTripStates(); // Call reset before populating states
 
-                // Reset all states first to avoid stale data
-                resetTripStates();
-
-                // Populate states with loaded data (handle potential undefined/null)
                 setCountries(tripData.countries || []);
                 setCities(tripData.cities || []);
                 setStartDate(tripData.startDate ? new Date(tripData.startDate) : null);
@@ -456,12 +479,9 @@ const App = () => {
                 setTravelStyle(tripData.travelStyle || '');
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
-                // MODIFIED: Load travelingParties, ensuring it's an array
-                // If tripData.travelingParties is not an array, use default.
                 setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
                 console.log('travelingParties in loadTrip (after set):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
 
-                // Removed old numberOfAdults and numberOfChildren loads
                 setCurrency(tripData.currency || 'USD');
                 setMoneyAvailable(tripData.moneyAvailable || 0);
                 setMoneySaved(tripData.moneySaved || 0);
@@ -492,7 +512,6 @@ const App = () => {
                 setAirportParking(tripData.airportParking || false);
                 setTravelPlanSummary(tripData.travelPlanSummary || null);
 
-                // Load selected AI suggestions (ensure they exist and handle defaults)
                 setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []);
                 setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []);
                 setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []);
@@ -500,8 +519,8 @@ const App = () => {
                 setSelectedSuggestedTours(tripData.selectedSuggestedTours || []);
                 setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
 
-                setCurrentTripId(tripId); // Set the current trip ID after loading
-                setIsNewTripStarted(false); // EXISTING TRIP: Set to false
+                setCurrentTripId(tripId);
+                setIsNewTripStarted(false);
                 console.log(`Trip ${tripId} loaded successfully.`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
@@ -509,23 +528,23 @@ const App = () => {
                 setTravelPlanSummary(null);
                 setCurrentTripId(null);
                 resetTripStates();
-                setIsNewTripStarted(false); // Reset to false if not found
+                setIsNewTripStarted(false);
             }
         } catch (error) {
             console.error("Error loading trip:", error);
             setTravelPlanSummary(null);
             setCurrentTripId(null);
             resetTripStates();
-            setIsNewTripStarted(false); // Reset to false on error
+            setIsNewTripStarted(false);
         }
     };
 
     // --- Function to create a new trip ---
     const createNewTrip = () => {
-        setCurrentTripId(null); // Deselect any active trip
-        resetTripStates(); // Clear all form data
-        setTravelPlanSummary(null); // Clear summary
-        setIsNewTripStarted(true); // NEW: Set to true when a new trip is initiated
+        setCurrentTripId(null);
+        resetTripStates();
+        setTravelPlanSummary(null);
+        setIsNewTripStarted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -535,24 +554,21 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        // FIX: Corrected to use projectId for paths
-        const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+        const projectIdForPaths = firebaseConfig.projectId;
 
         try {
             const tripDataToSave = {
-                ...summaryData, // This spread already includes airportTransfersCost from summaryData
-                // Convert Date objects to ISO strings for Firestore compatibility
+                ...summaryData,
                 startDate: startDate ? startDate.toISOString() : null,
                 endDate: endDate ? endDate.toISOString() : null,
-                createdAt: currentTripId ? summaryData.createdAt : serverTimestamp(), // Preserve original creation time if updating
+                createdAt: currentTripId ? summaryData.createdAt : serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                // Include all form states that make up the trip (ensure no duplicates with summaryData)
                 countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
                 travelingParties,
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
-                estimatedHotelCost, // Corrected: Removed duplicate estimatedHotelCost from here
+                estimatedHotelCost,
                 estimatedActivityCost, estimatedMiscellaneousCost,
                 estimatedTransportCost, carRentalCost, shuttleCost,
                 airportTransfersCost,
@@ -590,26 +606,24 @@ const App = () => {
 
     // --- MAIN TRAVEL PLAN CALCULATION (modified to call saveCurrentTrip) ---
     const calculateTravelPlan = () => {
-        // Validation before generating summary
         let hasError = false;
         if (homeCountry.name === '') { setHomeCountryError("Please set your home country."); hasError = true; } else { setHomeCountryError(''); }
         if (homeCity === '') { setHomeCityError("Please set your home city."); hasError = true; } else { setHomeCityError(''); }
         if (countries.length === 0 && cities.length === 0) { setDestCountryError("Please add at least one destination country or city."); setDestCityError("Please add at least one destination country or city."); hasError = true; } else { setDestCountryError(''); setDestCityError(''); }
         if (!startDate || !endDate || overallDuration < 1) { setDateError("Please select valid start and end dates."); hasError = true; } else { setDateError(''); }
 
-        // MODIFIED Validation for adults/children based on travelingParties
         const totalAdults = travelingParties.reduce((sum, party) => sum + party.adults, 0);
         const totalChildren = travelingParties.reduce((sum, party) => sum + party.children, 0);
 
         if (totalAdults < 1) { setNumberOfAdultsError("Total adults must be at least 1."); hasError = true; } else { setNumberOfAdultsError(''); }
         if (totalChildren < 0) { setNumberOfChildrenError("Total children cannot be negative."); hasError = true; } else { setNumberOfChildrenError(''); }
-        if (numberOfPeople < 1) { // Ensure total people is at least 1
+        if (numberOfPeople < 1) {
             setNumberOfAdultsError("Total number of people (adults + children) must be at least 1.");
             hasError = true;
         }
 
         if (hasError) {
-            setTravelPlanSummary(null); // Clear previous summary if there are errors
+            setTravelPlanSummary(null);
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
@@ -621,11 +635,9 @@ const App = () => {
         const finalTours = selectedSuggestedTours.filter(Boolean).join(', ');
         const finalSportingEvents = selectedSuggestedSportingEvents.filter(Boolean).join(', ');
 
-        // Calculate total food allowance per day
         const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
         const totalFoodCost = totalDailyFoodAllowance * overallDuration;
 
-        // Calculate total estimated transport costs (AI estimate + manual inputs)
         const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
                                                 (carRental ? parseFloat(carRentalCost) : 0) +
                                                 (shuttle ? parseFloat(shuttleCost) : 0) +
@@ -638,7 +650,6 @@ const App = () => {
                                                 (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
 
 
-        // Calculate total estimated costs (excluding food for now, as food has its own calculation)
         const totalEstimatedCostBeforeFoodAndContingency =
             parseFloat(estimatedFlightCost) +
             parseFloat(estimatedHotelCost) +
@@ -646,20 +657,16 @@ const App = () => {
             combinedEstimatedTransportCost +
             parseFloat(estimatedMiscellaneousCost);
 
-        // Adjust costs based on per person/per party using total people
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
         const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
 
-        // Calculate contingency
         const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
 
         const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
 
-        // Calculate budget surplus/deficit based on ESTIMATED vs moneyAvailable + moneySaved
         const remainingBudgetEstimated = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotalEstimated;
 
-        // Calculate actual total transport cost for variance (now primarily from aggregated expenses)
-        const combinedActualTransportCostFromExpenses = actualTransportCost; // From aggregated expenses
+        const combinedActualTransportCostFromExpenses = actualTransportCost;
         const actualGrandTotal = actualFlightCost + actualHotelCost + actualActivityCost + actualMiscellaneousCost + actualFoodCost + combinedActualTransportCostFromExpenses;
         const remainingBudgetActual = parseFloat(moneyAvailable) + parseFloat(moneySaved) - actualGrandTotal;
 
@@ -682,33 +689,30 @@ const App = () => {
             touristSpots: finalTouristSpots,
             tours: finalTours,
             isPerPerson,
-            travelingParties, // MODIFIED: Include travelingParties in summary data
-            numberOfPeople, // Total derived people
+            travelingParties,
+            numberOfPeople,
             currency,
             moneyAvailable,
             moneySaved,
             contingencyPercentage,
             contingencyAmount,
 
-            // Estimated Costs
             estimatedFlightCost,
             estimatedHotelCost,
             estimatedActivityCost,
             estimatedMiscellaneousCost,
             combinedEstimatedTransportCost,
-            totalEstimatedCost: subTotalEstimatedCost, // Total estimated before food/contingency adjusted for people
-            grandTotalEstimated, // New: Grand total including contingency
+            totalEstimatedCost: subTotalEstimatedCost,
+            grandTotalEstimated,
 
-            // Actual Costs (now from aggregated expenses)
             actualFlightCost,
             actualHotelCost,
             actualActivityCost,
             actualMiscellaneousCost,
             actualTransportCost: combinedActualTransportCostFromExpenses,
             actualFoodCost,
-            actualGrandTotal, // New: Grand total actual spending
+            actualGrandTotal,
 
-            // Food Allowances
             breakfastAllowance,
             lunchAllowance,
             dinnerAllowance,
@@ -716,7 +720,6 @@ const App = () => {
             totalDailyFoodAllowance,
             totalFoodCost: finalTotalFoodCost,
 
-            // Transport Options (checked status and specific costs)
             carRental,
             carRentalCost,
             shuttle,
@@ -733,11 +736,9 @@ const App = () => {
             walking,
             dailyLocalTransportAllowance,
 
-            // Final Totals
             remainingBudgetEstimated,
-            remainingBudgetActual, // New: Grand total including contingency, based on actual spending
+            remainingBudgetActual,
             topicsOfInterest,
-            // Include selected AI suggestions for persistence
             selectedSuggestedActivities,
             selectedSuggestedFoodLocations,
             selectedSuggestedThemeParks,
@@ -746,26 +747,25 @@ const App = () => {
             selectedSuggestedSportingEvents,
         };
 
-        saveCurrentTrip(summaryData); // Save/update the trip in Firestore
+        saveCurrentTrip(summaryData);
     };
 
     const getFormattedCurrency = (amount) => {
         const numAmount = parseFloat(amount);
         if (isNaN(numAmount)) return `${currency}0.00`;
         switch (currency) {
-            case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
+            case 'JPY': return `¥${numAmount.toFixed(0)}`;
             case 'GBP': return `£${numAmount.toFixed(2)}`;
             case 'EUR': return `€${numAmount.toFixed(2)}`;
             default: return `$${numAmount.toFixed(2)}`;
         }
     };
 
-    // Bundle all state and helper functions into a single context value
     const contextValue = {
-        db, auth, userId, isAuthReady, // Firebase related
-        appId: firebaseConfig.appId, // Use the correct appId from the hardcoded config for context
+        db, auth, userId, isAuthReady,
+        appId: firebaseConfig.appId,
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
-        isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
+        isNewTripStarted, setIsNewTripStarted,
 
         countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
         newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics,
@@ -773,8 +773,8 @@ const App = () => {
         setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
         homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
         availableAmenities, isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties, // MODIFIED: Include travelingParties in context
-        numberOfPeople, // Pass derived total
+        travelingParties, setTravelingParties,
+        numberOfPeople,
         currency, setCurrency,
         moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
         estimatedFlightCost, setEstimatedFlightCost, estimatedHotelCost, setEstimatedHotelCost, estimatedActivityCost,
@@ -793,9 +793,8 @@ const App = () => {
         isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
         isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
-        expenses, setExpenses, // Pass expenses state
+        expenses, setExpenses,
 
-        // These are the actual setSelected functions, make sure to use them if needed by children
         selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities,
         selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations,
         selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks,
@@ -805,7 +804,7 @@ const App = () => {
 
         homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, destCountryError, setDestCountryError,
         destCityError, setDestCityError, dateError, setDateError,
-        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError, // New error states
+        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError,
         newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
 
         getFormattedCurrency, toggleSuggestionSelection
@@ -829,7 +828,7 @@ const App = () => {
                         Travel Planner
                     </h1>
 
-                    {userId && ( // Display userId and trip management only when authenticated
+                    {userId && (
                         <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
                             <p className="text-sm text-gray-600 mb-2 sm:mb-0">
                                 User ID: <span className="font-mono text-indigo-700 break-all">{userId}</span>
@@ -841,13 +840,12 @@ const App = () => {
                                 >
                                     <PlusCircle size={16} className="mr-1" /> New Trip
                                 </button>
-                                <TripList /> {/* New TripList component */}
+                                <TripList />
                             </div>
                         </div>
                     )}
 
 
-                    {/* MODIFIED: Only show sections if a trip is being planned (either new or loaded) */}
                     {currentTripId !== null || isNewTripStarted ? (
                         <>
                             <HomeLocationSection />
@@ -859,7 +857,6 @@ const App = () => {
                             <FoodAllowanceSection />
                             <TransportOptionsSection />
 
-                            {/* Generate Travel Plan Button */}
                             <div className="text-center mt-10 print:hidden">
                                 <button
                                     onClick={calculateTravelPlan}
@@ -876,10 +873,8 @@ const App = () => {
                                 </button>
                             </div>
 
-                            {/* Travel Plan Summary */}
                             <TravelPlanSummary />
-                            {/* Expense Tracker Section */}
-                            <ExpenseTracker /> {/* New ExpenseTracker component */}
+                            <ExpenseTracker />
                         </>
                     ) : (
                         <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
