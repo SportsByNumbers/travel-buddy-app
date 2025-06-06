@@ -140,24 +140,17 @@ const App = () => {
     const [airportTransfers, setAirportTransfers] = useState(false);
     const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
-    // These are values from useMultiSelection, not direct setters for individual items
-    const [suggestedActivities, setSuggestedActivities] = useState([]);
-    const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
-    const [suggestedThemeParks, setSuggestedThemeParks] = useState([]);
-    const [suggestedTouristSpots, setSuggestedTouristSpots] = useState([]);
-    const [suggestedTours, setSuggestedTours] = useState([]);
-    const [suggestedSportingEvents, setSuggestedSportingEvents] = useState([]);
 
-    const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
-    const [suggestionError, setSuggestionError] = useState('');
-
-    // These are the ACTUAL setters returned by useMultiSelection
+    // These are the ACTUAL states returned by useMultiSelection
     const [selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities] = useMultiSelection([]);
     const [selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useMultiSelection([]);
     const [selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks] = useMultiSelection([]);
     const [selectedSuggestedTouristSpots, toggleSuggestedTouristSpots, setSelectedSuggestedTouristSpots] = useMultiSelection([]);
     const [selectedSuggestedTours, toggleSuggestedTours, setSelectedSuggestedTours] = useMultiSelection([]);
     const [selectedSuggestedSportingEvents, toggleSuggestedSportingEvents, setSelectedSuggestedSportingEvents] = useMultiSelection([]);
+
+    const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+    const [suggestionError, setSuggestionError] = useState('');
 
     const toggleSuggestionSelection = (category, item) => {
         const setterMap = {
@@ -760,7 +753,7 @@ const App = () => {
         if (isNaN(numAmount)) return `${currency}0.00`;
         switch (currency) {
             case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
-            case 'GBP': return `£${numAmount.toFixed(2)}`;
+            case 'GBP': return `£${numAmount.toFixed(2)}`; // FIX: Corrected numNump to numAmount
             case 'EUR': return `€${numAmount.toFixed(2)}`;
             default: return `$${numAmount.toFixed(2)}`;
         }
@@ -795,10 +788,13 @@ const App = () => {
         setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
-        travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, // FIX: Corrected duplicate and ensured setter is passed
-        suggestedTouristSpots, setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
-        setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
+        travelPlanSummary, setTravelPlanSummary,
+        // Removed redundant suggestedActivities, etc. from context as they are duplicates of selectedSuggestedActivities from useMultiSelection
+        // suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
+        // setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
+        // setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
+        // setSuggestedSportingEvents,
+        isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
         isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
         expenses, setExpenses, // Pass expenses state
