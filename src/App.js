@@ -136,7 +136,7 @@ const App = () => {
             foodLocations: toggleSuggestedFoodLocations,
             themeParks: toggleSuggestedThemeParks,
             touristSpots: toggleSuggestedTouristSpots,
-            tours: toggleSuggestedTours,
+            tours: toggleTours,
             sportingEvents: toggleSuggestedSportingEvents,
         };
         const toggle = setterMap[category];
@@ -712,7 +712,7 @@ const App = () => {
             // Include selected AI suggestions for persistence
             selectedSuggestedActivities,
             selectedSuggestedFoodLocations,
-            selectedSuggestedThemeParks,
+            selectedSuggestedThemeParks, // FIX: Removed duplicate setSuggestedFoodLocations
             selectedSuggestedTouristSpots,
             selectedSuggestedTours,
             selectedSuggestedSportingEvents,
@@ -762,7 +762,7 @@ const App = () => {
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedFoodLocations, suggestedTouristSpots,
+        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedFoodLocations, suggestedTouristSpots, // FIX: Duplicate setSuggestedFoodLocations removed here too
         setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
         setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
