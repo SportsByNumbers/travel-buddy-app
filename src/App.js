@@ -136,7 +136,7 @@ const App = () => {
             foodLocations: toggleSuggestedFoodLocations,
             themeParks: toggleSuggestedThemeParks,
             touristSpots: toggleSuggestedTouristSpots,
-            tours: toggleTours,
+            tours: toggleSuggestedTours, // FIX: Changed 'toggleTours' to 'toggleSuggestedTours'
             sportingEvents: toggleSuggestedSportingEvents,
         };
         const toggle = setterMap[category];
