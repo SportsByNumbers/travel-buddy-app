@@ -117,7 +117,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = useState(false); // FIX: Corrected syntax here
+    const [taxiRideShare, setTaxiRideShare] = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -162,7 +162,7 @@ const App = () => {
             foodLocations: toggleSuggestedFoodLocations,
             themeParks: toggleSuggestedThemeParks,
             touristSpots: toggleSuggestedTouristSpots,
-            tours: toggleSuggestedTours, // FIX: Changed 'toggleTours' to 'toggleSuggestedTours'
+            tours: toggleSuggestedTours,
             sportingEvents: toggleSuggestedSportingEvents,
         };
         const toggle = setterMap[category];
@@ -267,7 +267,7 @@ const App = () => {
 
             return () => unsubscribe(); // Cleanup snapshot listener
         }
-    }, [isAuthReady, userId, db]);
+    }, [isAuthReady, userId, db, firebaseConfig.projectId]); // FIX: Added firebaseConfig.projectId dependency
 
 
     // --- EFFECT: Fetch expenses for the current trip ---
@@ -340,7 +340,7 @@ const App = () => {
             setActualHotelCost(0);
             setActualFlightCost(0);
         }
-    }, [isAuthReady, userId, db, currentTripId]);
+    }, [isAuthReady, userId, db, currentTripId, firebaseConfig.projectId]); // FIX: Added firebaseConfig.projectId dependency
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -796,7 +796,7 @@ const App = () => {
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots, // FIX: Duplicate setSuggestedFoodLocations removed here too
+        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
         setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
         setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
