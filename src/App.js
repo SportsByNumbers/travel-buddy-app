@@ -20,7 +20,7 @@ import TripList from './components/TripList.jsx'; // New component
 import ExpenseTracker from './components/ExpenseTracker.jsx'; // New component
 
 // Import custom hooks with explicit .js extension
-import { useMultiSelection } from './hooks/useMultiSelection.js';
+import { useMultiSelection } = './hooks/useMultiSelection.js';
 
 // Create a context for sharing state
 export const TripContext = createContext();
@@ -91,7 +91,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = useState(false);
+    const [taxiRideShare, setTaxiRideShare = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
