@@ -67,7 +67,8 @@ const App = () => {
     ]);
 
     // Derived total numberOfPeople from all groups
-    const numberOfPeople = travelingParties.reduce((sum, party) => sum + party.adults + party.children, 0);
+    // FIX: Added Array.isArray check to prevent 'false is not iterable' error
+    const numberOfPeople = Array.isArray(travelingParties) ? travelingParties.reduce((sum, party) => sum + party.adults + party.children, 0) : 0;
 
 
     const [currency, setCurrency] = useState('USD');
@@ -701,7 +702,7 @@ const App = () => {
 
             // Final Totals
             remainingBudgetEstimated,
-            remainingBudgetActual, // New: Remaining budget based on actual spending
+            remainingBudgetActual, // New: Grand total including contingency, based on actual spending
             topicsOfInterest,
             // Include selected AI suggestions for persistence
             selectedSuggestedActivities,
