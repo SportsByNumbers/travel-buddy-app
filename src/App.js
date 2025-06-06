@@ -50,8 +50,8 @@ const App = () => {
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
-    const [homeCity, setHomeCity] = useState('');
-    const [newHomeCityInput, setNewHomeCityInput] = useState('');
+    const [homeCity, setHomeCity] = '';
+    const [newHomeCityInput, setNewHomeCityInput] = '';
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
@@ -216,8 +216,6 @@ const App = () => {
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         if (isAuthReady && userId && db) {
-            // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
-            // FIX: Corrected Firestore path string interpolation
             const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
             const tripsRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`);
             const q = query(tripsRef);
@@ -240,8 +238,6 @@ const App = () => {
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
-            // FIX: Corrected Firestore path string interpolation
             const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
             const expensesRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
@@ -408,8 +404,6 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
-        // FIX: Corrected Firestore path string interpolation
         const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
         const tripDocRef = doc(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`, tripId);
         try {
@@ -509,50 +503,45 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        // FIX: Removed unnecessary `appId` declaration here as it's not used in this scope
         const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
 
         try {
             const tripDataToSave = {
-                ...summaryData,
+                ...summaryData, // This spread already includes airportTransfersCost from summaryData
                 // Convert Date objects to ISO strings for Firestore compatibility
                 startDate: startDate ? startDate.toISOString() : null,
                 endDate: endDate ? endDate.toISOString() : null,
                 createdAt: currentTripId ? summaryData.createdAt : serverTimestamp(), // Preserve original creation time if updating
                 updatedAt: serverTimestamp(),
-                // Include all form states that make up the trip
+                // Include all form states that make up the trip (ensure no duplicates with summaryData)
                 countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
-                travelingParties, // MODIFIED: Save travelingParties
+                travelingParties,
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
                 estimatedHotelCost, estimatedActivityCost, estimatedMiscellaneousCost,
-                estimatedTransportCost, carRentalCost, shuttleCost, airportTransfersCost,
+                estimatedTransportCost, carRentalCost, shuttleCost,
+                // airportTransfersCost, // <--- This line was the duplicate. It's now removed.
                 airportParkingCost, estimatedInterCityFlightCost, estimatedInterCityTrainCost,
                 estimatedInterCityBusCost, localPublicTransport, taxiRideShare, walking,
                 dailyLocalTransportAllowance, breakfastAllowance, lunchAllowance, dinnerAllowance,
-                snacksAllowance, carRental, shuttle, airportTransfers, airportTransfersCost, airportParking,
+                snacksAllowance, carRental, shuttle, airportTransfers, airportParking,
                 selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
                 selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
             };
 
             if (currentTripId) {
-                // Update existing trip
-                // FIX: Corrected Firestore path string interpolation
                 const tripDocRef = doc(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
                 console.log("Trip updated with ID:", currentTripId);
             } else {
-                // Create new trip
-                // FIX: Corrected Firestore path string interpolation
                 const tripsCollectionRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
-                setCurrentTripId(newTripDocRef.id); // Set the newly created trip as current
+                setCurrentTripId(newTripDocRef.id);
                 console.log("New trip created with ID:", newTripDocRef.id);
             }
-            // After saving, generate summary again to refresh UI with latest data, and scroll to summary
             setTravelPlanSummary(summaryData);
-            setTimeout(() => { // Small delay to allow state update before scrolling
+            setTimeout(() => {
                 const summaryElement = document.getElementById('travel-plan-summary');
                 if (summaryElement) {
                     summaryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
