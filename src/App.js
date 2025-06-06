@@ -124,7 +124,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare = useState(false);
+    const [taxiRideShare, setTaxiRideShare] = useState(false); // FIX: Corrected syntax here
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -451,8 +451,6 @@ const App = () => {
         console.log('setSelectedSuggestedTours:', setSelectedSuggestedTours, typeof setSelectedSuggestedTours);
         console.log('setSelectedSuggestedSportingEvents:', setSelectedSuggestedSportingEvents, typeof setSelectedSuggestedSportingEvents);
 
-        // Applying the reset using the setters returned from useMultiSelection
-        // These calls are now wrapped in individual try...catch for maximum resilience
         try {
             setSelectedSuggestedActivities?.([]);
         } catch (e) {
