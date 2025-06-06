@@ -117,7 +117,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = useState(false);
+    const [taxiRideShare, setTaxiRideShare = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -141,16 +141,25 @@ const App = () => {
     const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
 
-    // These are the ACTUAL states returned by useMultiSelection
+    // Removed the direct useState declarations for suggestedActivities, suggestedFoodLocations, etc.
+    // They are now managed solely by useMultiSelection.
+    // const [suggestedActivities, setSuggestedActivities] = useState([]);
+    // const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
+    // const [suggestedThemeParks, setSuggestedThemeParks] = useState([]);
+    // const [suggestedTouristSpots, setSuggestedTouristSpots] = useState([]);
+    // const [suggestedTours, setSuggestedTours] = useState([]);
+    // const [suggestedSportingEvents, setSuggestedSportingEvents] = useState([]);
+
+    const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+    const [suggestionError, setSuggestionError] = useState('');
+
+    // These are the ACTUAL setters returned by useMultiSelection, used in resetTripStates and contextValue
     const [selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities] = useMultiSelection([]);
     const [selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useMultiSelection([]);
     const [selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks] = useMultiSelection([]);
     const [selectedSuggestedTouristSpots, toggleSuggestedTouristSpots, setSelectedSuggestedTouristSpots] = useMultiSelection([]);
     const [selectedSuggestedTours, toggleSuggestedTours, setSelectedSuggestedTours] = useMultiSelection([]);
     const [selectedSuggestedSportingEvents, toggleSuggestedSportingEvents, setSelectedSuggestedSportingEvents] = useMultiSelection([]);
-
-    const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
-    const [suggestionError, setSuggestionError] = useState('');
 
     const toggleSuggestionSelection = (category, item) => {
         const setterMap = {
@@ -402,13 +411,13 @@ const App = () => {
         setAirportParking(false);
         setTravelPlanSummary(null);
 
-        // FIX: Corrected to use setSelectedSuggested... setters
-        setSelectedSuggestedActivities([]);
-        setSelectedSuggestedFoodLocations([]);
-        setSelectedSuggestedThemeParks([]);
-        setSelectedSuggestedTouristSpots([]);
-        setSelectedSuggestedTours([]);
-        setSelectedSuggestedSportingEvents([]);
+        // FIX: Corrected to use setSelectedSuggested... setters, ensuring they are functions before calling
+        if (typeof setSelectedSuggestedActivities === 'function') setSelectedSuggestedActivities([]);
+        if (typeof setSelectedSuggestedFoodLocations === 'function') setSelectedSuggestedFoodLocations([]);
+        if (typeof setSelectedSuggestedThemeParks === 'function') setSelectedSuggestedThemeParks([]);
+        if (typeof setSelectedSuggestedTouristSpots === 'function') setSelectedSuggestedTouristSpots([]);
+        if (typeof setSelectedSuggestedTours === 'function') setSelectedSuggestedTours([]);
+        if (typeof setSelectedSuggestedSportingEvents === 'function') setSelectedSuggestedSportingEvents([]);
 
         setHomeCountryError('');
         setHomeCityError('');
@@ -753,7 +762,7 @@ const App = () => {
         if (isNaN(numAmount)) return `${currency}0.00`;
         switch (currency) {
             case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
-            case 'GBP': return `£${numAmount.toFixed(2)}`; // FIX: Corrected numNump to numAmount
+            case 'GBP': return `£${numAmount.toFixed(2)}`;
             case 'EUR': return `€${numAmount.toFixed(2)}`;
             default: return `$${numAmount.toFixed(2)}`;
         }
