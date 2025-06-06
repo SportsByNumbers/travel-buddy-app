@@ -20,7 +20,7 @@ import TripList from './components/TripList.jsx'; // New component
 import ExpenseTracker from './components/ExpenseTracker.jsx'; // New component
 
 // Import custom hooks with explicit .js extension
-import { useMultiSelection } from './hooks/useMultiSelection.js'; // FIX: Changed '=' to 'from'
+import { useMultiSelection } from './hooks/useMultiSelection.js';
 
 // Create a context for sharing state
 export const TripContext = createContext();
@@ -91,7 +91,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare = useState(false);
+    const [taxiRideShare, setTaxiRideShare] = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -136,7 +136,7 @@ const App = () => {
             foodLocations: toggleSuggestedFoodLocations,
             themeParks: toggleSuggestedThemeParks,
             touristSpots: toggleSuggestedTouristSpots,
-            tours: toggleSuggestedTours, // FIX: Changed 'toggleTours' to 'toggleSuggestedTours'
+            tours: toggleSuggestedTours,
             sportingEvents: toggleSuggestedSportingEvents,
         };
         const toggle = setterMap[category];
@@ -620,7 +620,7 @@ const App = () => {
 
         // Adjust costs based on per person/per party using total people
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
-        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost; // FIX: Changed totalTotalFoodCost to totalFoodCost
+        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
 
         // Calculate contingency
         const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
@@ -712,7 +712,7 @@ const App = () => {
             // Include selected AI suggestions for persistence
             selectedSuggestedActivities,
             selectedSuggestedFoodLocations,
-            selectedSuggestedThemeParks, // FIX: Removed duplicate setSuggestedFoodLocations
+            selectedSuggestedThemeParks,
             selectedSuggestedTouristSpots,
             selectedSuggestedTours,
             selectedSuggestedSportingEvents,
@@ -762,7 +762,7 @@ const App = () => {
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedFoodLocations, suggestedTouristSpots, // FIX: Duplicate setSuggestedFoodLocations removed here too
+        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
         setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
         setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
