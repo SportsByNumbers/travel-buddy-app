@@ -48,6 +48,16 @@ const App = () => {
     const [currentTripId, setCurrentTripId] = useState(null);
     const [isNewTripStarted, setIsNewTripStarted] = useState(false); // NEW STATE: To control initial display
 
+    // New states for Email/Password authentication
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [authError, setAuthError] = useState('');
+    const [isLoginMode, setIsLoginMode] = useState(true); // Toggles between Login and Sign Up
+
+    // Initialize Google Provider only if auth is available
+    const googleProvider = auth ? new GoogleAuthProvider() : null;
+
+
     // State variables for various inputs (keep existing)
     const [countries, setCountries] = useState([]);
     const [newCountry, setNewCountry] = '';
@@ -72,10 +82,8 @@ const App = () => {
     const [isPerPerson, setIsPerPerson] = useState(true);
 
     // MODIFIED: numberOfAdults and numberOfChildren are now part of travelingParties
-    // The previous numberOfAdults and numberOfChildren states can be removed if they are solely replaced by travelingParties.
-    // If you need a fallback or a default for initial new trips, you can initialize travelingParties with one default group.
     const [travelingParties, setTravelingParties] = useState([
-        { id: 1, name: 'Main Group', adults: 1, children: 0 } // Initialize with one default group
+        { id: 1, name: 'Main Group', adults: 1, children: 0 }
     ]);
 
     // Derived total numberOfPeople from all groups
@@ -120,7 +128,6 @@ const App = () => {
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
-    // Actual Costs (now will be primarily driven by ExpenseTracker)
     const [actualFlightCost, setActualFlightCost] = useState(0);
     const [actualHotelCost, setActualHotelCost] = useState(0);
     const [actualActivityCost, setActualActivityCost] = useState(0);
@@ -128,7 +135,7 @@ const App = () => {
     const [actualMiscellaneousCost, setActualMiscellaneousCost] = useState(0);
     const [actualFoodCost, setActualFoodCost] = useState(0);
 
-    const [expenses, setExpenses] = useState([]); // State to hold actual expenses for the current trip
+    const [expenses, setExpenses] = useState([]);
 
     const [breakfastAllowance, setBreakfastAllowance] = useState(0);
     const [lunchAllowance, setLunchAllowance] = useState(0);
@@ -168,19 +175,73 @@ const App = () => {
     const [budgetError, setBudgetError] = useState('');
     const [allCountries, setAllCountries] = useState([]);
 
-    // Input validation states
     const [homeCountryError, setHomeCountryError] = useState('');
     const [homeCityError, setHomeCityError] = useState('');
     const [destCountryError, setDestCountryError] = useState('');
     const [destCityError, setDestCityError] = useState('');
     const [dateError, setDateError] = useState('');
-    // Updated: numberOfPeopleError replaced with more specific errors
-    // These specific errors might now be handled within the BudgetPlanningSection per group
     const [numberOfAdultsError, setNumberOfAdultsError] = useState('');
     const [numberOfChildrenError, setNumberOfChildrenError] = useState('');
 
     const [newCityNameError, setNewCityNameError] = useState('');
     const [newCityDurationError, setNewCityDurationError] = useState('');
+
+    // --- Authentication Handlers ---
+
+    const handleGoogleSignIn = async () => {
+        if (!auth || !googleProvider) {
+            console.error("Firebase Auth or Google Provider not initialized.");
+            setAuthError("Authentication service not ready.");
+            return;
+        }
+        setAuthError('');
+        try {
+            await signInWithPopup(auth, googleProvider);
+            console.log("Signed in with Google successfully.");
+        } catch (error) {
+            console.error("Google Sign-in Error:", error);
+            setAuthError(error.message);
+        }
+    };
+
+    const handleEmailAuth = async () => {
+        if (!auth) {
+            console.error("Firebase Auth not initialized.");
+            setAuthError("Authentication service not ready.");
+            return;
+        }
+        setAuthError('');
+        try {
+            if (isLoginMode) {
+                await signInWithEmailAndPassword(auth, email, password);
+                console.log("Signed in with Email/Password successfully.");
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+                console.log("Signed up with Email/Password successfully.");
+            }
+        } catch (error) {
+            console.error("Email/Password Auth Error:", error);
+            setAuthError(error.message);
+        }
+    };
+
+    const handleSignOut = async () => {
+        if (!auth) {
+            console.error("Firebase Auth not initialized.");
+            return;
+        }
+        try {
+            await signOut(auth);
+            console.log("User signed out.");
+            setCurrentTripId(null);
+            setIsNewTripStarted(false);
+            resetTripStates();
+            setTravelPlanSummary(null);
+        } catch (error) {
+            console.error("Sign out Error:", error);
+        }
+    };
+
 
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
@@ -219,10 +280,10 @@ const App = () => {
                 setIsAuthReady(true);
             });
 
-            return () => unsubscribe(); // Cleanup auth listener
+            return () => unsubscribe();
         } catch (error) {
             console.error("Firebase initialization error:", error);
-            setIsAuthReady(true); // Ensure app can still render even if Firebase fails
+            setIsAuthReady(true);
         }
     }, []);
 
@@ -261,7 +322,7 @@ const App = () => {
                 const fetchedExpenses = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
-                    date: doc.data().date?.toDate ? doc.data().date.toDate() : doc.data().date // Convert Firestore Timestamp to Date object
+                    date: doc.data().date?.toDate ? doc.data().date.toDate() : doc.data().date
                 }));
                 setExpenses(fetchedExpenses);
                 console.log("Fetched expenses for trip", currentTripId, ":", fetchedExpenses);
@@ -339,7 +400,7 @@ const App = () => {
     }, []);
 
     // --- Helper to reset all trip-related states for a new trip ---
-    const resetTripStates = useCallback(() => { // Wrapped in useCallback
+    const resetTripStates = useCallback(() => {
         setCountries([]);
         setCities([]);
         setStartDate(null);
@@ -382,8 +443,6 @@ const App = () => {
         setAirportParking(false);
         setTravelPlanSummary(null);
 
-        // FIX: Corrected to use setSelectedSuggested... setters, ensuring they are functions before calling
-        // Added specific logging for debugging if any setter is still problematic
         console.log('Debugging setSelectedSuggested... setters before reset (inside resetTripStates):');
         console.log('setSelectedSuggestedActivities:', setSelectedSuggestedActivities, typeof setSelectedSuggestedActivities);
         console.log('setSelectedSuggestedFoodLocations:', setSelectedSuggestedFoodLocations, typeof setSelectedSuggestedFoodLocations);
@@ -392,36 +451,38 @@ const App = () => {
         console.log('setSelectedSuggestedTours:', setSelectedSuggestedTours, typeof setSelectedSuggestedTours);
         console.log('setSelectedSuggestedSportingEvents:', setSelectedSuggestedSportingEvents, typeof setSelectedSuggestedSportingEvents);
 
-        // Applying the reset using the setters returned from useMultiSelection
-        // These calls are now wrapped in individual try...catch for maximum resilience
         try {
-            setSelectedSuggestedActivities([]);
+            setSelectedSuggestedActivities?.([]);
         } catch (e) {
             console.error('Error resetting selectedSuggestedActivities:', e);
         }
         try {
-            setSelectedSuggestedFoodLocations([]);
+            setSelectedSuggestedFoodLocations?.([]);
         } catch (e) {
             console.error('Error resetting selectedSuggestedFoodLocations:', e);
         }
         try {
-            setSelectedSuggestedThemeParks([]);
-        } catch (e) {
+            setSelectedSuggestedThemeParks?.([]);
+        }
+        catch (e) {
             console.error('Error resetting selectedSuggestedThemeParks:', e);
         }
         try {
-            setSelectedSuggestedTouristSpots([]);
-        } catch (e) {
+            setSelectedSuggestedTouristSpots?.([]);
+        }
+        catch (e) {
             console.error('Error resetting selectedSuggestedTouristSpots:', e);
         }
         try {
-            setSelectedSuggestedTours([]);
-        } catch (e) {
+            setSelectedSuggestedTours?.([]);
+        }
+        catch (e) {
             console.error('Error resetting selectedSuggestedTours:', e);
         }
         try {
-            setSelectedSuggestedSportingEvents([]);
-        } catch (e) {
+            setSelectedSuggestedSportingEvents?.([]);
+        }
+        catch (e) {
             console.error('Error resetting selectedSuggestedSportingEvents:', e);
         }
 
@@ -436,8 +497,7 @@ const App = () => {
         setNewCityDurationError('');
         setExpenses([]);
     }, [
-        setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
-        setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
+        // Include all state setters that are called inside this useCallback
         setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
         setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
         setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
@@ -446,6 +506,8 @@ const App = () => {
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
         setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
+        setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
+        setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
         setNumberOfAdultsError, setNumberOfChildrenError, setNewCityNameError, setNewCityDurationError, setExpenses
     ]);
@@ -828,63 +890,120 @@ const App = () => {
                         Travel Planner
                     </h1>
 
-                    {userId && (
-                        <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
-                            <p className="text-sm text-gray-600 mb-2 sm:mb-0">
-                                User ID: <span className="font-mono text-indigo-700 break-all">{userId}</span>
-                            </p>
-                            <div className="flex space-x-3">
-                                <button
-                                    onClick={createNewTrip}
-                                    className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md"
-                                >
-                                    <PlusCircle size={16} className="mr-1" /> New Trip
-                                </button>
-                                <TripList />
-                            </div>
-                        </div>
-                    )}
-
-
-                    {currentTripId !== null || isNewTripStarted ? (
+                    {userId ? (
                         <>
-                            <HomeLocationSection />
-                            <DestinationsSection />
-                            <TripDatesSection />
-                            <PreferencesSection />
-                            <ItinerarySuggestions />
-                            <BudgetPlanningSection />
-                            <FoodAllowanceSection />
-                            <TransportOptionsSection />
-
-                            <div className="text-center mt-10 print:hidden">
-                                <button
-                                    onClick={calculateTravelPlan}
-                                    className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || numberOfPeople < 1}
-                                >
-                                    {isGeneratingSuggestions ? (
-                                        <span className="flex items-center justify-center">
-                                            <Loader className="animate-spin mr-2" size={24} /> Generating Plan & Saving...
-                                        </span>
-                                    ) : (
-                                        currentTripId ? 'Update Travel Plan' : 'Generate & Save Travel Plan'
-                                    )}
-                                </button>
+                            <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
+                                <p className="text-sm text-gray-600 mb-2 sm:mb-0">
+                                    User ID: <span className="font-mono text-indigo-700 break-all">{userId}</span>
+                                </p>
+                                <div className="flex space-x-3">
+                                    <button
+                                        onClick={createNewTrip}
+                                        className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md"
+                                    >
+                                        <PlusCircle size={16} className="mr-1" /> New Trip
+                                    </button>
+                                    <TripList />
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
                             </div>
 
-                            <TravelPlanSummary />
-                            <ExpenseTracker />
+
+                            {currentTripId !== null || isNewTripStarted ? (
+                                <>
+                                    <HomeLocationSection />
+                                    <DestinationsSection />
+                                    <TripDatesSection />
+                                    <PreferencesSection />
+                                    <ItinerarySuggestions />
+                                    <BudgetPlanningSection />
+                                    <FoodAllowanceSection />
+                                    <TransportOptionsSection />
+
+                                    <div className="text-center mt-10 print:hidden">
+                                        <button
+                                            onClick={calculateTravelPlan}
+                                            className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || numberOfPeople < 1}
+                                        >
+                                            {isGeneratingSuggestions ? (
+                                                <span className="flex items-center justify-center">
+                                                    <Loader className="animate-spin mr-2" size={24} /> Generating Plan & Saving...
+                                                </span>
+                                            ) : (
+                                                currentTripId ? 'Update Travel Plan' : 'Generate & Save Travel Plan'
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    <TravelPlanSummary />
+                                    <ExpenseTracker />
+                                </>
+                            ) : (
+                                <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
+                                    <p className="text-lg mb-4">You're signed in! Start by creating a new trip or loading an existing one!</p>
+                                    <button
+                                        onClick={createNewTrip}
+                                        className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                                    >
+                                        <PlusCircle size={20} className="mr-2" /> Start New Travel Plan
+                                    </button>
+                                </div>
+                            )}
                         </>
                     ) : (
-                        <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
-                            <p className="text-lg mb-4">Start by creating a new trip or loading an existing one!</p>
+                        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
+                            <h2 className="text-2xl font-bold text-indigo-800 mb-6">{isLoginMode ? 'Sign In' : 'Sign Up'} to Plan Your Trip</h2>
+                            {authError && <p className="text-red-500 mb-4">{authError}</p>}
+
                             <button
-                                onClick={createNewTrip}
-                                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                                onClick={handleGoogleSignIn}
+                                className="inline-flex items-center px-6 py-3 mb-4 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
                             >
-                                <PlusCircle size={20} className="mr-2" /> Start New Travel Plan
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" className="w-5 h-5 mr-3" />
+                                {isLoginMode ? 'Sign In with Google' : 'Sign Up with Google'}
                             </button>
+
+                            <div className="w-full max-w-sm px-4">
+                                <div className="relative flex py-5 items-center">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="flex-shrink mx-4 text-gray-500">OR</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                </div>
+
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-4 py-3 mb-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                />
+                                <button
+                                    onClick={handleEmailAuth}
+                                    className="w-full px-6 py-3 mb-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                                >
+                                    {isLoginMode ? 'Sign In with Email' : 'Sign Up with Email'}
+                                </button>
+
+                                <button
+                                    onClick={() => setIsLoginMode(!isLoginMode)}
+                                    className="w-full text-indigo-600 hover:underline text-sm font-medium transition duration-200 ease-in-out"
+                                >
+                                    {isLoginMode ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
