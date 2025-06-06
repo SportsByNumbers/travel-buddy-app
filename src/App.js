@@ -1,6 +1,6 @@
 // App.js
 
-import React, { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect, createContext } = 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -522,9 +522,10 @@ const App = () => {
                 travelingParties,
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
-                estimatedHotelCost, estimatedHotelCost, estimatedActivityCost, estimatedMiscellaneousCost,
+                // Removed duplicate: estimatedHotelCost,
+                estimatedActivityCost, estimatedMiscellaneousCost,
                 estimatedTransportCost, carRentalCost, shuttleCost,
-                // airportTransfersCost, // <--- This line was the duplicate. It's now removed.
+                airportTransfersCost,
                 airportParkingCost, estimatedInterCityFlightCost, estimatedInterCityTrainCost,
                 estimatedInterCityBusCost, localPublicTransport, taxiRideShare, walking,
                 dailyLocalTransportAllowance, breakfastAllowance, lunchAllowance, dinnerAllowance,
