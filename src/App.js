@@ -87,7 +87,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = false;
+    const [taxiRideShare, setTaxiRideShare] = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -337,8 +337,8 @@ const App = () => {
         setTravelStyle('');
         setHotelAmenities([]);
         setIsPerPerson(true);
-        // MODIFIED: Ensure travelingParties is an array on reset
-        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Always reset to a valid array
+        // MODIFIED: Reset travelingParties
+        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Reset to default group
         // Removed old numberOfAdults and numberOfChildren resets
         setCurrency('USD');
         setMoneyAvailable(0);
