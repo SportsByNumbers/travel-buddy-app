@@ -412,6 +412,8 @@ const App = () => {
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
                 console.log("Loading trip data:", tripData);
+                // FIX: Added console.log to inspect the value of tripData.travelingParties
+                console.log('tripData.travelingParties before set:', tripData.travelingParties);
 
                 // Reset all states first to avoid stale data
                 resetTripStates();
@@ -520,7 +522,7 @@ const App = () => {
                 travelingParties,
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
-                estimatedHotelCost, estimatedActivityCost, estimatedMiscellaneousCost,
+                estimatedHotelCost, estimatedHotelCost, estimatedActivityCost, estimatedMiscellaneousCost,
                 estimatedTransportCost, carRentalCost, shuttleCost,
                 // airportTransfersCost, // <--- This line was the duplicate. It's now removed.
                 airportParkingCost, estimatedInterCityFlightCost, estimatedInterCityTrainCost,
