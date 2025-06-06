@@ -67,7 +67,7 @@ const App = () => {
     ]);
 
     // Derived total numberOfPeople from all groups
-    // FIX: Added robust check to ensure travelingParties is an array before reduce, and added optional chaining for safety.
+    // FIX: Ensure travelingParties is an array before using it
     console.log('travelingParties (before numberOfPeople calc):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const numberOfPeople = (Array.isArray(travelingParties) && travelingParties.length > 0)
         ? travelingParties.reduce((sum, party) => sum + (party?.adults || 0) + (party?.children || 0), 0)
