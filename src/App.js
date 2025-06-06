@@ -1,6 +1,6 @@
 // App.js
 
-import React, { useState, useEffect, createContext } = 'react';
+import React, { useState, useEffect, createContext } from 'react'; // FIX: Changed '=' to 'from'
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
