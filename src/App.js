@@ -498,7 +498,6 @@ const App = () => {
         setNewCityDurationError('');
         setExpenses([]);
     }, [
-        // Include all state setters that are called inside this useCallback
         setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
         setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
         setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
