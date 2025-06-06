@@ -20,7 +20,7 @@ import TripList from './components/TripList.jsx'; // New component
 import ExpenseTracker from './components/ExpenseTracker.jsx'; // New component
 
 // Import custom hooks with explicit .js extension
-import { useMultiSelection } = './hooks/useMultiSelection.js';
+import { useMultiSelection } from './hooks/useMultiSelection.js'; // FIX: Changed '=' to 'from'
 
 // Create a context for sharing state
 export const TripContext = createContext();
