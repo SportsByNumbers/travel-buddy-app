@@ -524,7 +524,7 @@ const App = () => {
                 travelingParties,
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
-                // Removed duplicate: estimatedHotelCost,
+                estimatedHotelCost, // Corrected: Removed duplicate estimatedHotelCost from here
                 estimatedActivityCost, estimatedMiscellaneousCost,
                 estimatedTransportCost, carRentalCost, shuttleCost,
                 airportTransfersCost,
@@ -620,7 +620,7 @@ const App = () => {
 
         // Adjust costs based on per person/per party using total people
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
-        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalTotalFoodCost;
+        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost; // FIX: Changed totalTotalFoodCost to totalFoodCost
 
         // Calculate contingency
         const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
