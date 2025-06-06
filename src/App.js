@@ -38,7 +38,7 @@ const App = () => {
 
     // State variables for various inputs (keep existing)
     const [countries, setCountries] = useState([]);
-    const [newCountry, setNewCountry] = useState('');
+    const [newCountry, setNewCountry] = '';
     const [cities, setCities] = useState([]);
     const [newCityName, setNewCityName] = useState('');
     const [newCityDuration, setNewCityDuration] = useState(0);
@@ -531,7 +531,7 @@ const App = () => {
                 airportParkingCost, estimatedInterCityFlightCost, estimatedInterCityTrainCost,
                 estimatedInterCityBusCost, localPublicTransport, taxiRideShare, walking,
                 dailyLocalTransportAllowance, breakfastAllowance, lunchAllowance, dinnerAllowance,
-                snacksAllowance, carRental, shuttle, airportTransfers, airportParking,
+                snacksAllowance, carRental, shuttle, airportTransfers, airportTransfersCost, airportParking,
                 selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
                 selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
             };
