@@ -67,7 +67,7 @@ const App = () => {
     ]);
 
     // Derived total numberOfPeople from all groups
-    // FIX: Ensure travelingParties is an array before using it
+    // FIX: Added robust check to ensure travelingParties is an array before reduce, and added optional chaining for safety.
     console.log('travelingParties (before numberOfPeople calc):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const numberOfPeople = (Array.isArray(travelingParties) && travelingParties.length > 0)
         ? travelingParties.reduce((sum, party) => sum + (party?.adults || 0) + (party?.children || 0), 0)
@@ -220,6 +220,8 @@ const App = () => {
 
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
+        // FIX: Added console.log for Firebase init state
+        console.log('Firebase init state (for trips effect):', { isAuthReady, userId, db });
         if (isAuthReady && userId && db) {
             // When hardcoding, appId is part of firebaseConfig directly.
             // We use it directly here to ensure consistent pathing.
@@ -415,7 +417,8 @@ const App = () => {
                 const tripData = tripDocSnap.data();
                 console.log("Loading trip data:", tripData);
                 // FIX: Added console.log to inspect the value of tripData.travelingParties
-                console.log('tripData.travelingParties before set:', tripData.travelingParties);
+                console.log('tripData.travelingParties in loadTrip (from Firestore):', tripData.travelingParties, 'Type:', typeof tripData.travelingParties, 'IsArray:', Array.isArray(tripData.travelingParties));
+
 
                 // Reset all states first to avoid stale data
                 resetTripStates();
@@ -433,7 +436,10 @@ const App = () => {
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
                 // MODIFIED: Load travelingParties, ensuring it's an array
-                setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Ensure array type
+                // If tripData.travelingParties is not an array, use default.
+                setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
+                console.log('travelingParties in loadTrip (after set):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
+
                 // Removed old numberOfAdults and numberOfChildren loads
                 setCurrency(tripData.currency || 'USD');
                 setMoneyAvailable(tripData.moneyAvailable || 0);
