@@ -117,7 +117,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare = useState(false);
+    const [taxiRideShare, setTaxiRideShare] = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -141,25 +141,16 @@ const App = () => {
     const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
 
-    // Removed the direct useState declarations for suggestedActivities, suggestedFoodLocations, etc.
-    // They are now managed solely by useMultiSelection.
-    // const [suggestedActivities, setSuggestedActivities] = useState([]);
-    // const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
-    // const [suggestedThemeParks, setSuggestedThemeParks] = useState([]);
-    // const [suggestedTouristSpots, setSuggestedTouristSpots] = useState([]);
-    // const [suggestedTours, setSuggestedTours] = useState([]);
-    // const [suggestedSportingEvents, setSuggestedSportingEvents] = useState([]);
-
-    const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
-    const [suggestionError, setSuggestionError] = useState('');
-
-    // These are the ACTUAL setters returned by useMultiSelection, used in resetTripStates and contextValue
+    // These are the ACTUAL states returned by useMultiSelection
     const [selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities] = useMultiSelection([]);
     const [selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useMultiSelection([]);
     const [selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks] = useMultiSelection([]);
     const [selectedSuggestedTouristSpots, toggleSuggestedTouristSpots, setSelectedSuggestedTouristSpots] = useMultiSelection([]);
     const [selectedSuggestedTours, toggleSuggestedTours, setSelectedSuggestedTours] = useMultiSelection([]);
     const [selectedSuggestedSportingEvents, toggleSuggestedSportingEvents, setSelectedSuggestedSportingEvents] = useMultiSelection([]);
+
+    const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+    const [suggestionError, setSuggestionError] = useState('');
 
     const toggleSuggestionSelection = (category, item) => {
         const setterMap = {
