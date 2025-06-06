@@ -27,6 +27,17 @@ export const TripContext = createContext();
 
 // Main App component
 const App = () => {
+    // Firebase configuration (moved to top-level scope within App component)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
+        authDomain: "travelbuddy-e050f.firebaseapp.com",
+        projectId: "travelbuddy-e050f",
+        storageBucket: "travelbuddy-e050f.firebasestorage.app",
+        messagingSenderId: "625134272046",
+        appId: "1:625134272046:web:a18883626fcfbb2df329bf",
+        measurementId: "G-Y5RGMDS33E"
+    };
+
     // Firebase states
     const [db, setDb] = useState(null);
     const [auth, setAuth] = useState(null);
@@ -106,7 +117,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = useState(false); // FIX: Corrected syntax here
+    const [taxiRideShare, setTaxiRideShare] = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -151,7 +162,7 @@ const App = () => {
             foodLocations: toggleSuggestedFoodLocations,
             themeParks: toggleSuggestedThemeParks,
             touristSpots: toggleSuggestedTouristSpots,
-            tours: toggleSuggestedTours, // FIX: Changed 'toggleTours' to 'toggleSuggestedTours'
+            tours: toggleSuggestedTours,
             sportingEvents: toggleSuggestedSportingEvents,
         };
         const toggle = setterMap[category];
@@ -179,18 +190,6 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            // Define firebaseConfig directly (hardcoded for direct implementation as requested)
-            // It's still recommended to use environment variables for security in production.
-            const firebaseConfig = {
-                apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
-                authDomain: "travelbuddy-e050f.firebaseapp.com",
-                projectId: "travelbuddy-e050f",
-                storageBucket: "travelbuddy-e050f.firebasestorage.app",
-                messagingSenderId: "625134272046",
-                appId: "1:625134272046:web:a18883626fcfbb2df329bf",
-                measurementId: "G-Y5RGMDS33E"
-            };
-
             // This check will now always pass as apiKey is hardcoded
             if (!firebaseConfig.apiKey) {
                 console.error("Firebase config is missing apiKey. This theoretical error should not appear with hardcoded values.");
@@ -749,7 +748,7 @@ const App = () => {
         if (isNaN(numAmount)) return `${currency}0.00`;
         switch (currency) {
             case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
-            case 'GBP': return `£${numAmount.toFixed(2)}`;
+            case 'GBP': return `£${numNump.toFixed(2)}`;
             case 'EUR': return `€${numAmount.toFixed(2)}`;
             default: return `$${numAmount.toFixed(2)}`;
         }
