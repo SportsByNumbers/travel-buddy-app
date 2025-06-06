@@ -403,12 +403,13 @@ const App = () => {
         setTravelPlanSummary(null);
 
         // FIX: Corrected to use setSelectedSuggested... setters, ensuring they are functions before calling
-        if (typeof setSelectedSuggestedActivities === 'function') setSelectedSuggestedActivities([]);
-        if (typeof setSelectedSuggestedFoodLocations === 'function') setSelectedSuggestedFoodLocations([]);
-        if (typeof setSelectedSuggestedThemeParks === 'function') setSelectedSuggestedThemeParks([]);
-        if (typeof setSelectedSuggestedTouristSpots === 'function') setSelectedSuggestedTouristSpots([]);
-        if (typeof setSelectedSuggestedTours === 'function') setSelectedSuggestedTours([]);
-        if (typeof setSelectedSuggestedSportingEvents === 'function') setSelectedSuggestedSportingEvents([]);
+        // Use optional chaining to safely call the setter if it exists
+        setSelectedSuggestedActivities?.([]);
+        setSelectedSuggestedFoodLocations?.([]);
+        setSelectedSuggestedThemeParks?.([]);
+        setSelectedSuggestedTouristSpots?.([]);
+        setSelectedSuggestedTours?.([]);
+        setSelectedSuggestedSportingEvents?.([]);
 
         setHomeCountryError('');
         setHomeCityError('');
@@ -789,11 +790,6 @@ const App = () => {
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary,
-        // Removed redundant suggestedActivities, etc. from context as they are duplicates of selectedSuggestedActivities from useMultiSelection
-        // suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        // setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
-        // setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
-        // setSuggestedSportingEvents,
         isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
         isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
