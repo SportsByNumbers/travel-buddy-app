@@ -368,11 +368,6 @@ const App = () => {
         setTaxiRideShare(false);
         setWalking(false);
         setDailyLocalTransportAllowance(0);
-        setActualFlightCost(0);
-        setActualHotelCost(0);
-        setActualActivityCost(0);
-        setActualMiscellaneousCost(0);
-        setActualFoodCost(0);
         setBreakfastAllowance(0);
         setLunchAllowance(0);
         setDinnerAllowance(0);
@@ -625,7 +620,7 @@ const App = () => {
 
         // Adjust costs based on per person/per party using total people
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
-        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
+        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalTotalFoodCost;
 
         // Calculate contingency
         const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
@@ -767,7 +762,7 @@ const App = () => {
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
+        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedFoodLocations, suggestedTouristSpots,
         setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
         setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
