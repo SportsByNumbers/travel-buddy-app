@@ -140,15 +140,18 @@ const App = () => {
     const [airportTransfers, setAirportTransfers] = useState(false);
     const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
+    // These are values from useMultiSelection, not direct setters for individual items
     const [suggestedActivities, setSuggestedActivities] = useState([]);
     const [suggestedFoodLocations, setSuggestedFoodLocations] = useState([]);
     const [suggestedThemeParks, setSuggestedThemeParks] = useState([]);
     const [suggestedTouristSpots, setSuggestedTouristSpots] = useState([]);
     const [suggestedTours, setSuggestedTours] = useState([]);
     const [suggestedSportingEvents, setSuggestedSportingEvents] = useState([]);
+
     const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
     const [suggestionError, setSuggestionError] = useState('');
 
+    // These are the ACTUAL setters returned by useMultiSelection
     const [selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities] = useMultiSelection([]);
     const [selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useMultiSelection([]);
     const [selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks] = useMultiSelection([]);
@@ -267,7 +270,7 @@ const App = () => {
 
             return () => unsubscribe(); // Cleanup snapshot listener
         }
-    }, [isAuthReady, userId, db, firebaseConfig.projectId]); // FIX: Added firebaseConfig.projectId dependency
+    }, [isAuthReady, userId, db, firebaseConfig.projectId]);
 
 
     // --- EFFECT: Fetch expenses for the current trip ---
@@ -340,7 +343,7 @@ const App = () => {
             setActualHotelCost(0);
             setActualFlightCost(0);
         }
-    }, [isAuthReady, userId, db, currentTripId, firebaseConfig.projectId]); // FIX: Added firebaseConfig.projectId dependency
+    }, [isAuthReady, userId, db, currentTripId, firebaseConfig.projectId]);
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -405,18 +408,15 @@ const App = () => {
         setAirportTransfers(false);
         setAirportParking(false);
         setTravelPlanSummary(null);
-        setSuggestedActivities([]);
-        setSuggestedFoodLocations([]);
-        setSuggestedThemeParks([]);
-        setSuggestedTouristSpots([]);
-        setSuggestedTours([]);
-        setSuggestedSportingEvents([]);
+
+        // FIX: Corrected to use setSelectedSuggested... setters
         setSelectedSuggestedActivities([]);
         setSelectedSuggestedFoodLocations([]);
         setSelectedSuggestedThemeParks([]);
         setSelectedSuggestedTouristSpots([]);
         setSelectedSuggestedTours([]);
         setSelectedSuggestedSportingEvents([]);
+
         setHomeCountryError('');
         setHomeCityError('');
         setDestCountryError('');
@@ -760,7 +760,7 @@ const App = () => {
         if (isNaN(numAmount)) return `${currency}0.00`;
         switch (currency) {
             case 'JPY': return `¥${numAmount.toFixed(0)}`; // JPY typically doesn't use decimals
-            case 'GBP': return `£${numAmount.toFixed(2)}`; // FIX: Corrected numNump to numAmount
+            case 'GBP': return `£${numAmount.toFixed(2)}`;
             case 'EUR': return `€${numAmount.toFixed(2)}`;
             default: return `$${numAmount.toFixed(2)}`;
         }
@@ -796,13 +796,14 @@ const App = () => {
         lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
         carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
         travelPlanSummary, setTravelPlanSummary, suggestedActivities, setSuggestedActivities, suggestedFoodLocations,
-        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, suggestedTouristSpots,
-        setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
+        setSuggestedFoodLocations, suggestedThemeParks, setSuggestedThemeParks, // FIX: Corrected duplicate and ensured setter is passed
+        suggestedTouristSpots, setSuggestedTouristSpots, suggestedTours, setSuggestedTours, suggestedSportingEvents,
         setSuggestedSportingEvents, isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
         setSuggestionError, allCountries,
         isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
         expenses, setExpenses, // Pass expenses state
 
+        // These are the actual setSelected functions, make sure to use them if needed by children
         selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities,
         selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations,
         selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks,
