@@ -106,7 +106,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare = useState(false);
+    const [taxiRideShare, setTaxiRideShare] = useState(false); // FIX: Corrected syntax here
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -151,7 +151,7 @@ const App = () => {
             foodLocations: toggleSuggestedFoodLocations,
             themeParks: toggleSuggestedThemeParks,
             touristSpots: toggleSuggestedTouristSpots,
-            tours: toggleSuggestedTours,
+            tours: toggleSuggestedTours, // FIX: Changed 'toggleTours' to 'toggleSuggestedTours'
             sportingEvents: toggleSuggestedSportingEvents,
         };
         const toggle = setterMap[category];
