@@ -87,7 +87,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = useState(false);
+    const [taxiRideShare, setTaxiRideShare] = false;
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -337,8 +337,8 @@ const App = () => {
         setTravelStyle('');
         setHotelAmenities([]);
         setIsPerPerson(true);
-        // MODIFIED: Reset travelingParties
-        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Reset to default group
+        // MODIFIED: Ensure travelingParties is an array on reset
+        setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Always reset to a valid array
         // Removed old numberOfAdults and numberOfChildren resets
         setCurrency('USD');
         setMoneyAvailable(0);
@@ -427,8 +427,8 @@ const App = () => {
                 setTravelStyle(tripData.travelStyle || '');
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
-                // MODIFIED: Load travelingParties
-                setTravelingParties(tripData.travelingParties || [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Load groups or default
+                // MODIFIED: Load travelingParties, ensuring it's an array
+                setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]); // Ensure array type
                 // Removed old numberOfAdults and numberOfChildren loads
                 setCurrency(tripData.currency || 'USD');
                 setMoneyAvailable(tripData.moneyAvailable || 0);
