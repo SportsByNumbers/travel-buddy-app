@@ -68,6 +68,7 @@ const App = () => {
 
     // Derived total numberOfPeople from all groups
     // FIX: Added robust check to ensure travelingParties is an array before reduce, and added optional chaining for safety.
+    console.log('travelingParties (before numberOfPeople calc):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const numberOfPeople = (Array.isArray(travelingParties) && travelingParties.length > 0)
         ? travelingParties.reduce((sum, party) => sum + (party?.adults || 0) + (party?.children || 0), 0)
         : 0;
@@ -163,22 +164,21 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            // Define firebaseConfig directly (hardcoded for direct implementation as requested)
-            // It's still recommended to use environment variables for security in production.
+            // Define firebaseConfig using environment variables (RECOMMENDED)
             const firebaseConfig = {
-                apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
-                authDomain: "travelbuddy-e050f.firebaseapp.com",
-                projectId: "travelbuddy-e050f",
-                storageBucket: "travelbuddy-e050f.firebasestorage.app",
-                messagingSenderId: "625134272046",
-                appId: "1:625134272046:web:a18883626fcfbb2df329bf",
-                measurementId: "G-Y5RGMDS33E"
+                apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+                authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+                projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+                storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+                appId: process.env.REACT_APP_FIREBASE_APP_ID,
+                measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID // Optional
             };
 
-            // This check will now always pass as apiKey is hardcoded
+            // Ensure apiKey is present for initialization
             if (!firebaseConfig.apiKey) {
-                console.error("Firebase config is missing apiKey. This theoretical error should not appear with hardcoded values.");
-                setIsAuthReady(true);
+                console.error("Firebase config is missing apiKey. Please check your .env variables (e.g., REACT_APP_FIREBASE_API_KEY). Cannot initialize Firebase.");
+                setIsAuthReady(true); // Allow app to proceed, but Firebase won't work
                 return;
             }
 
@@ -220,10 +220,8 @@ const App = () => {
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         if (isAuthReady && userId && db) {
-            // When hardcoding, appId is part of firebaseConfig directly.
-            // We use it directly here to ensure consistent pathing without relying on process.env.
-            const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf";
-            const tripsRef = collection(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`);
+            const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
+            const tripsRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`);
             const q = query(tripsRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -239,14 +237,13 @@ const App = () => {
 
             return () => unsubscribe(); // Cleanup snapshot listener
         }
-    }, [isAuthReady, userId, db]);
+    }, [isAuthReady, userId, db]); // Remove appIdFromConfig from dependencies as it's constant
 
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            // When hardcoding, appId is part of firebaseConfig directly.
-            const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf";
-            const expensesRef = collection(db, `artifacts/${appIdFromConfig}/users/${userId}/trips/${currentTripId}/expenses`);
+            const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
+            const expensesRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -311,7 +308,7 @@ const App = () => {
             setActualHotelCost(0);
             setActualFlightCost(0);
         }
-    }, [isAuthReady, userId, db, currentTripId]);
+    }, [isAuthReady, userId, db, currentTripId]); // Remove appIdFromConfig from dependencies as it's constant
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -411,8 +408,8 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf"; // Directly use the hardcoded appId
-        const tripDocRef = doc(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`, tripId);
+        const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
+        const tripDocRef = doc(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`, tripId);
         try {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
@@ -512,7 +509,7 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf"; // Directly use the hardcoded appId
+        const appIdFromEnv = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'; // Use a consistent name
 
         try {
             const tripDataToSave = {
@@ -541,11 +538,11 @@ const App = () => {
             };
 
             if (currentTripId) {
-                const tripDocRef = doc(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`, currentTripId);
+                const tripDocRef = doc(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
                 console.log("Trip updated with ID:", currentTripId);
             } else {
-                const tripsCollectionRef = collection(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`);
+                const tripsCollectionRef = collection(db, `artifacts/${appIdFromEnv}/users/${userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id);
                 console.log("New trip created with ID:", newTripDocRef.id);
@@ -739,7 +736,7 @@ const App = () => {
     // Bundle all state and helper functions into a single context value
     const contextValue = {
         db, auth, userId, isAuthReady, // Firebase related
-        appId: "1:625134272046:web:a18883626fcfbb2df329bf", // Directly use the hardcoded appId from firebaseConfig
+        appId: process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id', // Use process.env for appId
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
         isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
 
