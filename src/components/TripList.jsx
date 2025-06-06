@@ -1,183 +1,113 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { TripContext } from '../App.js';
-import SectionWrapper from './SectionWrapper.jsx';
-import InputField from './InputField.jsx';
-import { PlusCircle, DollarSign, XCircle } from 'lucide-react';
-import { collection, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
+import { doc, deleteDoc } from 'firebase/firestore';
 
-const ExpenseTracker = () => {
+const TripList = () => {
     // FIX: Added 'appId' to destructuring from TripContext
-    const { db, userId, currentTripId, expenses, currency, getFormattedCurrency, appId } = useContext(TripContext);
+    const { trips, loadTrip, currentTripId, db, userId, /* Removed: setTravelPlanSummary, */ createNewTrip, appId } = useContext(TripContext);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // Stores trip ID to confirm deletion
 
-    const [description, setDescription] = useState('');
-    const [amount, setAmount] = useState('');
-    const [category, setCategory] = useState('Food'); // Default category
-    const [expenseDate, setExpenseDate] = useState(''); // Date of expense
-    const [amountError, setAmountError] = useState('');
-    const [descriptionError, setDescriptionError] = useState('');
-
-    const expenseCategories = ['Food', 'Transport', 'Activities', 'Hotel', 'Flight', 'Miscellaneous', 'Shopping'];
-
-    // Set default expense date to today
-    useEffect(() => {
-        const today = new Date();
-        setExpenseDate(today.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-    }, []);
-
-    const handleAddExpense = async () => {
-        let hasError = false;
-        if (!description.trim()) {
-            setDescriptionError("Description cannot be empty.");
-            hasError = true;
-        } else {
-            setDescriptionError('');
-        }
-        if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-            setAmountError("Amount must be a positive number.");
-            hasError = true;
-        } else {
-            setAmountError('');
-        }
-
-        if (hasError) return;
-
-        if (!db || !userId || !currentTripId) {
-            console.error("Cannot add expense: Firestore not initialized, user not authenticated, or no trip selected.");
-            // Optionally, show a user-friendly message
+    const handleDeleteTrip = async (tripId) => {
+        if (!db || !userId) {
+            console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-
         // FIX: Removed this line as appId is now correctly sourced from context
         // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
         try {
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`), {
-                description: description.trim(),
-                amount: parseFloat(amount),
-                category: category,
-                currency: currency,
-                date: new Date(expenseDate), // Store as Firestore Timestamp
-                createdAt: serverTimestamp(),
-            });
-            setDescription('');
-            setAmount('');
-            setCategory('Food');
-            setExpenseDate(new Date().toISOString().split('T')[0]); // Reset to today
-            console.log("Expense added successfully!");
+            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/trips`, tripId));
+            console.log("Trip successfully deleted:", tripId);
+            // If the deleted trip was the current one, reset the form
+            if (currentTripId === tripId) {
+                createNewTrip(); // Clears all form data and sets currentTripId to null
+            }
+            setShowDeleteConfirm(null); // Hide confirmation dialog
         } catch (error) {
-            console.error("Error adding expense:", error);
+            console.error("Error deleting trip:", error);
         }
     };
 
-    const handleDeleteExpense = async (expenseId) => {
-        if (!db || !userId || !currentTripId) {
-            console.error("Cannot delete expense: Firestore not initialized, user not authenticated, or no trip selected.");
-            return;
-        }
-        // FIX: Removed this line as appId is now correctly sourced from context
-        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        try {
-            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`, expenseId));
-            console.log("Expense deleted successfully:", expenseId);
-        } catch (error) {
-            console.error("Error deleting expense:", error);
-        }
+    const handleLoadClick = (tripId) => {
+        loadTrip(tripId);
+        setDropdownOpen(false); // Close dropdown after selection
+    };
+
+    const handleConfirmDelete = (tripId) => {
+        setShowDeleteConfirm(tripId);
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirm(null);
     };
 
     return (
-        <SectionWrapper title="Expense Tracker" icon={DollarSign}>
-            {!currentTripId ? (
-                <p className="text-center text-gray-600 text-lg py-10">Select or create a trip to start tracking expenses.</p>
-            ) : (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <InputField
-                            id="expenseDescription"
-                            label="Description"
-                            value={description}
-                            onChange={(e) => { setDescription(e.target.value); setDescriptionError(''); }}
-                            placeholder="e.g., Dinner at local restaurant"
-                            error={descriptionError}
-                            required
-                        />
-                        <InputField
-                            id="expenseAmount"
-                            label="Amount"
-                            type="number"
-                            value={amount}
-                            onChange={(e) => { setAmount(e.target.value); setAmountError(''); }}
-                            placeholder={`e.g., 50 (${currency})`}
-                            error={amountError}
-                            required
-                        />
-                        <InputField
-                            id="expenseCategory"
-                            label="Category"
-                            type="select"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            options={expenseCategories.map(cat => ({ value: cat, label: cat }))}
-                            required
-                        />
-                         <InputField
-                            id="expenseDate"
-                            label="Date"
-                            type="date"
-                            value={expenseDate}
-                            onChange={(e) => setExpenseDate(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button
-                        onClick={handleAddExpense}
-                        className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md w-full md:w-auto"
-                    >
-                        <PlusCircle size={20} className="inline-block mr-2" /> Add Expense
-                    </button>
+        <div className="relative">
+            <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center px-4 py-2 bg-indigo-500 text-white rounded-md text-sm font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md"
+            >
+                <FolderOpen size={16} className="mr-2" /> Load Trip ({trips.length})
+                <ChevronDown size={16} className={`ml-2 transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'} transition-transform duration-200`} />
+            </button>
 
-                    <div className="mt-8">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-4">Recorded Expenses ({expenses.length})</h3>
-                        {expenses.length === 0 ? (
-                            <p className="text-gray-500">No expenses recorded for this trip yet.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white rounded-lg shadow-md">
-                                    <thead className="bg-gray-100">
-                                        <tr>
-                                            <th className="py-3 px-4 text-left text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Date</th>
-                                            <th className="py-3 px-4 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Description</th>
-                                            <th className="py-3 px-4 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Category</th>
-                                            <th className="py-3 px-4 text-right text-sm font-medium text-gray-600 uppercase tracking-wider">Amount</th>
-                                            <th className="py-3 px-4 text-right text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {expenses.map((expense) => (
-                                            <tr key={expense.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{expense.date.toLocaleDateString()}</td>
-                                                <td className="py-3 px-4 text-sm text-gray-800">{expense.description}</td>
-                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-600">{expense.category}</td>
-                                                <td className="py-3 px-4 whitespace-nowrap text-right font-medium text-gray-900">{getFormattedCurrency(expense.amount)}</td>
-                                                <td className="py-3 px-4 whitespace-nowrap text-right">
+            {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-10 max-h-60 overflow-y-auto">
+                    {trips.length === 0 ? (
+                        <p className="p-4 text-gray-500 text-sm">No saved trips.</p>
+                    ) : (
+                        <ul>
+                            {trips.map((trip) => (
+                                <li key={trip.id} className="border-b last:border-b-0">
+                                    <div className={`flex justify-between items-center p-3 hover:bg-gray-50 ${currentTripId === trip.id ? 'bg-indigo-50 font-medium' : ''}`}>
+                                        <button
+                                            onClick={() => handleLoadClick(trip.id)}
+                                            className="flex-grow text-left text-gray-800 text-sm truncate pr-2"
+                                            title={trip.homeCity ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}` : `Trip ID: ${trip.id}`}
+                                        >
+                                            {trip.homeCity && (trip.cities.length > 0 || trip.countries.length > 0)
+                                                ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}`
+                                                : `Trip: ${trip.id.substring(0, 8)}...`}
+                                            {trip.startDate && <span className="text-xs text-gray-500 block">{trip.startDate}</span>}
+                                        </button>
+                                        <button
+                                            onClick={() => handleConfirmDelete(trip.id)}
+                                            className="p-1 rounded-full text-red-500 hover:bg-red-100 transition-colors duration-200"
+                                            title="Delete Trip"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                    {showDeleteConfirm === trip.id && (
+                                        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-75 z-20">
+                                            <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                                                <p className="mb-4 text-gray-800">Are you sure you want to delete this trip?</p>
+                                                <div className="flex justify-center space-x-4">
                                                     <button
-                                                        onClick={() => handleDeleteExpense(expense.id)}
-                                                        className="text-red-500 hover:text-red-700 transition-colors duration-200"
-                                                        title="Delete Expense"
+                                                        onClick={() => handleDeleteTrip(trip.id)}
+                                                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                                                     >
-                                                        <XCircle size={18} />
+                                                        Delete
                                                     </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                </>
+                                                    <button
+                                                        onClick={handleCancelDelete}
+                                                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             )}
-        </SectionWrapper>
+        </div>
     );
 };
 
-export default ExpenseTracker;
+export default TripList;
