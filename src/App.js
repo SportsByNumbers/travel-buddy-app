@@ -69,9 +69,24 @@ const App = () => {
     // Derived total numberOfPeople from all groups
     // FIX: Added robust check to ensure travelingParties is an array before reduce, and added optional chaining for safety.
     console.log('travelingParties (before numberOfPeople calc):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
-    const numberOfPeople = (Array.isArray(travelingParties) && travelingParties.length > 0)
-        ? travelingParties.reduce((sum, party) => sum + (party?.adults || 0) + (party?.children || 0), 0)
-        : 0;
+    let calculatedPeople = 0;
+    // Ensure travelingParties is an array before iterating
+    const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
+
+    if (partiesToProcess.length > 0) {
+        console.log('travelingParties is array, attempting loop for numberOfPeople...');
+        for (const party of partiesToProcess) {
+            console.log('Party object in travelingParties loop:', party, 'Type:', typeof party, 'IsNull:', party === null);
+            if (typeof party === 'object' && party !== null) { // Ensure party is an object
+                calculatedPeople += (party.adults || 0) + (party.children || 0);
+            } else {
+                console.warn('Non-object or null found in travelingParties array, skipping:', party);
+            }
+        }
+    } else {
+        console.log('travelingParties is empty or not an array for numberOfPeople calc, defaulting to 0.');
+    }
+    const numberOfPeople = calculatedPeople;
 
 
     const [currency, setCurrency] = useState('USD');
@@ -91,7 +106,7 @@ const App = () => {
     const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
-    const [taxiRideShare, setTaxiRideShare] = useState(false);
+    const [taxiRideShare, setTaxiRideShare = useState(false);
     const [walking, setWalking] = useState(false);
     const [dailyLocalTransportAllowance, setDailyLocalTransportAllowance] = useState(0);
 
@@ -223,10 +238,9 @@ const App = () => {
         // FIX: Added console.log for Firebase init state
         console.log('Firebase init state (for trips effect):', { isAuthReady, userId, db });
         if (isAuthReady && userId && db) {
-            // When hardcoding, appId is part of firebaseConfig directly.
-            // We use it directly here to ensure consistent pathing.
-            const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf";
-            const tripsRef = collection(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`);
+            // FIX: Corrected to use projectId for paths
+            const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+            const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
             const q = query(tripsRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -244,12 +258,13 @@ const App = () => {
         }
     }, [isAuthReady, userId, db]);
 
+
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            // When hardcoding, appId is part of firebaseConfig directly.
-            const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf";
-            const expensesRef = collection(db, `artifacts/${appIdFromConfig}/users/${userId}/trips/${currentTripId}/expenses`);
+            // FIX: Corrected to use projectId for paths
+            const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+            const expensesRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -409,8 +424,9 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf"; // Directly use the hardcoded appId
-        const tripDocRef = doc(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`, tripId);
+        // FIX: Corrected to use projectId for paths
+        const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
+        const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, tripId);
         try {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
@@ -514,7 +530,8 @@ const App = () => {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        const appIdFromConfig = "1:625134272046:web:a18883626fcfbb2df329bf"; // Directly use the hardcoded appId
+        // FIX: Corrected to use projectId for paths
+        const projectIdForPaths = firebaseConfig.projectId; // Use projectId directly from hardcoded config
 
         try {
             const tripDataToSave = {
@@ -543,11 +560,11 @@ const App = () => {
             };
 
             if (currentTripId) {
-                const tripDocRef = doc(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`, currentTripId);
+                const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
                 console.log("Trip updated with ID:", currentTripId);
             } else {
-                const tripsCollectionRef = collection(db, `artifacts/${appIdFromConfig}/users/${userId}/trips`);
+                const tripsCollectionRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id);
                 console.log("New trip created with ID:", newTripDocRef.id);
@@ -741,7 +758,7 @@ const App = () => {
     // Bundle all state and helper functions into a single context value
     const contextValue = {
         db, auth, userId, isAuthReady, // Firebase related
-        appId: "1:625134272046:web:a18883626fcfbb2df329bf", // Directly use the hardcoded appId from firebaseConfig
+        appId: firebaseConfig.appId, // Use the correct appId from the hardcoded config for context
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
         isNewTripStarted, setIsNewTripStarted, // NEW: Include in context
 
