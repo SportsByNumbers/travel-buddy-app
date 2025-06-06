@@ -1,6 +1,6 @@
 // App.js
 
-import React, { useState, useEffect, createContext } from 'react'; // FIX: Changed '=' to 'from'
+import React, { useState, useEffect, createContext } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -67,8 +67,8 @@ const App = () => {
     ]);
 
     // Derived total numberOfPeople from all groups
-    // FIX: Added Array.isArray check to prevent 'false is not iterable' error
-    const numberOfPeople = Array.isArray(travelingParties) ? travelingParties.reduce((sum, party) => sum + party.adults + party.children, 0) : 0;
+    // FIX: Added robust check to ensure travelingParties is an array before reduce
+    const numberOfPeople = (Array.isArray(travelingParties) && travelingParties.length > 0) ? travelingParties.reduce((sum, party) => sum + party.adults + party.children, 0) : 0;
 
 
     const [currency, setCurrency] = useState('USD');
