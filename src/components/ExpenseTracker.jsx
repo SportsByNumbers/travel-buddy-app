@@ -6,7 +6,6 @@ import { PlusCircle, DollarSign, XCircle } from 'lucide-react';
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 const ExpenseTracker = () => {
-    // FIX: Added 'appId' to destructuring from TripContext
     const { db, userId, currentTripId, expenses, currency, getFormattedCurrency, appId } = useContext(TripContext);
 
     const [description, setDescription] = useState('');
@@ -47,9 +46,6 @@ const ExpenseTracker = () => {
             return;
         }
 
-        // FIX: Removed this line as appId is now correctly sourced from context
-        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
         try {
             await addDoc(collection(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`), {
                 description: description.trim(),
@@ -74,8 +70,6 @@ const ExpenseTracker = () => {
             console.error("Cannot delete expense: Firestore not initialized, user not authenticated, or no trip selected.");
             return;
         }
-        // FIX: Removed this line as appId is now correctly sourced from context
-        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         try {
             await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/trips/${currentTripId}/expenses`, expenseId));
             console.log("Expense deleted successfully:", expenseId);
