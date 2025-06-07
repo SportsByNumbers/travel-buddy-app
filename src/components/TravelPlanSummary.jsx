@@ -4,7 +4,7 @@ import SectionWrapper from './SectionWrapper.jsx';
 import { FileText } from 'lucide-react';
 
 const TravelPlanSummary = () => {
-    const { travelPlanSummary, getFormattedCurrency, currentTripId /* Removed: expenses */ } = useContext(TripContext);
+    const { travelPlanSummary, getFormattedCurrency, currentTripId } = useContext(TripContext);
 
     if (!travelPlanSummary) {
         return (
@@ -60,7 +60,7 @@ const TravelPlanSummary = () => {
                         {(travelPlanSummary.cities.map(c => c.name).join(', ') || travelPlanSummary.countries.map(c => c.name).join(', ')) || 'N/A'}
                     </p>
                     <p><strong className="font-semibold">Dates:</strong> {travelPlanSummary.startDate} - {travelPlanSummary.endDate} ({travelPlanSummary.overallDuration} days)</p>
-                    <p><strong className="font-semibold">Travelers:</strong> {travelPlanSummary.numberOfAdults} Adults, {travelPlanSummary.numberOfChildren} Children (Total: {travelPlanSummary.numberOfPeople})</p> {/* Updated party size display */}
+                    <p><strong className="font-semibold">Travelers:</strong> {travelPlanSummary.numberOfAdults} Adults, {travelPlanSummary.numberOfChildren} Children (Total: {travelPlanSummary.numberOfPeople})</p>
                     <p><strong className="font-semibold">Travel Style:</strong> {travelPlanSummary.travelStyle || 'Not specified'}</p>
                     <p><strong className="font-semibold">Hotel Rating:</strong> {travelPlanSummary.starRating || 'Any'}</p>
                     <p><strong className="font-semibold">Topics:</strong> {travelPlanSummary.topicsOfInterest.join(', ') || 'None'}</p>
