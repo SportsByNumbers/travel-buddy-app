@@ -506,6 +506,10 @@ const App = () => {
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
         setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
+        // The issue is these are passed by value from the App component's render, and useCallback captures them.
+        // If useMultiSelection is causing them to be undefined during *its* initialization/re-initialization,
+        // then the useCallback might be capturing an old, undefined reference.
+        // We will explicitly pass these setters as dependencies to useCallback.
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
