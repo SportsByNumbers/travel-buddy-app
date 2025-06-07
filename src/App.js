@@ -3,7 +3,7 @@
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import all refactored components with explicit .jsx extension
@@ -26,9 +26,8 @@ import { useMultiSelection } from './hooks/useMultiSelection.js';
 export const TripContext = createContext();
 
 // Firebase configuration moved OUTSIDE the App component
-// This ensures firebaseConfig is only created once and does not change on every render
 const firebaseConfig = {
-    apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
+    apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA",
     authDomain: "travelbuddy-e050f.firebaseapp.com",
     projectId: "travelbuddy-e050f",
     storageBucket: "travelbuddy-e050f.firebasestorage.app",
@@ -43,20 +42,19 @@ const App = () => {
     const [db, setDb] = useState(null);
     const [auth, setAuth] = useState(null);
     const [userId, setUserId] = useState(null);
+    const [userName, setUserName] = useState(null); // NEW STATE: To store the user's display name
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [trips, setTrips] = useState([]);
     const [currentTripId, setCurrentTripId] = useState(null);
-    const [isNewTripStarted, setIsNewTripStarted] = useState(false); // NEW STATE: To control initial display
+    const [isNewTripStarted, setIsNewTripStarted] = useState(false);
 
     // New states for Email/Password authentication
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [authError, setAuthError] = useState('');
-    const [isLoginMode, setIsLoginMode] = useState(true); // Toggles between Login and Sign Up
+    const [isLoginMode, setIsLoginMode] = useState(true);
 
-    // Initialize Google Provider only if auth is available
     const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
-
 
     // State variables for various inputs (keep existing)
     const [countries, setCountries] = useState([]);
@@ -81,28 +79,19 @@ const App = () => {
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
     const [isPerPerson, setIsPerPerson] = useState(true);
 
-    // MODIFIED: numberOfAdults and numberOfChildren are now part of travelingParties
     const [travelingParties, setTravelingParties] = useState([
         { id: 1, name: 'Main Group', adults: 1, children: 0 }
     ]);
 
-    // Derived total numberOfPeople from all groups
-    console.log('travelingParties (before numberOfPeople calc):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     let calculatedPeople = 0;
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
-        console.log('travelingParties is array, attempting loop for numberOfPeople...');
         for (const party of partiesToProcess) {
-            console.log('Party object in travelingParties loop:', party, 'Type:', typeof party, 'IsNull:', party === null);
             if (typeof party === 'object' && party !== null) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
-            } else {
-                console.warn('Non-object or null found in travelingParties array, skipping:', party);
             }
         }
-    } else {
-        console.log('travelingParties is empty or not an array for numberOfPeople calc, defaulting to 0.');
     }
     const numberOfPeople = calculatedPeople;
 
@@ -147,7 +136,6 @@ const App = () => {
     const [airportParking, setAirportParking] = useState(false);
     const [travelPlanSummary, setTravelPlanSummary] = useState(null);
 
-    // These are the ACTUAL states and setters returned by useMultiSelection
     const [selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities] = useMultiSelection([]);
     const [selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations] = useMultiSelection([]);
     const [selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks] = useMultiSelection([]);
@@ -237,6 +225,7 @@ const App = () => {
             setIsNewTripStarted(false);
             resetTripStates();
             setTravelPlanSummary(null);
+            setUserName(null); // Clear username on sign out
         } catch (error) {
             console.error("Sign out Error:", error);
         }
@@ -256,21 +245,22 @@ const App = () => {
             const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
                 if (user) {
                     setUserId(user.uid);
+                    // NEW: Set the user's display name
+                    setUserName(user.displayName || user.email || user.uid); // Prioritize displayName, then email, then UID
                     console.log("Firebase user authenticated:", user.uid);
                 } else {
-                    console.log("No Firebase user, signing in anonymously...");
-                    try {
-                        // Ensure __initial_auth_token is globally defined if you intend to use it
-                        // For most deployments, anonymous or email/google auth is sufficient
-                        if (typeof window !== 'undefined' && typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+                    console.log("No Firebase user. Waiting for explicit login/signup.");
+                    if (typeof window !== 'undefined' && typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+                        try {
                             await signInWithCustomToken(authInstance, window.__initial_auth_token);
                             console.log("Signed in with custom token.");
-                        } else {
-                            await signInAnonymously(authInstance);
-                            console.log("Signed in anonymously.");
+                        } catch (signInError) {
+                            console.error("Firebase Custom Token Sign-in Error:", signInError);
+                            setAuthError(signInError.message);
                         }
-                    } catch (signInError) {
-                        console.error("Firebase Anonymous/Custom Token Sign-in Error:", signInError);
+                    } else {
+                        setUserId(null);
+                        setUserName(null); // Clear username if no user
                     }
                 }
                 setIsAuthReady(true);
@@ -281,12 +271,11 @@ const App = () => {
             console.error("Firebase initialization error:", error);
             setIsAuthReady(true);
         }
-    }, []); // firebaseConfig is now a stable constant, so removed from dependencies.
+    }, []);
 
 
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
-        console.log('Firebase init state (for trips effect):', { isAuthReady, userId, db });
         if (isAuthReady && userId && db) {
             const projectIdForPaths = firebaseConfig.projectId;
             const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
@@ -298,14 +287,13 @@ const App = () => {
                     ...doc.data()
                 }));
                 setTrips(fetchedTrips);
-                console.log("Fetched trips:", fetchedTrips);
             }, (error) => {
                 console.error("Error fetching trips:", error);
             });
 
             return () => unsubscribe();
         }
-    }, [isAuthReady, userId, db]); // firebaseConfig.projectId is a constant, so removed from dependencies.
+    }, [isAuthReady, userId, db]);
 
 
     // --- EFFECT: Fetch expenses for the current trip ---
@@ -322,7 +310,6 @@ const App = () => {
                     date: doc.data().date?.toDate ? doc.data().date.toDate() : doc.data().date
                 }));
                 setExpenses(fetchedExpenses);
-                console.log("Fetched expenses for trip", currentTripId, ":", fetchedExpenses);
 
                 let totalActualFood = 0;
                 let totalActualTransport = 0;
@@ -376,7 +363,7 @@ const App = () => {
             setActualHotelCost(0);
             setActualFlightCost(0);
         }
-    }, [isAuthReady, userId, db, currentTripId]); // firebaseConfig.projectId is a constant, so removed from dependencies.
+    }, [isAuthReady, userId, db, currentTripId]);
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -440,16 +427,6 @@ const App = () => {
         setAirportParking(false);
         setTravelPlanSummary(null);
 
-        // Debugging logs from previous context
-        console.log('Debugging setSelectedSuggested... setters before reset (inside resetTripStates):');
-        console.log('setSelectedSuggestedActivities:', setSelectedSuggestedActivities, typeof setSelectedSuggestedActivities);
-        console.log('setSelectedSuggestedFoodLocations:', setSelectedSuggestedFoodLocations, typeof setSelectedSuggestedFoodLocations);
-        console.log('setSelectedSuggestedThemeParks:', setSelectedSuggestedThemeParks, typeof setSelectedSuggestedThemeParks);
-        console.log('setSelectedSuggestedTouristSpots:', setSelectedSuggestedTouristSpots, typeof setSelectedSuggestedTouristSpots);
-        console.log('setSelectedSuggestedTours:', setSelectedSuggestedTours, typeof setSelectedSuggestedTours);
-        console.log('setSelectedSuggestedSportingEvents:', setSelectedSuggestedSportingEvents, typeof setSelectedSuggestedSportingEvents);
-
-        // Ensure setters are functions before calling them
         setSelectedSuggestedActivities?.([]);
         setSelectedSuggestedFoodLocations?.([]);
         setSelectedSuggestedThemeParks?.([]);
@@ -475,7 +452,7 @@ const App = () => {
         setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
-        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
+        setSnacksAllowance, setCarRental, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
@@ -495,10 +472,7 @@ const App = () => {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
-                console.log("Loading trip data:", tripData);
-                console.log('tripData.travelingParties in loadTrip (from Firestore):', tripData.travelingParties, 'Type:', typeof tripData.travelingParties, 'IsArray:', Array.isArray(tripData.travelingParties));
-
-                resetTripStates(); // Call reset before populating states
+                resetTripStates();
 
                 setCountries(tripData.countries || []);
                 setCities(tripData.cities || []);
@@ -512,7 +486,6 @@ const App = () => {
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
                 setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
-                console.log('travelingParties in loadTrip (after set):', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
 
                 setCurrency(tripData.currency || 'USD');
                 setMoneyAvailable(tripData.moneyAvailable || 0);
@@ -553,7 +526,6 @@ const App = () => {
 
                 setCurrentTripId(tripId);
                 setIsNewTripStarted(false);
-                console.log(`Trip ${tripId} loaded successfully.`);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 console.warn("No such trip document!");
@@ -598,8 +570,8 @@ const App = () => {
                 countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
                 travelingParties,
-                numberOfAdults: travelingParties.reduce((sum, party) => sum + party.adults, 0), // Added for TravelPlanSummary
-                numberOfChildren: travelingParties.reduce((sum, party) => sum + party.children, 0), // Added for TravelPlanSummary
+                numberOfAdults: travelingParties.reduce((sum, party) => sum + party.adults, 0),
+                numberOfChildren: travelingParties.reduce((sum, party) => sum + party.children, 0),
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
                 estimatedHotelCost,
@@ -725,8 +697,8 @@ const App = () => {
             isPerPerson,
             travelingParties,
             numberOfPeople,
-            numberOfAdults: totalAdults, // Added to summaryData
-            numberOfChildren: totalChildren, // Added to summaryData
+            numberOfAdults: totalAdults,
+            numberOfChildren: totalChildren,
             currency,
             moneyAvailable,
             moneySaved,
@@ -798,7 +770,7 @@ const App = () => {
     };
 
     const contextValue = {
-        db, auth, userId, isAuthReady,
+        db, auth, userId, userName, isAuthReady, // Added userName to context
         appId: firebaseConfig.appId,
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
         isNewTripStarted, setIsNewTripStarted,
@@ -868,7 +840,10 @@ const App = () => {
                         <>
                             <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
                                 <p className="text-sm text-gray-600 mb-2 sm:mb-0">
-                                    User ID: <span className="font-mono text-indigo-700 break-all">{userId}</span>
+                                    {/* Display user name or email, fallback to User ID */}
+                                    Welcome, <span className="font-semibold text-indigo-700 break-all">
+                                        {userName || userId}
+                                    </span>!
                                 </p>
                                 <div className="flex space-x-3">
                                     <button
