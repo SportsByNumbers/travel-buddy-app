@@ -42,7 +42,7 @@ const App = () => {
     const [db, setDb] = useState(null);
     const [auth, setAuth] = useState(null);
     const [userId, setUserId] = useState(null);
-    const [userName, setUserName] = useState(null); // NEW STATE: To store the user's display name
+    const [userName, setUserName] = useState(null);
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [trips, setTrips] = useState([]);
     const [currentTripId, setCurrentTripId] = useState(null);
@@ -245,7 +245,7 @@ const App = () => {
             const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
                 if (user) {
                     setUserId(user.uid);
-                    setUserName(user.displayName || user.email || user.uid); // Prioritize displayName, then email, then UID
+                    setUserName(user.displayName || user.email || user.uid);
                     console.log("Firebase user authenticated:", user.uid);
                 } else {
                     console.log("No Firebase user. Waiting for explicit login/signup.");
@@ -420,7 +420,7 @@ const App = () => {
         setLunchAllowance(0);
         setDinnerAllowance(0);
         setSnacksAllowance(0);
-        setCarRental(false); // Removed duplicate setCarRental
+        setCarRental(false);
         setShuttle(false);
         setAirportTransfers(false);
         setAirportParking(false);
@@ -446,12 +446,12 @@ const App = () => {
     }, [
         setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
         setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
-        setCurrency, setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
+        setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
         setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
         setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
-        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary, // Corrected dependency for setCarRental
+        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary, // Corrected dependency for setCarRental. One `setCurrency` removed previously.
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
