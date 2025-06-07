@@ -1,11 +1,10 @@
 // App.js
 
-import React, { useState, useEffect, createContext, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react'; // Added useMemo
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'; // Consolidated auth imports
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'; // Added for new auth
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
@@ -26,19 +25,20 @@ import { useMultiSelection } from './hooks/useMultiSelection.js';
 // Create a context for sharing state
 export const TripContext = createContext();
 
+// Firebase configuration moved OUTSIDE the App component
+// This ensures firebaseConfig is only created once and does not change on every render
+const firebaseConfig = {
+    apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
+    authDomain: "travelbuddy-e050f.firebaseapp.com",
+    projectId: "travelbuddy-e050f",
+    storageBucket: "travelbuddy-e050f.firebasestorage.app",
+    messagingSenderId: "625134272046",
+    appId: "1:625134272046:web:a18883626fcfbb2df329bf",
+    measurementId: "G-Y5RGMDS33E"
+};
+
 // Main App component
 const App = () => {
-    // Firebase configuration (moved to top-level scope within App component)
-    const firebaseConfig = {
-        apiKey: "AIzaSyAiFzUl9jxtiaf-OpFbybOuqGHfQAR6lFA", // Directly use the provided API Key
-        authDomain: "travelbuddy-e050f.firebaseapp.com",
-        projectId: "travelbuddy-e050f",
-        storageBucket: "travelbuddy-e050f.firebasestorage.app",
-        messagingSenderId: "625134272046",
-        appId: "1:625134272046:web:a18883626fcfbb2df329bf",
-        measurementId: "G-Y5RGMDS33E"
-    };
-
     // Firebase states
     const [db, setDb] = useState(null);
     const [auth, setAuth] = useState(null);
@@ -55,16 +55,18 @@ const App = () => {
     const [isLoginMode, setIsLoginMode] = useState(true); // Toggles between Login and Sign Up
 
     // Initialize Google Provider only if auth is available
-    const googleProvider = auth ? new GoogleAuthProvider() : null;
+    // Use useMemo for googleProvider to ensure it's memoized if auth changes,
+    // though in this setup `auth` is set once in useEffect.
+    const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
 
 
     // State variables for various inputs (keep existing)
     const [countries, setCountries] = useState([]);
-    const [newCountry, setNewCountry] = '';
+    const [newCountry, setNewCountry] = useState(''); // Corrected initialization
     const [cities, setCities] = useState([]);
     const [newCityName, setNewCityName] = useState('');
     const [newCityDuration, setNewCityDuration] = useState(0);
-    const [newCityStarRating, setNewCityStarRating] = '';
+    const [newCityStarRating, setNewCityStarRating] = useState('');
     const [newCityTopics, setNewCityTopics] = useState([]);
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
@@ -72,8 +74,8 @@ const App = () => {
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
-    const [homeCity, setHomeCity] = '';
-    const [newHomeCityInput, setNewHomeCityInput] = '';
+    const [homeCity, setHomeCity] = useState(''); // Corrected initialization
+    const [newHomeCityInput, setNewHomeCityInput] = useState('');
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
@@ -246,12 +248,7 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            if (!firebaseConfig.apiKey) {
-                console.error("Firebase config is missing apiKey. This theoretical error should not appear with hardcoded values.");
-                setIsAuthReady(true);
-                return;
-            }
-
+            // No need to check firebaseConfig.apiKey here, as it's a constant outside.
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
             const firestoreInstance = getFirestore(app);
@@ -285,13 +282,14 @@ const App = () => {
             console.error("Firebase initialization error:", error);
             setIsAuthReady(true);
         }
-    }, [firebaseConfig]); // FIX: Added firebaseConfig as a dependency
+    }, []); // Removed firebaseConfig from dependencies as it's now a stable constant
 
 
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         console.log('Firebase init state (for trips effect):', { isAuthReady, userId, db });
         if (isAuthReady && userId && db) {
+            // firebaseConfig.projectId is a constant, so it's stable.
             const projectIdForPaths = firebaseConfig.projectId;
             const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
             const q = query(tripsRef);
@@ -309,12 +307,13 @@ const App = () => {
 
             return () => unsubscribe();
         }
-    }, [isAuthReady, userId, db, firebaseConfig.projectId]);
+    }, [isAuthReady, userId, db]); // Removed firebaseConfig.projectId as it's a constant
 
 
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
+            // firebaseConfig.projectId is a constant, so it's stable.
             const projectIdForPaths = firebaseConfig.projectId;
             const expensesRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
@@ -380,7 +379,7 @@ const App = () => {
             setActualHotelCost(0);
             setActualFlightCost(0);
         }
-    }, [isAuthReady, userId, db, currentTripId, firebaseConfig.projectId]);
+    }, [isAuthReady, userId, db, currentTripId]); // Removed firebaseConfig.projectId as it's a constant
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -507,6 +506,9 @@ const App = () => {
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
         setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
+        // Removed unnecessary setters for `selectedSuggestedActivities` etc. from the dependency array,
+        // as they are already destructured from `useMultiSelection` and are stable functions themselves.
+        // If they were created inside this component, they would need to be wrapped in useCallback.
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
@@ -702,15 +704,15 @@ const App = () => {
         const totalFoodCost = totalDailyFoodAllowance * overallDuration;
 
         const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
-                                                (carRental ? parseFloat(carRentalCost) : 0) +
-                                                (shuttle ? parseFloat(shuttleCost) : 0) +
-                                                (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
-                                                (airportParking ? parseFloat(airportParkingCost) : 0) +
-                                                parseFloat(estimatedInterCityFlightCost) +
-                                                parseFloat(estimatedInterCityTrainCost) +
-                                                parseFloat(estimatedInterCityBusCost) +
-                                                (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
-                                                (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
+                                                        (carRental ? parseFloat(carRentalCost) : 0) +
+                                                        (shuttle ? parseFloat(shuttleCost) : 0) +
+                                                        (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+                                                        (airportParking ? parseFloat(airportParkingCost) : 0) +
+                                                        parseFloat(estimatedInterCityFlightCost) +
+                                                        parseFloat(estimatedInterCityTrainCost) +
+                                                        parseFloat(estimatedInterCityBusCost) +
+                                                        (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
+                                                        (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
 
 
         const totalEstimatedCostBeforeFoodAndContingency =
