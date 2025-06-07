@@ -1,6 +1,6 @@
 // components/BudgetPlanningSection.jsx
 import React, { useContext } from 'react';
-import { TripContext } from '../App.js'; // Ensure .js extension for App
+import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import { PlusCircle, XCircle } from 'lucide-react';
