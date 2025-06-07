@@ -1,7 +1,7 @@
 // components/BudgetPlanningSection.jsx
 import React, { useContext } from 'react';
 import { TripContext } from '../App.js'; // Ensure .js extension for App
-import SectionWrapper from './SectionWrapper.jsx'; // FIX: Corrected import to SectionWrapper
+import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import { PlusCircle, XCircle } from 'lucide-react';
 
@@ -19,8 +19,8 @@ const BudgetPlanningSection = () => {
         isPerPerson, setIsPerPerson,
         travelingParties, setTravelingParties,
         numberOfPeople,
-        numberOfAdultsError, // FIX: Removed setNumberOfAdultsError as it's not used here
-        numberOfChildrenError, // FIX: Removed setNumberOfChildrenError as it's not used here
+        numberOfAdultsError,
+        numberOfChildrenError,
     } = useContext(TripContext);
 
     // Handler to update a specific party's details
@@ -47,8 +47,8 @@ const BudgetPlanningSection = () => {
     };
 
     return (
-        <SectionWrapper // FIX: Used SectionWrapper here
-            icon={<span className="text-xl">💰</span>} // This icon usage is fine
+        <SectionWrapper
+            icon={<span className="text-xl">💰</span>}
             title="Budget Planning"
             description="Plan your trip's finances. Estimate costs and track savings."
         >
