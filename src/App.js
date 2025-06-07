@@ -1,9 +1,9 @@
 // App.js
 
-import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react'; // Added useMemo
+import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'; // Consolidated auth imports
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import all refactored components with explicit .jsx extension
@@ -55,14 +55,12 @@ const App = () => {
     const [isLoginMode, setIsLoginMode] = useState(true); // Toggles between Login and Sign Up
 
     // Initialize Google Provider only if auth is available
-    // Use useMemo for googleProvider to ensure it's memoized if auth changes,
-    // though in this setup `auth` is set once in useEffect.
     const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
 
 
     // State variables for various inputs (keep existing)
     const [countries, setCountries] = useState([]);
-    const [newCountry, setNewCountry] = useState(''); // Corrected initialization
+    const [newCountry, setNewCountry] = useState('');
     const [cities, setCities] = useState([]);
     const [newCityName, setNewCityName] = useState('');
     const [newCityDuration, setNewCityDuration] = useState(0);
@@ -74,7 +72,7 @@ const App = () => {
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
-    const [homeCity, setHomeCity] = useState(''); // Corrected initialization
+    const [homeCity, setHomeCity] = useState('');
     const [newHomeCityInput, setNewHomeCityInput] = useState('');
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
@@ -160,7 +158,7 @@ const App = () => {
     const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
     const [suggestionError, setSuggestionError] = useState('');
 
-    const toggleSuggestionSelection = (category, item) => {
+    const toggleSuggestionSelection = useCallback((category, item) => {
         const setterMap = {
             activities: toggleSuggestedActivities,
             foodLocations: toggleSuggestedFoodLocations,
@@ -171,7 +169,7 @@ const App = () => {
         };
         const toggle = setterMap[category];
         if (toggle) toggle(item);
-    };
+    }, [toggleSuggestedActivities, toggleSuggestedFoodLocations, toggleSuggestedThemeParks, toggleSuggestedTouristSpots, toggleSuggestedTours, toggleSuggestedSportingEvents]);
 
     const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
     const [budgetError, setBudgetError] = useState('');
@@ -248,7 +246,6 @@ const App = () => {
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
         try {
-            // No need to check firebaseConfig.apiKey here, as it's a constant outside.
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
             const firestoreInstance = getFirestore(app);
@@ -263,8 +260,10 @@ const App = () => {
                 } else {
                     console.log("No Firebase user, signing in anonymously...");
                     try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(authInstance, __initial_auth_token);
+                        // Ensure __initial_auth_token is globally defined if you intend to use it
+                        // For most deployments, anonymous or email/google auth is sufficient
+                        if (typeof window !== 'undefined' && typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+                            await signInWithCustomToken(authInstance, window.__initial_auth_token);
                             console.log("Signed in with custom token.");
                         } else {
                             await signInAnonymously(authInstance);
@@ -282,14 +281,13 @@ const App = () => {
             console.error("Firebase initialization error:", error);
             setIsAuthReady(true);
         }
-    }, []); // Removed firebaseConfig from dependencies as it's now a stable constant
+    }, []); // firebaseConfig is now a stable constant, so removed from dependencies.
 
 
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
         console.log('Firebase init state (for trips effect):', { isAuthReady, userId, db });
         if (isAuthReady && userId && db) {
-            // firebaseConfig.projectId is a constant, so it's stable.
             const projectIdForPaths = firebaseConfig.projectId;
             const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
             const q = query(tripsRef);
@@ -307,13 +305,12 @@ const App = () => {
 
             return () => unsubscribe();
         }
-    }, [isAuthReady, userId, db]); // Removed firebaseConfig.projectId as it's a constant
+    }, [isAuthReady, userId, db]); // firebaseConfig.projectId is a constant, so removed from dependencies.
 
 
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
         if (isAuthReady && userId && db && currentTripId) {
-            // firebaseConfig.projectId is a constant, so it's stable.
             const projectIdForPaths = firebaseConfig.projectId;
             const expensesRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
@@ -379,7 +376,7 @@ const App = () => {
             setActualHotelCost(0);
             setActualFlightCost(0);
         }
-    }, [isAuthReady, userId, db, currentTripId]); // Removed firebaseConfig.projectId as it's a constant
+    }, [isAuthReady, userId, db, currentTripId]); // firebaseConfig.projectId is a constant, so removed from dependencies.
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -443,6 +440,7 @@ const App = () => {
         setAirportParking(false);
         setTravelPlanSummary(null);
 
+        // Debugging logs from previous context
         console.log('Debugging setSelectedSuggested... setters before reset (inside resetTripStates):');
         console.log('setSelectedSuggestedActivities:', setSelectedSuggestedActivities, typeof setSelectedSuggestedActivities);
         console.log('setSelectedSuggestedFoodLocations:', setSelectedSuggestedFoodLocations, typeof setSelectedSuggestedFoodLocations);
@@ -451,41 +449,13 @@ const App = () => {
         console.log('setSelectedSuggestedTours:', setSelectedSuggestedTours, typeof setSelectedSuggestedTours);
         console.log('setSelectedSuggestedSportingEvents:', setSelectedSuggestedSportingEvents, typeof setSelectedSuggestedSportingEvents);
 
-        try {
-            setSelectedSuggestedActivities?.([]);
-        } catch (e) {
-            console.error('Error resetting selectedSuggestedActivities:', e);
-        }
-        try {
-            setSelectedSuggestedFoodLocations?.([]);
-        } catch (e) {
-            console.error('Error resetting selectedSuggestedFoodLocations:', e);
-        }
-        try {
-            setSelectedSuggestedThemeParks?.([]);
-        }
-        catch (e) {
-            console.error('Error resetting selectedSuggestedThemeParks:', e);
-        }
-        try {
-            setSelectedSuggestedTouristSpots?.([]);
-        }
-        catch (e) {
-            console.error('Error resetting selectedSuggestedTouristSpots:', e);
-        }
-        try {
-            setSelectedSuggestedTours?.([]);
-        }
-        catch (e) {
-            console.error('Error resetting selectedSuggestedTours:', e);
-        }
-        try {
-            setSelectedSuggestedSportingEvents?.([]);
-        }
-        catch (e) {
-            console.error('Error resetting selectedSuggestedSportingEvents:', e);
-        }
-
+        // Ensure setters are functions before calling them
+        setSelectedSuggestedActivities?.([]);
+        setSelectedSuggestedFoodLocations?.([]);
+        setSelectedSuggestedThemeParks?.([]);
+        setSelectedSuggestedTouristSpots?.([]);
+        setSelectedSuggestedTours?.([]);
+        setSelectedSuggestedSportingEvents?.([]);
 
         setHomeCountryError('');
         setHomeCityError('');
@@ -506,9 +476,6 @@ const App = () => {
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
         setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
-        // Removed unnecessary setters for `selectedSuggestedActivities` etc. from the dependency array,
-        // as they are already destructured from `useMultiSelection` and are stable functions themselves.
-        // If they were created inside this component, they would need to be wrapped in useCallback.
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
@@ -631,6 +598,8 @@ const App = () => {
                 countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
                 travelingParties,
+                numberOfAdults: travelingParties.reduce((sum, party) => sum + party.adults, 0), // Added for TravelPlanSummary
+                numberOfChildren: travelingParties.reduce((sum, party) => sum + party.children, 0), // Added for TravelPlanSummary
                 currency,
                 moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
                 estimatedHotelCost,
@@ -756,6 +725,8 @@ const App = () => {
             isPerPerson,
             travelingParties,
             numberOfPeople,
+            numberOfAdults: totalAdults, // Added to summaryData
+            numberOfChildren: totalChildren, // Added to summaryData
             currency,
             moneyAvailable,
             moneySaved,
