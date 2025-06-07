@@ -245,7 +245,6 @@ const App = () => {
             const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
                 if (user) {
                     setUserId(user.uid);
-                    // NEW: Set the user's display name
                     setUserName(user.displayName || user.email || user.uid); // Prioritize displayName, then email, then UID
                     console.log("Firebase user authenticated:", user.uid);
                 } else {
@@ -260,7 +259,7 @@ const App = () => {
                         }
                     } else {
                         setUserId(null);
-                        setUserName(null); // Clear username if no user
+                        setUserName(null);
                     }
                 }
                 setIsAuthReady(true);
@@ -421,7 +420,7 @@ const App = () => {
         setLunchAllowance(0);
         setDinnerAllowance(0);
         setSnacksAllowance(0);
-        setCarRental(false);
+        setCarRental(false); // Removed duplicate setCarRental
         setShuttle(false);
         setAirportTransfers(false);
         setAirportParking(false);
@@ -447,12 +446,12 @@ const App = () => {
     }, [
         setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
         setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
-        setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
+        setCurrency, setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
         setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
         setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
-        setSnacksAllowance, setCarRental, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
+        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary, // Corrected dependency for setCarRental
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
@@ -770,7 +769,7 @@ const App = () => {
     };
 
     const contextValue = {
-        db, auth, userId, userName, isAuthReady, // Added userName to context
+        db, auth, userId, userName, isAuthReady,
         appId: firebaseConfig.appId,
         trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
         isNewTripStarted, setIsNewTripStarted,
@@ -840,7 +839,6 @@ const App = () => {
                         <>
                             <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
                                 <p className="text-sm text-gray-600 mb-2 sm:mb-0">
-                                    {/* Display user name or email, fallback to User ID */}
                                     Welcome, <span className="font-semibold text-indigo-700 break-all">
                                         {userName || userId}
                                     </span>!
