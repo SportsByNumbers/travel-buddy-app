@@ -11,15 +11,12 @@ const HomeLocationSection = () => {
     const {
         homeCountry, setHomeCountry,
         homeCity, setHomeCity,
-        // Removed: newHomeCountryInput, setNewHomeCountryInput, // Marked as unused
-        // Removed: newHomeCityInput, setNewHomeCityInput,     // Marked as unused
         homeCountryError, setHomeCountryError,
         homeCityError, setHomeCityError,
         allCountries // From App.js context
     } = useContext(TripContext);
 
     const homeCountryInputRef = useRef(null);
-    // Removed: const homeCityInputRef = useRef(null); // Marked as unused
 
     const { inputValue: homeCountryInputValue, setInputValue: setHomeCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleHomeCountryInputChange, clearSuggestions: clearHomeCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
 
