@@ -55,7 +55,7 @@ const App = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [authError, setAuthError] = useState('');
-    const [isLoginMode, setIsLoginMode] = true;
+    const [isLoginMode, setIsLoginMode] = useState(true);
 
     const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
 
@@ -89,6 +89,7 @@ const App = () => {
 
     // numberOfPeople calculation based on travelingParties
     let calculatedPeople = 0;
+    // LINE 58 (approximately):
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
@@ -173,8 +174,8 @@ const App = () => {
     const [destCountryError, setDestCountryError] = useState('');
     const [destCityError, setDestCityError] = useState('');
     const [dateError, setDateError] = useState('');
-    const [numberOfAdultsError, setNumberOfAdultsError] = useState(''); // Re-added errors for validation
-    const [numberOfChildrenError, setNumberOfChildrenError] = useState(''); // Re-added errors for validation
+    const [numberOfAdultsError, setNumberOfAdultsError] = useState('');
+    const [numberOfChildrenError, setNumberOfChildrenError] = useState('');
 
     const [newCityNameError, setNewCityNameError] = useState('');
     const [newCityDurationError, setNewCityDurationError] = useState('');
@@ -445,14 +446,14 @@ const App = () => {
         setDestCountryError('');
         setDestCityError('');
         setDateError('');
-        setNumberOfAdultsError(''); // Re-added errors for validation
-        setNumberOfChildrenError(''); // Re-added errors for validation
+        setNumberOfAdultsError('');
+        setNumberOfChildrenError('');
         setNewCityNameError('');
         setNewCityDurationError('');
         setExpenses([]);
     }, [
         setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
-        setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties, // REVERTED: setTravelingParties dependency
+        setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
         setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
         setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
         setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
@@ -462,7 +463,7 @@ const App = () => {
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
-        setNumberOfAdultsError, setNumberOfChildrenError, // Re-added error setters
+        setNumberOfAdultsError, setNumberOfChildrenError,
         setNewCityNameError, setNewCityDurationError, setExpenses
     ]);
 
@@ -479,7 +480,7 @@ const App = () => {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
-                resetTripStates();
+                resetTripStates(); // Call reset before populating states
 
                 setCountries(tripData.countries || []);
                 setCities(tripData.cities || []);
@@ -492,8 +493,15 @@ const App = () => {
                 setTravelStyle(tripData.travelStyle || '');
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
-                // REVERTED: Load travelingParties
-                setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
+                // Ensure tripData.travelingParties is an array, fallback to default if not.
+                // This is the CRITICAL check for the "true is not iterable" error.
+                if (Array.isArray(tripData.travelingParties)) {
+                    setTravelingParties(tripData.travelingParties);
+                } else {
+                    console.warn("tripData.travelingParties is not an array, resetting to default.");
+                    setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
+                }
+
 
                 setCurrency(tripData.currency || 'USD');
                 setMoneyAvailable(tripData.moneyAvailable || 0);
@@ -539,14 +547,14 @@ const App = () => {
                 console.warn("No such trip document!");
                 setTravelPlanSummary(null);
                 setCurrentTripId(null);
-                resetTripStates();
+                resetTripStates(); // Resets to default initial state
                 setIsNewTripStarted(false);
             }
         } catch (error) {
             console.error("Error loading trip:", error);
             setTravelPlanSummary(null);
             setCurrentTripId(null);
-            resetTripStates();
+            resetTripStates(); // Resets to default initial state
             setIsNewTripStarted(false);
         }
     };
