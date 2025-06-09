@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, XCircle } from 'lucide-react'; // XCircle is now used again
 
 const BudgetPlanningSection = () => {
     const {
@@ -23,7 +23,7 @@ const BudgetPlanningSection = () => {
         numberOfChildrenError,
     } = useContext(TripContext);
 
-    // Handler to update a specific party's details
+    // Handler to update a specific party's details - now used in JSX again
     const handlePartyChange = (id, field, value) => {
         setTravelingParties(prevParties =>
             prevParties.map(party =>
@@ -41,7 +41,7 @@ const BudgetPlanningSection = () => {
         ]);
     };
 
-    // Handler to remove a party
+    // Handler to remove a party - now used in JSX again
     const removeParty = (idToRemove) => {
         setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
@@ -113,8 +113,8 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
-            {/* COMMENT OUT THIS ENTIRE DIV BLOCK */}
-            {/* <div className="space-y-4">
+            {/* UNCOMMENT THIS ENTIRE DIV BLOCK */}
+            <div className="space-y-4">
                 {travelingParties.map(party => (
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
                         <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
@@ -140,7 +140,7 @@ const BudgetPlanningSection = () => {
                                 min="0"
                             />
                         </div>
-                        {travelingParties.length > 1 && (
+                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
@@ -151,7 +151,7 @@ const BudgetPlanningSection = () => {
                         )}
                     </div>
                 ))}
-            </div> */}
+            </div>
 
             <div className="mt-4 flex justify-between items-center">
                 <button
