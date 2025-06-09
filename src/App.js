@@ -8,19 +8,20 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDo
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
-import DestinationsSection from './components/DestinationsSection.jsx';
-import TripDatesSection from './components/TripDatesSection.jsx';
-import PreferencesSection from './components/PreferencesSection.jsx';
-import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
-import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
-import TransportOptionsSection from './components/TransportOptionsSection.jsx';
-import TravelPlanSummary from './components/TravelPlanSummary.jsx';
-import TripList from './components/TripList.jsx';
-import ExpenseTracker from './components/ExpenseTracker.jsx';
+// COMMENT OUT THESE IMPORTS TO FIX 'is defined but never used' ERRORS
+// import DestinationsSection from './components/DestinationsSection.jsx';
+// import TripDatesSection from './components/TripDatesSection.jsx';
+// import PreferencesSection from './components/PreferencesSection.jsx';
+// import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // This one is still used in JSX, so keep it imported
+// import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
+// import TransportOptionsSection from './components/TransportOptionsSection.jsx';
+// import TravelPlanSummary from './components/TravelPlanSummary.jsx';
+import TripList from './components/TripList.jsx'; // This one is still used in JSX, so keep it imported
+// import ExpenseTracker from './components/ExpenseTracker.jsx';
 
 // NEW: Import ErrorBoundary
-import ErrorBoundary from './components/ErrorBoundary.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx'; // Keep this import
 
 // Import custom hooks with explicit .js extension
 import { useMultiSelection } from './hooks/useMultiSelection.js';
@@ -575,17 +576,39 @@ const App = () => {
                 numberOfAdults: travelingParties.reduce((sum, party) => sum + party.adults, 0),
                 numberOfChildren: travelingParties.reduce((sum, party) => sum + party.children, 0),
                 currency,
-                moneyAvailable, moneySaved, contingencyPercentage, estimatedFlightCost,
+                moneyAvailable,
+                moneySaved,
+                contingencyPercentage,
+                estimatedFlightCost,
                 estimatedHotelCost,
-                estimatedActivityCost, estimatedMiscellaneousCost,
-                estimatedTransportCost, carRentalCost, shuttleCost,
+                estimatedActivityCost,
+                estimatedMiscellaneousCost,
+                estimatedTransportCost,
+                carRentalCost,
+                shuttleCost,
                 airportTransfersCost,
-                airportParkingCost, estimatedInterCityFlightCost, estimatedInterCityTrainCost,
-                estimatedInterCityBusCost, localPublicTransport, taxiRideShare, walking,
-                dailyLocalTransportAllowance, breakfastAllowance, lunchAllowance, dinnerAllowance,
-                snacksAllowance, carRental, shuttle, airportTransfers, airportParking,
-                selectedSuggestedActivities, selectedSuggestedFoodLocations, selectedSuggestedThemeParks,
-                selectedSuggestedTouristSpots, selectedSuggestedTours, selectedSuggestedSportingEvents,
+                airportParkingCost,
+                estimatedInterCityFlightCost,
+                estimatedInterCityTrainCost,
+                estimatedInterCityBusCost,
+                localPublicTransport,
+                taxiRideShare,
+                walking,
+                dailyLocalTransportAllowance,
+                breakfastAllowance,
+                lunchAllowance,
+                dinnerAllowance,
+                snacksAllowance,
+                carRental,
+                shuttle,
+                airportTransfers,
+                airportParking,
+                selectedSuggestedActivities,
+                selectedSuggestedFoodLocations,
+                selectedSuggestedThemeParks,
+                selectedSuggestedTouristSpots,
+                selectedSuggestedTours,
+                selectedSuggestedSportingEvents,
             };
 
             if (currentTripId) {
@@ -869,15 +892,16 @@ const App = () => {
                                 // Wrap the potentially problematic content with an ErrorBoundary
                                 <ErrorBoundary>
                                     <HomeLocationSection />
-                                    {/* These components are currently commented out for debugging App.js, uncomment one by one later */}
+                                    {/* Keep these imports commented out, as per build fix strategy */}
                                     {/* <DestinationsSection /> */}
                                     {/* <TripDatesSection /> */}
                                     {/* <PreferencesSection /> */}
                                     {/* <ItinerarySuggestions /> */}
 
-                                    {/* BudgetPlanningSection will now be uncommented here */}
+                                    {/* BUDGET PLANNING SECTION IS NOW UNCOMMENTED HERE IN APP.JS */}
                                     <BudgetPlanningSection />
 
+                                    {/* Keep these imports commented out */}
                                     {/* <FoodAllowanceSection /> */}
                                     {/* <TransportOptionsSection /> */}
 
