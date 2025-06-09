@@ -8,20 +8,20 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDo
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
-// COMMENT OUT THESE IMPORTS TO FIX 'is defined but never used' ERRORS
+// COMMENT OUT THESE IMPORTS WHILE THEY ARE COMMENTED OUT IN JSX FOR DEBUGGING
 // import DestinationsSection from './components/DestinationsSection.jsx';
 // import TripDatesSection from './components/TripDatesSection.jsx';
 // import PreferencesSection from './components/PreferencesSection.jsx';
 // import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // This one is still used in JSX, so keep it imported
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // Keep imported, as it's now the target
 // import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
 // import TransportOptionsSection from './components/TransportOptionsSection.jsx';
 // import TravelPlanSummary from './components/TravelPlanSummary.jsx';
-import TripList from './components/TripList.jsx'; // This one is still used in JSX, so keep it imported
+import TripList from './components/TripList.jsx'; // Keep TripList
 // import ExpenseTracker from './components/ExpenseTracker.jsx';
 
 // NEW: Import ErrorBoundary
-import ErrorBoundary from './components/ErrorBoundary.jsx'; // Keep this import
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Import custom hooks with explicit .js extension
 import { useMultiSelection } from './hooks/useMultiSelection.js';
