@@ -1,11 +1,8 @@
 // src/components/PartyDetailsDisplay.jsx
 import React from 'react';
+import { XCircle } from 'lucide-react'; // ADD THIS IMPORT
 
 const PartyDetailsDisplay = ({ party, handlePartyChange, removeParty, isRemovable }) => {
-    // This component will use simple input fields and direct text display
-    // to avoid any potential complexities with the generic InputField component
-    // that might be causing the "object as child" error.
-
     if (!party || typeof party !== 'object' || party === null) {
         return <p className="text-red-500">Invalid party data.</p>;
     }
