@@ -2,8 +2,8 @@
 import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
-import InputField from './InputField.jsx'; // Still needed for other inputs
-import { PlusCircle, XCircle } from 'lucide-react'; // XCircle is used in PartyDetailsDisplay
+import InputField from './InputField.jsx';
+import { PlusCircle } /* Removed XCircle from here */ from 'lucide-react'; // Removed XCircle from this import
 
 // NEW: Import PartyDetailsDisplay
 import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
