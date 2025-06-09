@@ -13,7 +13,7 @@ import HomeLocationSection from './components/HomeLocationSection.jsx';
 // import TripDatesSection from './components/TripDatesSection.jsx';
 // import PreferencesSection from './components/PreferencesSection.jsx';
 // import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
+// import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // Comment this out now
 // import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
 // import TransportOptionsSection from './components/TransportOptionsSection.jsx';
 // import TravelPlanSummary from './components/TravelPlanSummary.jsx';
@@ -431,7 +431,7 @@ const App = () => {
         setSelectedSuggestedFoodLocations?.([]);
         setSelectedSuggestedThemeParks?.([]);
         setSelectedSuggestedTouristSpots?.([]);
-        setSelectedSuggestedTours?.([]); // Removed the duplicate line for setSelectedSuggestedTours
+        setSelectedSuggestedTours?.([]);
         setSelectedSuggestedSportingEvents?.([]);
 
         setHomeCountryError('');
@@ -851,7 +851,7 @@ const App = () => {
                                     >
                                         <PlusCircle size={16} className="mr-1" /> New Trip
                                     </button>
-                                    <TripList /> {/* Keep TripList visible to allow selecting trips */}
+                                    <TripList />
                                     <button
                                         onClick={handleSignOut}
                                         className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md"
@@ -870,7 +870,7 @@ const App = () => {
                                     {/* <TripDatesSection /> */}
                                     {/* <PreferencesSection /> */}
                                     {/* <ItinerarySuggestions /> */}
-                                    <BudgetPlanningSection /> {/* Keep this component for testing */}
+                                    {/* <BudgetPlanningSection /> */} {/* COMMENT OUT THIS COMPONENT NOW */}
                                     {/* <FoodAllowanceSection /> */}
                                     {/* <TransportOptionsSection /> */}
 
