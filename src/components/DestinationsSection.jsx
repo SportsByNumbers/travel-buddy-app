@@ -6,7 +6,7 @@ import TagInput from './TagInput.jsx';
 import InputField from './InputField.jsx';
 import CheckboxGroup from './CheckboxGroup.jsx';
 import { useCountrySearch } from '../hooks/useCountrySearch.js';
-import { fetchCountryData } from '../services/apiService.js'; // Assuming you have an apiService
+import { fetchCountryData } from '../services/apiService.js';
 
 const DestinationsSection = () => {
     const {
@@ -36,7 +36,7 @@ const DestinationsSection = () => {
         const existingCountry = countries.find(c => c.name.toLowerCase() === trimmedCountry.toLowerCase());
         if (!existingCountry) {
             const countryData = await fetchCountryData(trimmedCountry, allCountries);
-            if (countryData.name) {
+            if (countryData?.name) { // Add optional chaining for safety
                 setCountries([...countries, countryData]);
                 setDestCountryError('');
             } else {
@@ -87,16 +87,16 @@ const DestinationsSection = () => {
             name: newCityName.trim(),
             duration: parseInt(newCityDuration),
             starRating: newCityStarRating,
-            topics: newCityTopics // Use newCityTopics for city-specific interests
+            topics: newCityTopics
         }]);
 
         setNewCityName('');
         setNewCityDuration(0);
         setNewCityStarRating('');
-        setNewCityTopics([]); // Clear city-specific topics
+        setNewCityTopics([]);
         setNewCityNameError('');
         setNewCityDurationError('');
-        setDestCityError(''); // Clear overall dest city error if fixed
+        setDestCityError('');
     };
 
     const removeCity = (cityToRemove) => {
@@ -115,6 +115,15 @@ const DestinationsSection = () => {
                 : [...prevTopics, topic]
         );
     };
+
+    const cityStarRatingOptions = [
+        { value: '', label: 'City Hotel Rating (Optional)' },
+        { value: '1', label: '1 Star (Budget)' },
+        { value: '2', label: '2 Star (Economy)' },
+        { value: '3', label: '3 Star (Mid-Range)' },
+        { value: '4', label: '4 Star (First Class)' },
+        { value: '5', label: '5 Star (Luxury)' },
+    ];
 
     return (
         <SectionWrapper title="Travel Destinations" icon={MapPin}>
@@ -140,39 +149,38 @@ const DestinationsSection = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
                         <InputField
                             id="newCityName"
+                            label="City Name" // Added label for InputField
                             value={newCityName}
                             onChange={(e) => { setNewCityName(e.target.value); setNewCityNameError(''); setDestCityError('');}}
-                            placeholder="City Name (e.g., Tokyo)"
+                            placeholder="e.g., Tokyo"
                             error={newCityNameError}
+                            required // Mark as required
                         />
                         <InputField
                             type="number"
                             id="newCityDuration"
+                            label="Days" // Added label for InputField
                             value={newCityDuration}
                             onChange={(e) => { setNewCityDuration(parseInt(e.target.value) || 0); setNewCityDurationError('');}}
-                            placeholder="Days (e.g., 5)"
+                            placeholder="e.g., 5"
                             min="0"
                             error={newCityDurationError}
+                            required // Mark as required
                         />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        {/* Updated to use InputField with options prop */}
                         <InputField
                             type="select"
                             id="newCityStarRating"
+                            label="City Hotel Rating (Optional)"
                             value={newCityStarRating}
                             onChange={(e) => setNewCityStarRating(e.target.value)}
-                            label="City Hotel Rating (Optional)" // Label for the select itself
-                        >
-                            <option value="">City Hotel Rating (Optional)</option>
-                            <option value="1">1 Star (Budget)</option>
-                            <option value="2">2 Star (Economy)</option>
-                            <option value="3">3 Star (Mid-Range)</option>
-                            <option value="4">4 Star (First Class)</option>
-                            <option value="5">5 Star (Luxury)</option>
-                        </InputField>
+                            options={cityStarRatingOptions}
+                        />
                         <CheckboxGroup
                             label="City-Specific Topics"
-                            options={availableTopics.map(topic => topic.split(' ')[0])} // Shorten for space
+                            options={availableTopics.map(topic => topic.split(' ')[0])}
                             selected={newCityTopics}
                             onChange={handleNewCityTopicChange}
                             columns={2}
