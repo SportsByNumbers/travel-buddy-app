@@ -8,17 +8,19 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDo
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
-// COMMENT OUT THESE IMPORTS WHILE THEY ARE COMMENTED OUT IN JSX FOR DEBUGGING
-// import DestinationsSection from './components/DestinationsSection.jsx';
-// import TripDatesSection from './components/TripDatesSection.jsx';
-// import PreferencesSection from './components/PreferencesSection.jsx';
-// import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // Keep imported, as it's now the target
-// import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
-// import TransportOptionsSection from './components/TransportOptionsSection.jsx';
-// import TravelPlanSummary from './components/TravelPlanSummary.jsx';
-import TripList from './components/TripList.jsx'; // Keep TripList
-// import ExpenseTracker from './components/ExpenseTracker.jsx';
+import DestinationsSection from './components/DestinationsSection.jsx';
+import TripDatesSection from './components/TripDatesSection.jsx';
+import PreferencesSection from './components/PreferencesSection.jsx';
+import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
+import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
+import TransportOptionsSection from './components/TransportOptionsSection.jsx';
+import TravelPlanSummary from './components/TravelPlanSummary.jsx';
+import TripList from './components/TripList.jsx';
+import ExpenseTracker from './components/ExpenseTracker.jsx';
+
+// NEW: Import ErrorBoundary
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Import custom hooks with explicit .js extension
 import { useMultiSelection } from './hooks/useMultiSelection.js';
@@ -862,15 +864,20 @@ const App = () => {
                             </div>
 
 
-                            {/* This is the key block to manage for debugging */}
+                            {/* Main content area for authenticated users */}
                             {currentTripId !== null || isNewTripStarted ? (
-                                <>
+                                // Wrap the potentially problematic content with an ErrorBoundary
+                                <ErrorBoundary>
                                     <HomeLocationSection />
+                                    {/* These components are currently commented out for debugging App.js, uncomment one by one later */}
                                     {/* <DestinationsSection /> */}
                                     {/* <TripDatesSection /> */}
                                     {/* <PreferencesSection /> */}
                                     {/* <ItinerarySuggestions /> */}
-                                    <BudgetPlanningSection /> {/* Now that the error is in BudgetPlanningSection, keep it in */}
+
+                                    {/* BudgetPlanningSection will now be uncommented here */}
+                                    <BudgetPlanningSection />
+
                                     {/* <FoodAllowanceSection /> */}
                                     {/* <TransportOptionsSection /> */}
 
@@ -892,7 +899,7 @@ const App = () => {
 
                                     {/* <TravelPlanSummary /> */}
                                     {/* <ExpenseTracker /> */}
-                                </>
+                                </ErrorBoundary>
                             ) : (
                                 <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
                                     <p className="text-lg mb-4">You're signed in! Start by creating a new trip or loading an existing one!</p>
