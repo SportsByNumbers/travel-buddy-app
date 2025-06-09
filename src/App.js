@@ -8,17 +8,16 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDo
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
-// COMMENT OUT THESE IMPORTS WHILE THEY ARE COMMENTED OUT IN JSX FOR DEBUGGING
-// import DestinationsSection from './components/DestinationsSection.jsx';
-// import TripDatesSection from './components/TripDatesSection.jsx';
-// import PreferencesSection from './components/PreferencesSection.jsx';
-// import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // Keep imported, as it's now the target
-// import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
-// import TransportOptionsSection from './components/TransportOptionsSection.jsx';
-// import TravelPlanSummary from './components/TravelPlanSummary.jsx';
-import TripList from './components/TripList.jsx'; // Keep TripList
-// import ExpenseTracker from './components/ExpenseTracker.jsx';
+import DestinationsSection from './components/DestinationsSection.jsx';
+import TripDatesSection from './components/TripDatesSection.jsx';
+import PreferencesSection from './components/PreferencesSection.jsx';
+import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
+import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
+import TransportOptionsSection from './components/TransportOptionsSection.jsx';
+import TravelPlanSummary from './components/TravelPlanSummary.jsx';
+import TripList from './components/TripList.jsx';
+import ExpenseTracker from './components/ExpenseTracker.jsx';
 
 // NEW: Import ErrorBoundary
 import ErrorBoundary from './components/ErrorBoundary.jsx';
@@ -56,7 +55,7 @@ const App = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [authError, setAuthError] = useState('');
-    const [isLoginMode, setIsLoginMode] = useState(true);
+    const [isLoginMode, setIsLoginMode] = true;
 
     const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
 
@@ -83,10 +82,12 @@ const App = () => {
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
     const [isPerPerson, setIsPerPerson] = useState(true);
 
+    // REVERTED: Bring back travelingParties array
     const [travelingParties, setTravelingParties] = useState([
         { id: 1, name: 'Main Group', adults: 1, children: 0 }
     ]);
 
+    // numberOfPeople calculation based on travelingParties
     let calculatedPeople = 0;
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
@@ -172,8 +173,8 @@ const App = () => {
     const [destCountryError, setDestCountryError] = useState('');
     const [destCityError, setDestCityError] = useState('');
     const [dateError, setDateError] = useState('');
-    const [numberOfAdultsError, setNumberOfAdultsError] = useState('');
-    const [numberOfChildrenError, setNumberOfChildrenError] = useState('');
+    const [numberOfAdultsError, setNumberOfAdultsError] = useState(''); // Re-added errors for validation
+    const [numberOfChildrenError, setNumberOfChildrenError] = useState(''); // Re-added errors for validation
 
     const [newCityNameError, setNewCityNameError] = useState('');
     const [newCityDurationError, setNewCityDurationError] = useState('');
@@ -399,7 +400,9 @@ const App = () => {
         setTravelStyle('');
         setHotelAmenities([]);
         setIsPerPerson(true);
+        // REVERTED: Reset travelingParties
         setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
+
         setCurrency('USD');
         setMoneyAvailable(0);
         setMoneySaved(0);
@@ -442,14 +445,14 @@ const App = () => {
         setDestCountryError('');
         setDestCityError('');
         setDateError('');
-        setNumberOfAdultsError('');
-        setNumberOfChildrenError('');
+        setNumberOfAdultsError(''); // Re-added errors for validation
+        setNumberOfChildrenError(''); // Re-added errors for validation
         setNewCityNameError('');
         setNewCityDurationError('');
         setExpenses([]);
     }, [
         setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
-        setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
+        setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties, // REVERTED: setTravelingParties dependency
         setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
         setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
         setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
@@ -459,7 +462,8 @@ const App = () => {
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
-        setNumberOfAdultsError, setNumberOfChildrenError, setNewCityNameError, setNewCityDurationError, setExpenses
+        setNumberOfAdultsError, setNumberOfChildrenError, // Re-added error setters
+        setNewCityNameError, setNewCityDurationError, setExpenses
     ]);
 
 
@@ -488,6 +492,7 @@ const App = () => {
                 setTravelStyle(tripData.travelStyle || '');
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
+                // REVERTED: Load travelingParties
                 setTravelingParties(Array.isArray(tripData.travelingParties) ? tripData.travelingParties : [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
 
                 setCurrency(tripData.currency || 'USD');
@@ -564,6 +569,10 @@ const App = () => {
         const projectIdForPaths = firebaseConfig.projectId;
 
         try {
+            // Calculate total adults/children for summary data from travelingParties
+            const totalAdults = travelingParties.reduce((sum, party) => sum + (party.adults || 0), 0);
+            const totalChildren = travelingParties.reduce((sum, party) => sum + (party.children || 0), 0);
+
             const tripDataToSave = {
                 ...summaryData,
                 startDate: startDate ? startDate.toISOString() : null,
@@ -572,9 +581,9 @@ const App = () => {
                 updatedAt: serverTimestamp(),
                 countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
-                travelingParties,
-                numberOfAdults: travelingParties.reduce((sum, party) => sum + party.adults, 0),
-                numberOfChildren: travelingParties.reduce((sum, party) => sum + party.children, 0),
+                travelingParties, // Keep this as the source of truth for saving
+                numberOfAdults: totalAdults, // Add derived totals to summary for display convenience
+                numberOfChildren: totalChildren, // Add derived totals to summary for display convenience
                 currency,
                 moneyAvailable,
                 moneySaved,
@@ -646,12 +655,14 @@ const App = () => {
         const totalAdults = travelingParties.reduce((sum, party) => sum + party.adults, 0);
         const totalChildren = travelingParties.reduce((sum, party) => sum + party.children, 0);
 
+        // RE-ADDED Validation
         if (totalAdults < 1) { setNumberOfAdultsError("Total adults must be at least 1."); hasError = true; } else { setNumberOfAdultsError(''); }
         if (totalChildren < 0) { setNumberOfChildrenError("Total children cannot be negative."); hasError = true; } else { setNumberOfChildrenError(''); }
         if (numberOfPeople < 1) {
-            setNumberOfAdultsError("Total number of people (adults + children) must be at least 1.");
+            setNumberOfAdultsError("Total number of people (adults + children) must be at least 1."); // Using adult error for total check
             hasError = true;
         }
+
 
         if (hasError) {
             setTravelPlanSummary(null);
@@ -720,10 +731,10 @@ const App = () => {
             touristSpots: finalTouristSpots,
             tours: finalTours,
             isPerPerson,
-            travelingParties,
+            travelingParties, // Pass travelingParties to summaryData
             numberOfPeople,
-            numberOfAdults: totalAdults,
-            numberOfChildren: totalChildren,
+            numberOfAdults: totalAdults, // Pass derived totals to summaryData
+            numberOfChildren: totalChildren, // Pass derived totals to summaryData
             currency,
             moneyAvailable,
             moneySaved,
@@ -806,7 +817,7 @@ const App = () => {
         setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
         homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
         availableAmenities, isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties,
+        travelingParties, setTravelingParties, // REVERTED: Provide travelingParties
         numberOfPeople,
         currency, setCurrency,
         moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
@@ -837,7 +848,7 @@ const App = () => {
 
         homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, destCountryError, setDestCountryError,
         destCityError, setDestCityError, dateError, setDateError,
-        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError,
+        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError, // Re-added errors to context
         newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
 
         getFormattedCurrency, toggleSuggestionSelection
@@ -892,18 +903,17 @@ const App = () => {
                                 // Wrap the potentially problematic content with an ErrorBoundary
                                 <ErrorBoundary>
                                     <HomeLocationSection />
-                                    {/* Keep these imports commented out, as per build fix strategy */}
-                                    {/* <DestinationsSection /> */}
-                                    {/* <TripDatesSection /> */}
-                                    {/* <PreferencesSection /> */}
-                                    {/* <ItinerarySuggestions /> */}
+                                    {/* Uncomment components one by one to bring them back */}
+                                    <DestinationsSection />
+                                    <TripDatesSection />
+                                    <PreferencesSection />
+                                    <ItinerarySuggestions />
 
-                                    {/* BUDGET PLANNING SECTION IS NOW UNCOMMENTED HERE IN APP.JS */}
+                                    {/* BudgetPlanningSection will now handle multiple parties again */}
                                     <BudgetPlanningSection />
 
-                                    {/* Keep these imports commented out */}
-                                    {/* <FoodAllowanceSection /> */}
-                                    {/* <TransportOptionsSection /> */}
+                                    <FoodAllowanceSection />
+                                    <TransportOptionsSection />
 
                                     <div className="text-center mt-10 print:hidden">
                                         <button
@@ -921,8 +931,8 @@ const App = () => {
                                         </button>
                                     </div>
 
-                                    {/* <TravelPlanSummary /> */}
-                                    {/* <ExpenseTracker /> */}
+                                    <TravelPlanSummary />
+                                    <ExpenseTracker />
                                 </ErrorBoundary>
                             ) : (
                                 <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
