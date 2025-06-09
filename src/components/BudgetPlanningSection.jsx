@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle, XCircle } from 'lucide-react'; // XCircle is now used again
+import { PlusCircle, XCircle } from 'lucide-react';
 
 const BudgetPlanningSection = () => {
     const {
@@ -23,7 +23,7 @@ const BudgetPlanningSection = () => {
         numberOfChildrenError,
     } = useContext(TripContext);
 
-    // Handler to update a specific party's details - now used in JSX again
+    // Handler to update a specific party's details
     const handlePartyChange = (id, field, value) => {
         setTravelingParties(prevParties =>
             prevParties.map(party =>
@@ -41,7 +41,7 @@ const BudgetPlanningSection = () => {
         ]);
     };
 
-    // Handler to remove a party - now used in JSX again
+    // Handler to remove a party
     const removeParty = (idToRemove) => {
         setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
@@ -113,34 +113,37 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
-            {/* UNCOMMENT THIS ENTIRE DIV BLOCK */}
+            {/* Now we re-enable the map, but comment out its children one by one */}
             <div className="space-y-4">
                 {travelingParties.map(party => (
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
                         <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                            <InputField
+                            {/* TEST 1: Comment out the first InputField */}
+                            {/* <InputField
                                 label={`Group Name`}
                                 type="text"
                                 value={party.name}
                                 onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
                                 placeholder={`e.g., Family A`}
-                            />
-                            <InputField
+                            /> */}
+                            {/* TEST 2: Comment out the second InputField */}
+                            {/* <InputField
                                 label={`Adults (${party.name})`}
                                 type="number"
                                 value={party.adults}
                                 onChange={(e) => handlePartyChange(party.id, 'adults', parseInt(e.target.value) || 0)}
                                 min="0"
-                            />
-                            <InputField
+                            /> */}
+                            {/* TEST 3: Comment out the third InputField */}
+                            {/* <InputField
                                 label={`Children (${party.name})`}
                                 type="number"
                                 value={party.children}
                                 onChange={(e) => handlePartyChange(party.id, 'children', parseInt(e.target.value) || 0)}
                                 min="0"
-                            />
+                            /> */}
                         </div>
-                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
+                        {travelingParties.length > 1 && (
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
