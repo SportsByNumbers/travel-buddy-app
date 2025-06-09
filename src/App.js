@@ -831,7 +831,7 @@ const App = () => {
         setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
         homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
         availableAmenities, isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties, // REVERTED: Provide travelingParties
+        travelingParties, setTravelingParties, // Provide travelingParties
         numberOfPeople,
         currency, setCurrency,
         moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
