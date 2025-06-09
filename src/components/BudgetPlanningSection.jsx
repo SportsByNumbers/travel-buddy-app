@@ -23,7 +23,7 @@ const BudgetPlanningSection = () => {
         numberOfChildrenError,
     } = useContext(TripContext);
 
-    // Handler to update a specific party's details
+    // Handler to update a specific party's details - now used in JSX again
     const handlePartyChange = (id, field, value) => {
         setTravelingParties(prevParties =>
             prevParties.map(party =>
@@ -41,7 +41,7 @@ const BudgetPlanningSection = () => {
         ]);
     };
 
-    // Handler to remove a party
+    // Handler to remove a party - now used in JSX again
     const removeParty = (idToRemove) => {
         setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
@@ -115,40 +115,32 @@ const BudgetPlanningSection = () => {
 
             <div className="space-y-4">
                 {travelingParties.map(party => (
-                    // THIS IS THE LINE WHERE THE ERROR IS ORIGINATING (the div containing party.id)
-                    // The error message is telling us that the 'party' object itself is being rendered,
-                    // but it should be inside a specific component prop, not directly as a child of a div.
-                    // Let's comment out the contents of the div to find the exact problem within it.
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
                         <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                            {/* Start with all InputFields commented out */}
-                            {/* Uncomment them one by one in subsequent deployments */}
-                            {/* Step A: Comment out this InputField */}
-                            {/* <InputField
+                            {/* UNCOMMENT ALL THREE InputFields here */}
+                            <InputField
                                 label={`Group Name`}
                                 type="text"
                                 value={party.name}
                                 onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
                                 placeholder={`e.g., Family A`}
-                            /> */}
-                            {/* Step B: Comment out this InputField */}
-                            {/* <InputField
+                            />
+                            <InputField
                                 label={`Adults (${party.name})`}
                                 type="number"
                                 value={party.adults}
                                 onChange={(e) => handlePartyChange(party.id, 'adults', parseInt(e.target.value) || 0)}
                                 min="0"
-                            /> */}
-                            {/* Step C: Comment out this InputField */}
-                            {/* <InputField
+                            />
+                            <InputField
                                 label={`Children (${party.name})`}
                                 type="number"
                                 value={party.children}
                                 onChange={(e) => handlePartyChange(party.id, 'children', parseInt(e.target.value) || 0)}
                                 min="0"
-                            /> */}
+                            />
                         </div>
-                        {travelingParties.length > 1 && (
+                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
