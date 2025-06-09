@@ -8,16 +8,17 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDo
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
-import DestinationsSection from './components/DestinationsSection.jsx'; // Keep imported, but commented out in JSX
-import TripDatesSection from './components/TripDatesSection.jsx'; // Keep imported, but commented out in JSX
-import PreferencesSection from './components/PreferencesSection.jsx'; // Keep imported, but commented out in JSX
-import ItinerarySuggestions from './components/ItinerarySuggestions.jsx'; // Keep imported, but commented out in JSX
+// COMMENT OUT THESE IMPORTS WHILE THEY ARE COMMENTED OUT IN JSX FOR DEBUGGING
+// import DestinationsSection from './components/DestinationsSection.jsx';
+// import TripDatesSection from './components/TripDatesSection.jsx';
+// import PreferencesSection from './components/PreferencesSection.jsx';
+// import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
 import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
-import FoodAllowanceSection from './components/FoodAllowanceSection.jsx'; // Keep imported, but commented out in JSX
-import TransportOptionsSection from './components/TransportOptionsSection.jsx'; // Keep imported, but commented out in JSX
-import TravelPlanSummary from './components/TravelPlanSummary.jsx'; // Keep imported, but commented out in JSX
-import TripList from './components/TripList.jsx'; // New component - keep this for now, but if the error persists, test without it
-import ExpenseTracker from './components/ExpenseTracker.jsx'; // New component - Keep imported, but commented out in JSX
+// import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
+// import TransportOptionsSection from './components/TransportOptionsSection.jsx';
+// import TravelPlanSummary from './components/TravelPlanSummary.jsx';
+import TripList from './components/TripList.jsx';
+// import ExpenseTracker from './components/ExpenseTracker.jsx';
 
 // Import custom hooks with explicit .js extension
 import { useMultiSelection } from './hooks/useMultiSelection.js';
@@ -430,8 +431,7 @@ const App = () => {
         setSelectedSuggestedFoodLocations?.([]);
         setSelectedSuggestedThemeParks?.([]);
         setSelectedSuggestedTouristSpots?.([]);
-        setSelectedSuggestedTours?.([]);
-        setSelectedSuggestedTours?.([]); // Duplicate set of setTours - removed
+        setSelectedSuggestedTours?.([]); // Removed the duplicate line for setSelectedSuggestedTours
         setSelectedSuggestedSportingEvents?.([]);
 
         setHomeCountryError('');
