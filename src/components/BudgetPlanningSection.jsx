@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, XCircle } from 'lucide-react'; // XCircle should be used again
 
 const BudgetPlanningSection = () => {
     const {
@@ -23,7 +23,7 @@ const BudgetPlanningSection = () => {
         numberOfChildrenError,
     } = useContext(TripContext);
 
-    // Handler to update a specific party's details
+    // Handler to update a specific party's details - now used in JSX again
     const handlePartyChange = (id, field, value) => {
         setTravelingParties(prevParties =>
             prevParties.map(party =>
@@ -41,7 +41,7 @@ const BudgetPlanningSection = () => {
         ]);
     };
 
-    // Handler to remove a party
+    // Handler to remove a party - now used in JSX again
     const removeParty = (idToRemove) => {
         setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
@@ -116,14 +116,8 @@ const BudgetPlanningSection = () => {
             <div className="space-y-4">
                 {travelingParties.map(party => (
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
-                        {/* **CRITICAL TEST:**
-                            Comment out this entire inner div, leaving only a basic display of party.id
-                            AND the remove button.
-                            If the error is gone, then the issue is within the inner div (the inputs).
-                            If it persists, the issue might be the remove button, or even the outer div structure.
-                        */}
-                        {/* FIRST TEST: Comment out this entire inner div */}
-                        {/* <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            {/* UNCOMMENT ALL THREE InputFields here */}
                             <div>
                                 <label htmlFor={`group-name-${party.id}`} className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
                                 <input
@@ -159,13 +153,8 @@ const BudgetPlanningSection = () => {
                                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 />
                             </div>
-                        </div> */}
-
-                        {/* Leave this placeholder for initial testing: */}
-                        <p>Party ID: {party.id} - {party.name}</p> {/* Render basic primitive data */}
-
-
-                        {travelingParties.length > 1 && (
+                        </div>
+                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
