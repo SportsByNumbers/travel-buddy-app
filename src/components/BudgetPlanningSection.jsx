@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, XCircle } from 'lucide-react'; // Re-added PlusCircle, XCircle
 
 const BudgetPlanningSection = () => {
     const {
@@ -17,10 +17,10 @@ const BudgetPlanningSection = () => {
         estimatedMiscellaneousCost, setEstimatedMiscellaneousCost,
         estimatedTransportCost, setEstimatedTransportCost,
         isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties,
-        numberOfPeople,
-        numberOfAdultsError,
-        numberOfChildrenError,
+        travelingParties, setTravelingParties, // Re-added travelingParties
+        numberOfPeople, // Derived total people
+        numberOfAdultsError, // Re-added for validation feedback
+        numberOfChildrenError, // Re-added for validation feedback
     } = useContext(TripContext);
 
     // Handler to update a specific party's details
@@ -117,37 +117,46 @@ const BudgetPlanningSection = () => {
                 {travelingParties.map(party => (
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
                         <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                            {/*
-                                WE WILL UNCOMMENT THESE ONE BY ONE IN SEPARATE DEPLOYS.
-                                Start with all three InputFields commented out initially,
-                                then uncomment just one at a time and redeploy.
-                            */}
-                            {/* TEST 1: Uncomment ONLY the "Group Name" InputField in the FIRST deployment of this step */}
-                            <InputField
-                                label={`Group Name`}
-                                type="text"
-                                value={party.name}
-                                onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
-                                placeholder={`e.g., Family A`}
-                            />
-                            {/* TEST 2: If Test 1 passes, keep "Group Name" uncommented, then uncomment ONLY this "Adults" InputField */}
-                            {/* <InputField
-                                label={`Adults (${party.name})`}
-                                type="number"
-                                value={party.adults}
-                                onChange={(e) => handlePartyChange(party.id, 'adults', parseInt(e.target.value) || 0)}
-                                min="0"
-                            /> */}
-                            {/* TEST 3: If Test 2 passes, keep "Group Name" and "Adults" uncommented, then uncomment ONLY this "Children" InputField */}
-                            {/* <InputField
-                                label={`Children (${party.name})`}
-                                type="number"
-                                value={party.children}
-                                onChange={(e) => handlePartyChange(party.id, 'children', parseInt(e.target.value) || 0)}
-                                min="0"
-                            /> */}
+                            {/* Using simple <input> for name to avoid potential issues with InputField's `value` prop */}
+                            <div>
+                                <label htmlFor={`group-name-${party.id}`} className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
+                                <input
+                                    id={`group-name-${party.id}`}
+                                    type="text"
+                                    value={party.name}
+                                    onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
+                                    placeholder={`e.g., Family A`}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
+                            </div>
+
+                            {/* Using simple <input> for adults */}
+                            <div>
+                                <label htmlFor={`adults-${party.id}`} className="block text-sm font-medium text-gray-700 mb-1">Adults ({party.name})</label>
+                                <input
+                                    id={`adults-${party.id}`}
+                                    type="number"
+                                    value={party.adults}
+                                    onChange={(e) => handlePartyChange(party.id, 'adults', parseInt(e.target.value) || 0)}
+                                    min="0"
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
+                            </div>
+
+                            {/* Using simple <input> for children */}
+                            <div>
+                                <label htmlFor={`children-${party.id}`} className="block text-sm font-medium text-gray-700 mb-1">Children ({party.name})</label>
+                                <input
+                                    id={`children-${party.id}`}
+                                    type="number"
+                                    value={party.children}
+                                    onChange={(e) => handlePartyChange(party.id, 'children', parseInt(e.target.value) || 0)}
+                                    min="0"
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
+                            </div>
                         </div>
-                        {travelingParties.length > 1 && (
+                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
