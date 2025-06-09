@@ -113,7 +113,8 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
-            <div className="space-y-4">
+            {/* COMMENT OUT THIS ENTIRE DIV BLOCK */}
+            {/* <div className="space-y-4">
                 {travelingParties.map(party => (
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
                         <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
@@ -139,7 +140,7 @@ const BudgetPlanningSection = () => {
                                 min="0"
                             />
                         </div>
-                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
+                        {travelingParties.length > 1 && (
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
@@ -150,7 +151,7 @@ const BudgetPlanningSection = () => {
                         )}
                     </div>
                 ))}
-            </div>
+            </div> */}
 
             <div className="mt-4 flex justify-between items-center">
                 <button
