@@ -13,11 +13,11 @@ import HomeLocationSection from './components/HomeLocationSection.jsx';
 // import TripDatesSection from './components/TripDatesSection.jsx';
 // import PreferencesSection from './components/PreferencesSection.jsx';
 // import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-// import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // Comment this out now
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // Keep imported, as it's now the target
 // import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
 // import TransportOptionsSection from './components/TransportOptionsSection.jsx';
 // import TravelPlanSummary from './components/TravelPlanSummary.jsx';
-import TripList from './components/TripList.jsx';
+import TripList from './components/TripList.jsx'; // Keep TripList
 // import ExpenseTracker from './components/ExpenseTracker.jsx';
 
 // Import custom hooks with explicit .js extension
@@ -870,7 +870,7 @@ const App = () => {
                                     {/* <TripDatesSection /> */}
                                     {/* <PreferencesSection /> */}
                                     {/* <ItinerarySuggestions /> */}
-                                    {/* <BudgetPlanningSection /> */} {/* COMMENT OUT THIS COMPONENT NOW */}
+                                    <BudgetPlanningSection /> {/* Now that the error is in BudgetPlanningSection, keep it in */}
                                     {/* <FoodAllowanceSection /> */}
                                     {/* <TransportOptionsSection /> */}
 
