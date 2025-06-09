@@ -23,7 +23,7 @@ const BudgetPlanningSection = () => {
         numberOfChildrenError,
     } = useContext(TripContext);
 
-    // Handler to update a specific party's details - now used in JSX again
+    // Handler to update a specific party's details
     const handlePartyChange = (id, field, value) => {
         setTravelingParties(prevParties =>
             prevParties.map(party =>
@@ -41,7 +41,7 @@ const BudgetPlanningSection = () => {
         ]);
     };
 
-    // Handler to remove a party - now used in JSX again
+    // Handler to remove a party
     const removeParty = (idToRemove) => {
         setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
@@ -117,7 +117,12 @@ const BudgetPlanningSection = () => {
                 {travelingParties.map(party => (
                     <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex items-center gap-4">
                         <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                            {/* UNCOMMENT ALL THREE InputFields here */}
+                            {/*
+                                WE WILL UNCOMMENT THESE ONE BY ONE IN SEPARATE DEPLOYS.
+                                Start with all three InputFields commented out initially,
+                                then uncomment just one at a time and redeploy.
+                            */}
+                            {/* TEST 1: Uncomment ONLY the "Group Name" InputField in the FIRST deployment of this step */}
                             <InputField
                                 label={`Group Name`}
                                 type="text"
@@ -125,22 +130,24 @@ const BudgetPlanningSection = () => {
                                 onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
                                 placeholder={`e.g., Family A`}
                             />
-                            <InputField
+                            {/* TEST 2: If Test 1 passes, keep "Group Name" uncommented, then uncomment ONLY this "Adults" InputField */}
+                            {/* <InputField
                                 label={`Adults (${party.name})`}
                                 type="number"
                                 value={party.adults}
                                 onChange={(e) => handlePartyChange(party.id, 'adults', parseInt(e.target.value) || 0)}
                                 min="0"
-                            />
-                            <InputField
+                            /> */}
+                            {/* TEST 3: If Test 2 passes, keep "Group Name" and "Adults" uncommented, then uncomment ONLY this "Children" InputField */}
+                            {/* <InputField
                                 label={`Children (${party.name})`}
                                 type="number"
                                 value={party.children}
                                 onChange={(e) => handlePartyChange(party.id, 'children', parseInt(e.target.value) || 0)}
                                 min="0"
-                            />
+                            /> */}
                         </div>
-                        {travelingParties.length > 1 && ( // Only show remove button if there's more than one group
+                        {travelingParties.length > 1 && (
                             <button
                                 onClick={() => removeParty(party.id)}
                                 className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
