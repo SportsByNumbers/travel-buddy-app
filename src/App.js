@@ -42,7 +42,7 @@ const App = () => {
     const [db, setDb] = useState(null);
     const [auth, setAuth] = useState(null);
     const [userId, setUserId] = useState(null);
-    const [userName, setUserName] = useState(null);
+    const [userName, setUserName] = useState(null); // NEW STATE: To store the user's display name
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [trips, setTrips] = useState([]);
     const [currentTripId, setCurrentTripId] = useState(null);
@@ -225,7 +225,7 @@ const App = () => {
             setIsNewTripStarted(false);
             resetTripStates();
             setTravelPlanSummary(null);
-            setUserName(null); // Clear username on sign out
+            setUserName(null);
         } catch (error) {
             console.error("Sign out Error:", error);
         }
@@ -451,7 +451,7 @@ const App = () => {
         setCarRentalCost, setShuttleCost, setAirportTransfersCost, setAirportParkingCost, setEstimatedInterCityFlightCost,
         setEstimatedInterCityTrainCost, setEstimatedInterCityBusCost, setLocalPublicTransport, setTaxiRideShare,
         setWalking, setDailyLocalTransportAllowance, setBreakfastAllowance, setLunchAllowance, setDinnerAllowance,
-        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary, // Corrected dependency for setCarRental. One `setCurrency` removed previously.
+        setSnacksAllowance, setCarRental, setShuttle, setAirportTransfers, setAirportParking, setTravelPlanSummary,
         setSelectedSuggestedActivities, setSelectedSuggestedFoodLocations, setSelectedSuggestedThemeParks,
         setSelectedSuggestedTouristSpots, setSelectedSuggestedTours, setSelectedSuggestedSportingEvents,
         setHomeCountryError, setHomeCityError, setDestCountryError, setDestCityError, setDateError,
