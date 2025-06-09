@@ -82,15 +82,14 @@ const App = () => {
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
     const [isPerPerson, setIsPerPerson] = useState(true);
 
-    // REVERTED: Bring back travelingParties array
     const [travelingParties, setTravelingParties] = useState([
         { id: 1, name: 'Main Group', adults: 1, children: 0 }
     ]);
 
-    // numberOfPeople calculation based on travelingParties
     let calculatedPeople = 0;
-    // LINE 58 (approximately):
-    const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
+    // CRITICAL FIX: Ensure travelingParties is always an array before attempting iteration.
+    // This handles cases where travelingParties might momentarily be a non-array value like 'true'.
+    const partiesToProcess = (Array.isArray(travelingParties) && travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
         for (const party of partiesToProcess) {
@@ -493,12 +492,12 @@ const App = () => {
                 setTravelStyle(tripData.travelStyle || '');
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
-                // Ensure tripData.travelingParties is an array, fallback to default if not.
-                // This is the CRITICAL check for the "true is not iterable" error.
+                // CRITICAL FIX: Explicitly ensure travelingParties is an array from loaded data
+                // If it's not an array, set it to the default initial state.
                 if (Array.isArray(tripData.travelingParties)) {
                     setTravelingParties(tripData.travelingParties);
                 } else {
-                    console.warn("tripData.travelingParties is not an array, resetting to default.");
+                    console.warn("tripData.travelingParties is not an array for trip:", tripId, ". Resetting to default.");
                     setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
                 }
 
