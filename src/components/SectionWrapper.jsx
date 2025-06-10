@@ -2,18 +2,28 @@
 import React from 'react';
 
 const SectionWrapper = ({ title, icon: Icon, children }) => {
-    // Explicitly convert title to a string to prevent "Objects are not valid as a React child" errors.
-    // If title is ever an object (e.g., due to an error in the calling component),
-    // it will be converted to "[object Object]", which is a valid string for rendering,
-    // preventing the crash and potentially highlighting the issue in dev tools.
-    const renderedTitle = String(title || ''); // Use String() for explicit conversion
+    // Defensive check and explicit conversion for the title prop.
+    // This will force the title to be a string or an empty string,
+    // ensuring React never tries to render a non-string object directly here.
+    let displayTitle = '';
+    if (typeof title === 'string' || typeof title === 'number') {
+        displayTitle = String(title);
+    } else if (title && typeof title === 'object' && title !== null) {
+        // If an object is passed, try to get a 'name' or 'label' property,
+        // or fall back to a generic indicator.
+        // This is the most likely spot where a rogue object is being passed.
+        console.error("SectionWrapper received an object as 'title' prop:", title);
+        displayTitle = title.name || title.label || '[Invalid Title Object]'; // Try to extract a string
+    } else {
+        // Handle undefined, null, or other unexpected types
+        displayTitle = String(title || '');
+    }
 
     return (
         <section className="bg-white p-6 rounded-lg shadow-md mb-8 border border-gray-200">
             <h2 className="text-2xl font-bold text-indigo-800 mb-6 pb-3 border-b border-indigo-100 flex items-center">
-                {/* This is the correct way to render a component passed as a prop */}
                 {Icon && <Icon size={24} className="mr-3 text-indigo-600" />}
-                {renderedTitle} {/* Use the explicitly converted title */}
+                {displayTitle} {/* Use the defensively prepared title */}
             </h2>
             {children}
         </section>
