@@ -21,7 +21,7 @@ export const safeRender = (value) => {
     if (Array.isArray(value)) {
         // If it's an array, join its elements to a string.
         // Recursively call safeRender for each element to handle nested objects in arrays.
-        return value.map(item => safeRender(item)).filter(Boolean).join(', ');
+        return value.map(item => safeRender(item)).filter(item => item !== null).join(', '); // Filter out nulls from map
     }
     if (typeof value === 'object' && value !== null) {
         // Log the problematic object to the console for debugging
@@ -34,9 +34,9 @@ export const safeRender = (value) => {
             return String(value.label);
         }
         // Fallback for other objects, or if it's a React component itself
+        // Note: Direct rendering of React components should be done via <Component /> not as text children.
+        // This is a last-resort string representation for debugging.
         if (typeof value === 'function' && value.prototype && value.prototype.isReactComponent) {
-             // This branch is for React components (like MapPin itself) passed as children directly
-             // We return a specific string, as attempting to Stringify it results in [object Function]
              return "[React Component]";
         }
         return "[Object]"; // Generic fallback for objects without name/label
