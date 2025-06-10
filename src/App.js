@@ -6,7 +6,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
-// Import all refactored components with explicit .jsx extension
+// Import ALL refactored components with explicit .jsx extension (now fully uncommented)
 import HomeLocationSection from './components/HomeLocationSection.jsx';
 import DestinationsSection from './components/DestinationsSection.jsx';
 import TripDatesSection from './components/TripDatesSection.jsx';
@@ -82,23 +82,23 @@ const App = () => {
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
     const [isPerPerson, setIsPerPerson] = useState(true);
 
-    // Explicitly initialize travelingParties to always be an array
-    const [travelingParties, setTravelingParties] = useState(
-        // This is the most robust initialization to ensure it's always an array
-        [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]
-    );
+    const [travelingParties, setTravelingParties] = useState([
+        { id: 1, name: 'Main Group', adults: 1, children: 0 }
+    ]);
 
     let calculatedPeople = 0;
-    // Reinforced check: Ensure partiesToProcess is always an array for iteration
+    // CRITICAL DEBUG LOGS AND REINFORCED CHECK:
+    console.log('App.js - Current travelingParties state:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
         for (const party of partiesToProcess) {
+            console.log('App.js - Processing party:', party, 'Type:', typeof party);
             // Defensive check for party object structure before accessing properties
             if (typeof party === 'object' && party !== null && 'adults' in party && 'children' in party) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
             } else {
-                console.warn("Invalid party object found in travelingParties, skipping:", party);
+                console.warn("App.js - Invalid party object found in travelingParties (for calculation), skipping:", party);
             }
         }
     }
@@ -119,7 +119,7 @@ const App = () => {
     const [airportTransfersCost, setAirportTransfersCost] = useState(0);
     const [airportParkingCost, setAirportParkingCost] = useState(0);
     const [estimatedInterCityFlightCost, setEstimatedInterCityFlightCost] = useState(0);
-    const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0); // Fix for SyntaxError
+    const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
     const [taxiRideShare, setTaxiRideShare] = useState(false);
