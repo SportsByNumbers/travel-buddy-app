@@ -8,18 +8,16 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDo
 
 // Import all refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
-// Imports for components currently commented out in JSX for debugging
-// Re-enable these imports when you uncomment the components in the JSX below
-// import DestinationsSection from './components/DestinationsSection.jsx';
-// import TripDatesSection from './components/TripDatesSection.jsx';
-// import PreferencesSection from './components/PreferencesSection.jsx';
-// import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
-import BudgetPlanningSection from './components/BudgetPlanningSection.jsx'; // This one is enabled in JSX
-// import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
-// import TransportOptionsSection from './components/TransportOptionsSection.jsx';
-// import TravelPlanSummary from './components/TravelPlanSummary.jsx';
-import TripList from './components/TripList.jsx'; // This one is enabled in JSX
-// import ExpenseTracker from './components/ExpenseTracker.jsx';
+import DestinationsSection from './components/DestinationsSection.jsx';
+import TripDatesSection from './components/TripDatesSection.jsx';
+import PreferencesSection from './components/PreferencesSection.jsx';
+import ItinerarySuggestions from './components/ItinerarySuggestions.jsx';
+import BudgetPlanningSection from './components/BudgetPlanningSection.jsx';
+import FoodAllowanceSection from './components/FoodAllowanceSection.jsx';
+import TransportOptionsSection from './components/TransportOptionsSection.jsx';
+import TravelPlanSummary from './components/TravelPlanSummary.jsx';
+import TripList from './components/TripList.jsx';
+import ExpenseTracker from './components/ExpenseTracker.jsx';
 
 // NEW: Import ErrorBoundary
 import ErrorBoundary from './components/ErrorBoundary.jsx';
@@ -121,7 +119,8 @@ const App = () => {
     const [airportTransfersCost, setAirportTransfersCost] = useState(0);
     const [airportParkingCost, setAirportParkingCost] = useState(0);
     const [estimatedInterCityFlightCost, setEstimatedInterCityFlightCost] = useState(0);
-    const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost = useState(0);
+    // FIX for SyntaxError on line 124: Changed '=' to ','
+    const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
     const [taxiRideShare, setTaxiRideShare] = useState(false);
