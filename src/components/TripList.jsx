@@ -1,3 +1,4 @@
+// src/components/TripList.jsx
 import React, { useContext, useState } from 'react';
 import { TripContext } from '../App.js';
 import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
