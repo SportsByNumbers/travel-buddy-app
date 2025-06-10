@@ -23,7 +23,7 @@ function InputField({ label, value, type = 'text', error, options, selectedItems
                 name={label}
                 value={value}
                 className={inputClasses}
-                {...props} // Pass through any other props like onChange, etc.
+                {...props} // Pass through any other props like onChange
             >
                 {/* Ensure options is an array before mapping */}
                 {options && Array.isArray(options) && options.map((option, index) => (
