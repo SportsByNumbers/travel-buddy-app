@@ -1,8 +1,9 @@
 // src/components/TravelPlanSummary.jsx
-import React, { useContext } from 'react'; // This is the correct and only required import for React
+import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import { FileText } from 'lucide-react';
+import { safeRender } from '../utils/safeRender.js'; // Import the new utility
 
 const TravelPlanSummary = () => {
     const { travelPlanSummary, getFormattedCurrency, currentTripId } = useContext(TripContext);
@@ -63,16 +64,16 @@ const TravelPlanSummary = () => {
             <div id="travel-plan-summary" className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
                 <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Trip Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
-                    <p><strong className="font-semibold">Home:</strong> {travelPlanSummary.homeCity || 'N/A'}, {travelPlanSummary.homeCountry?.name || 'N/A'}</p>
+                    <p><strong className="font-semibold">Home:</strong> {safeRender(travelPlanSummary.homeCity)}, {safeRender(travelPlanSummary.homeCountry?.name)}</p>
                     <p><strong className="font-semibold">Destinations:</strong>
-                        {(cities.map(c => c.name).join(', ') || countries.map(c => c.name).join(', ')) || 'N/A'}
+                        {safeRender(cities.map(c => c.name).join(', ') || countries.map(c => c.name).join(', ') || 'N/A')}
                     </p>
-                    <p><strong className="font-semibold">Dates:</strong> {travelPlanSummary.startDate || 'N/A'} - {travelPlanSummary.endDate || 'N/A'} ({travelPlanSummary.overallDuration || 0} days)</p>
-                    <p><strong className="font-semibold">Travelers:</strong> {travelPlanSummary.numberOfAdults || 0} Adults, {travelPlanSummary.numberOfChildren || 0} Children (Total: {travelPlanSummary.numberOfPeople || 0})</p>
-                    <p><strong className="font-semibold">Travel Style:</strong> {travelPlanSummary.travelStyle || 'Not specified'}</p>
-                    <p><strong className="font-semibold">Hotel Rating:</strong> {travelPlanSummary.starRating || 'Any'}</p>
-                    <p><strong className="font-semibold">Topics:</strong> {topicsOfInterest.join(', ') || 'None'}</p>
-                    <p><strong className="font-semibold">Hotel Amenities:</strong> {hotelAmenities.join(', ') || 'None'}</p>
+                    <p><strong className="font-semibold">Dates:</strong> {safeRender(travelPlanSummary.startDate)} - {safeRender(travelPlanSummary.endDate)} ({safeRender(travelPlanSummary.overallDuration)} days)</p>
+                    <p><strong className="font-semibold">Travelers:</strong> {safeRender(travelPlanSummary.numberOfAdults)} Adults, {safeRender(travelPlanSummary.numberOfChildren)} Children (Total: {safeRender(travelPlanSummary.numberOfPeople)})</p>
+                    <p><strong className="font-semibold">Travel Style:</strong> {safeRender(travelPlanSummary.travelStyle || 'Not specified')}</p>
+                    <p><strong className="font-semibold">Hotel Rating:</strong> {safeRender(travelPlanSummary.starRating || 'Any')}</p>
+                    <p><strong className="font-semibold">Topics:</strong> {safeRender(topicsOfInterest.join(', ') || 'None')}</p>
+                    <p><strong className="font-semibold">Hotel Amenities:</strong> {safeRender(hotelAmenities.join(', ') || 'None')}</p>
                 </div>
 
                 {cities.length > 0 && (
@@ -81,16 +82,16 @@ const TravelPlanSummary = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {cities.map((city, index) => (
                                 <div key={index} className="bg-indigo-50 p-4 rounded-lg shadow-sm">
-                                    <p className="font-semibold text-indigo-800">{city.name} ({city.duration} days)</p>
-                                    {city.starRating && <p className="text-sm text-gray-600">Hotel: {city.starRating} Star</p>}
-                                    {(Array.isArray(city.topics) && city.topics.length > 0) && <p className="text-sm text-gray-600">Topics: {city.topics.join(', ')}</p>}
+                                    <p className="font-semibold text-indigo-800">{safeRender(city.name)} ({safeRender(city.duration)} days)</p>
+                                    {city.starRating && <p className="text-sm text-gray-600">Hotel: {safeRender(city.starRating)} Star</p>}
+                                    {(Array.isArray(city.topics) && city.topics.length > 0) && <p className="text-sm text-gray-600">Topics: {safeRender(city.topics.join(', '))}</p>}
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-                <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Budget Summary ({travelPlanSummary.currency || 'USD'})</h3>
+                <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Budget Summary ({safeRender(travelPlanSummary.currency || 'USD')})</h3>
                 <div className="space-y-3 mb-6">
                     {renderCostRow("Flights", travelPlanSummary.estimatedFlightCost, travelPlanSummary.actualFlightCost)}
                     {renderCostRow("Hotels", travelPlanSummary.estimatedHotelCost, travelPlanSummary.actualHotelCost)}
@@ -119,7 +120,7 @@ const TravelPlanSummary = () => {
                         <span>{getFormattedCurrency(travelPlanSummary.moneySaved)}</span>
                     </p>
                     <p className="flex justify-between font-bold text-blue-800 text-lg">
-                        <span>Contingency ({travelPlanSummary.contingencyPercentage || 0}%):</span>
+                        <span>Contingency ({safeRender(travelPlanSummary.contingencyPercentage)}%):</span>
                         <span>{getFormattedCurrency(travelPlanSummary.contingencyAmount)}</span>
                     </p>
                     <p className={`flex justify-between font-bold text-xl mt-4 pt-4 border-t border-blue-200 ${travelPlanSummary.remainingBudgetActual >= 0 ? 'text-green-700' : 'text-red-700'}`}>
@@ -134,12 +135,12 @@ const TravelPlanSummary = () => {
 
                 <h3 className="text-2xl font-bold text-indigo-800 mt-8 mb-4 pb-2 border-b-2 border-indigo-200">Planned Activities & More</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                    {travelPlanSummary.activities && <p><strong className="font-semibold">Activities:</strong> {travelPlanSummary.activities || 'N/A'}</p>}
-                    {travelPlanSummary.foodLocations && <p><strong className="font-semibold">Food Locations:</strong> {travelPlanSummary.foodLocations || 'N/A'}</p>}
-                    {travelPlanSummary.themeParks && <p><strong className="font-semibold">Theme Parks:</strong> {travelPlanSummary.themeParks || 'N/A'}</p>}
-                    {travelPlanSummary.touristSpots && <p><strong className="font-semibold">Tourist Spots:</strong> {travelPlanSummary.touristSpots || 'N/A'}</p>}
-                    {travelPlanSummary.tours && <p><strong className="font-semibold">Tours:</strong> {travelPlanSummary.tours || 'N/A'}</p>}
-                    {travelPlanSummary.sportingEvents && <p><strong className="font-semibold">Sporting Events:</strong> {travelPlanSummary.sportingEvents || 'N/A'}</p>}
+                    {travelPlanSummary.activities && <p><strong className="font-semibold">Activities:</strong> {safeRender(travelPlanSummary.activities || 'N/A')}</p>}
+                    {travelPlanSummary.foodLocations && <p><strong className="font-semibold">Food Locations:</strong> {safeRender(travelPlanSummary.foodLocations || 'N/A')}</p>}
+                    {travelPlanSummary.themeParks && <p><strong className="font-semibold">Theme Parks:</strong> {safeRender(travelPlanSummary.themeParks || 'N/A')}</p>}
+                    {travelPlanSummary.touristSpots && <p><strong className="font-semibold">Tourist Spots:</strong> {safeRender(travelPlanSummary.touristSpots || 'N/A')}</p>}
+                    {travelPlanSummary.tours && <p><strong className="font-semibold">Tours:</strong> {safeRender(travelPlanSummary.tours || 'N/A')}</p>}
+                    {travelPlanSummary.sportingEvents && <p><strong className="font-semibold">Sporting Events:</strong> {safeRender(travelPlanSummary.sportingEvents || 'N/A')}</p>}
 
                     <div className="col-span-full mt-4 p-4 bg-gray-50 rounded-lg shadow-sm">
                         <h4 className="font-bold text-indigo-700 mb-2">Daily Food Allowances:</h4>
