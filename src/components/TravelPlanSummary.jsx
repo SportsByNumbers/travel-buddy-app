@@ -1,3 +1,4 @@
+// src/components/TravelPlanSummary.jsx
 import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
@@ -50,39 +51,46 @@ const TravelPlanSummary = () => {
         );
     };
 
+    // Defensive handling for potentially missing/non-array properties
+    const cities = Array.isArray(travelPlanSummary.cities) ? travelPlanSummary.cities : [];
+    const countries = Array.isArray(travelPlanSummary.countries) ? travelPlanSummary.countries : [];
+    const topicsOfInterest = Array.isArray(travelPlanSummary.topicsOfInterest) ? travelPlanSummary.topicsOfInterest : [];
+    const hotelAmenities = Array.isArray(travelPlanSummary.hotelAmenities) ? travelPlanSummary.hotelAmenities : [];
+
+
     return (
         <SectionWrapper title="Travel Plan Summary" icon={FileText} className="mt-12">
             <div id="travel-plan-summary" className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
                 <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Trip Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
-                    <p><strong className="font-semibold">Home:</strong> {travelPlanSummary.homeCity}, {travelPlanSummary.homeCountry.name}</p>
+                    <p><strong className="font-semibold">Home:</strong> {travelPlanSummary.homeCity || 'N/A'}, {travelPlanSummary.homeCountry?.name || 'N/A'}</p>
                     <p><strong className="font-semibold">Destinations:</strong>
-                        {(travelPlanSummary.cities.map(c => c.name).join(', ') || travelPlanSummary.countries.map(c => c.name).join(', ')) || 'N/A'}
+                        {(cities.map(c => c.name).join(', ') || countries.map(c => c.name).join(', ')) || 'N/A'}
                     </p>
-                    <p><strong className="font-semibold">Dates:</strong> {travelPlanSummary.startDate} - {travelPlanSummary.endDate} ({travelPlanSummary.overallDuration} days)</p>
-                    <p><strong className="font-semibold">Travelers:</strong> {travelPlanSummary.numberOfAdults} Adults, {travelPlanSummary.numberOfChildren} Children (Total: {travelPlanSummary.numberOfPeople})</p>
+                    <p><strong className="font-semibold">Dates:</strong> {travelPlanSummary.startDate || 'N/A'} - {travelPlanSummary.endDate || 'N/A'} ({travelPlanSummary.overallDuration || 0} days)</p>
+                    <p><strong className="font-semibold">Travelers:</strong> {travelPlanSummary.numberOfAdults || 0} Adults, {travelPlanSummary.numberOfChildren || 0} Children (Total: {travelPlanSummary.numberOfPeople || 0})</p>
                     <p><strong className="font-semibold">Travel Style:</strong> {travelPlanSummary.travelStyle || 'Not specified'}</p>
                     <p><strong className="font-semibold">Hotel Rating:</strong> {travelPlanSummary.starRating || 'Any'}</p>
-                    <p><strong className="font-semibold">Topics:</strong> {travelPlanSummary.topicsOfInterest.join(', ') || 'None'}</p>
-                    <p><strong className="font-semibold">Hotel Amenities:</strong> {travelPlanSummary.hotelAmenities.join(', ') || 'None'}</p>
+                    <p><strong className="font-semibold">Topics:</strong> {topicsOfInterest.join(', ') || 'None'}</p>
+                    <p><strong className="font-semibold">Hotel Amenities:</strong> {hotelAmenities.join(', ') || 'None'}</p>
                 </div>
 
-                {travelPlanSummary.cities.length > 0 && (
+                {cities.length > 0 && (
                     <div className="mb-6">
                         <h4 className="text-xl font-bold text-indigo-700 mb-3 pb-1 border-b border-indigo-100">City Breakdown</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {travelPlanSummary.cities.map((city, index) => (
+                            {cities.map((city, index) => (
                                 <div key={index} className="bg-indigo-50 p-4 rounded-lg shadow-sm">
                                     <p className="font-semibold text-indigo-800">{city.name} ({city.duration} days)</p>
                                     {city.starRating && <p className="text-sm text-gray-600">Hotel: {city.starRating} Star</p>}
-                                    {city.topics.length > 0 && <p className="text-sm text-gray-600">Topics: {city.topics.join(', ')}</p>}
+                                    {(Array.isArray(city.topics) && city.topics.length > 0) && <p className="text-sm text-gray-600">Topics: {city.topics.join(', ')}</p>}
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-                <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Budget Summary ({travelPlanSummary.currency})</h3>
+                <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Budget Summary ({travelPlanSummary.currency || 'USD'})</h3>
                 <div className="space-y-3 mb-6">
                     {renderCostRow("Flights", travelPlanSummary.estimatedFlightCost, travelPlanSummary.actualFlightCost)}
                     {renderCostRow("Hotels", travelPlanSummary.estimatedHotelCost, travelPlanSummary.actualHotelCost)}
@@ -96,7 +104,7 @@ const TravelPlanSummary = () => {
                     <span>Total Estimated Cost (inc. contingency):</span>
                     <span className="text-indigo-700">{getFormattedCurrency(travelPlanSummary.grandTotalEstimated)}</span>
                 </div>
-                 <div className="flex justify-between items-center text-lg font-bold text-gray-900 pt-2 pb-4">
+                   <div className="flex justify-between items-center text-lg font-bold text-gray-900 pt-2 pb-4">
                     <span>Total Actual Cost:</span>
                     <span className="text-indigo-700">{getFormattedCurrency(travelPlanSummary.actualGrandTotal)}</span>
                 </div>
@@ -111,14 +119,14 @@ const TravelPlanSummary = () => {
                         <span>{getFormattedCurrency(travelPlanSummary.moneySaved)}</span>
                     </p>
                     <p className="flex justify-between font-bold text-blue-800 text-lg">
-                        <span>Contingency ({travelPlanSummary.contingencyPercentage}%):</span>
+                        <span>Contingency ({travelPlanSummary.contingencyPercentage || 0}%):</span>
                         <span>{getFormattedCurrency(travelPlanSummary.contingencyAmount)}</span>
                     </p>
                     <p className={`flex justify-between font-bold text-xl mt-4 pt-4 border-t border-blue-200 ${travelPlanSummary.remainingBudgetActual >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                         <span>Remaining Budget (Actual):</span>
                         <span>{getFormattedCurrency(travelPlanSummary.remainingBudgetActual)}</span>
                     </p>
-                     <p className={`flex justify-between font-bold text-lg ${travelPlanSummary.remainingBudgetEstimated >= 0 ? 'text-green-700' : 'text-red-700'} `}>
+                       <p className={`flex justify-between font-bold text-lg ${travelPlanSummary.remainingBudgetEstimated >= 0 ? 'text-green-700' : 'text-red-700'} `}>
                         <span>Remaining Budget (Estimated):</span>
                         <span>{getFormattedCurrency(travelPlanSummary.remainingBudgetEstimated)}</span>
                     </p>
