@@ -1,11 +1,13 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext, useState, useEffect, useCallback } from 'react'; // Added useEffect, useCallback
+import React, { useContext, useState, useEffect, useCallback } from 'react'; // ADDED useState, useEffect, useCallback imports
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle } from 'lucide-react'; // PlusCircle is still used here
+import { PlusCircle } from 'lucide-react';
 
 const BudgetPlanningSection = () => {
+    // Get context values at the top level of the component
+    const context = useContext(TripContext);
     const {
         currency, setCurrency,
         moneyAvailable, setMoneyAvailable,
@@ -17,39 +19,35 @@ const BudgetPlanningSection = () => {
         estimatedMiscellaneousCost, setEstimatedMiscellaneousCost,
         estimatedTransportCost, setEstimatedTransportCost,
         isPerPerson, setIsPerPerson,
-        // Removed travelingParties, setTravelingParties from destructuring here
-        numberOfPeople, // This is derived from App.js's (simplified) travelingParties
-        numberOfAdultsError, // These are still passed from App.js, but now for general validation
-        numberOfChildrenError, // These are still passed from App.js, but now for general validation
-        // Access setTravelingParties directly from useContext below when updating
-    } = useContext(TripContext);
-
-    // Get the setter for travelingParties from context
-    const { setTravelingParties } = useContext(TripContext);
+        travelingParties, // Now explicitly from context
+        setTravelingParties, // Now explicitly from context
+        numberOfPeople,
+        numberOfAdultsError,
+        numberOfChildrenError,
+    } = context; // Use 'context' here
 
     // Local states for the fixed Adults/Children inputs
-    const [localAdults, setLocalAdults] = useState(1);
-    const [localChildren, setLocalChildren] = useState(0);
-
-    // Sync local state with global state on initial render and whenever the global travelingParties changes
-    useEffect(() => {
-        // Ensure that useContext(TripContext).travelingParties is an array before accessing its elements
-        const currentGlobalParties = useContext(TripContext).travelingParties;
-        if (Array.isArray(currentGlobalParties) && currentGlobalParties.length > 0) {
-            setLocalAdults(currentGlobalParties[0]?.adults || 1);
-            setLocalChildren(currentGlobalParties[0]?.children || 0);
-        }
-    }, [useContext(TripContext).travelingParties]); // Dependency on useContext().travelingParties
+    const [localAdults, setLocalAdults] = useState(travelingParties[0]?.adults || 1);
+    const [localChildren, setLocalChildren] = useState(travelingParties[0]?.children || 0);
 
     // Callback to update App.js's travelingParties state
     const updateAppTravelingParties = useCallback((adults, children) => {
         setTravelingParties([{ id: 1, name: 'Main Group', adults: adults, children: children }]);
     }, [setTravelingParties]); // Dependency on setTravelingParties from context
 
+    // Sync local state with global state on initial render and whenever the global travelingParties changes
+    useEffect(() => {
+        // Ensure that context.travelingParties is an array before accessing its elements
+        if (Array.isArray(context.travelingParties) && context.travelingParties.length > 0) {
+            setLocalAdults(context.travelingParties[0]?.adults || 1);
+            setLocalChildren(context.travelingParties[0]?.children || 0);
+        }
+    }, [context.travelingParties]); // Dependency on travelingParties from context
+
     // Debugging console logs
-    console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', useContext(TripContext).travelingParties, 'Type:', typeof useContext(TripContext).travelingParties, 'IsArray:', Array.isArray(useContext(TripContext).travelingParties));
-    if (Array.isArray(useContext(TripContext).travelingParties)) {
-        useContext(TripContext).travelingParties.forEach((party, index) => {
+    console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', context.travelingParties, 'Type:', typeof context.travelingParties, 'IsArray:', Array.isArray(context.travelingParties));
+    if (Array.isArray(context.travelingParties)) {
+        context.travelingParties.forEach((party, index) => {
             console.log(`BudgetPlanningSection (render) - Party ${index}:`, party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
             if (typeof party === 'object' && party !== null) {
                 console.log(`BudgetPlanningSection (render) - Party ${index} details: ID=${party.id} Name=${party.name} Adults=${party.adults} Children=${party.children}`);
@@ -124,7 +122,7 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
-            {/* NEW: Fixed inputs for Adults/Children and Debug Message */}
+            {/* Fixed inputs for Adults/Children and Debug Message */}
             <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-6">
                 <p className="font-semibold mb-2">Note: Multi-party breakdown temporarily disabled.</p>
                 <p className="text-sm">Please use the total number of adults and children for now. We are resolving a technical issue with dynamic party rendering.</p>
