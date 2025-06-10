@@ -6,18 +6,6 @@ import { Loader } from 'lucide-react'; // Add this import for the Loader compone
 
 const ItinerarySuggestions = () => {
     const {
-        // Removed as unused in this component:
-        // suggestedActivities,
-        // setSuggestedActivities,
-        // suggestionError,
-        // setSelectedSuggestedActivities,
-        // setSelectedSuggestedFoodLocations,
-        // setSelectedSuggestedThemeParks,
-        // setSelectedSuggestedTouristSpots,
-        // setSelectedSuggestedTours,
-        // setSelectedSuggestedSportingEvents,
-
-        // Keep these if you use them:
         isGeneratingSuggestions,
         // ... (keep any other context values you were already destructuring and using)
     } = useContext(TripContext);
