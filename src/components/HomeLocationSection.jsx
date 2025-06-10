@@ -51,7 +51,9 @@ const HomeLocationSection = () => {
         setHomeCountryInputValue(''); // Clear input after selection
         clearHomeCountrySuggestions();
         setHomeCountryError('');
-        homeCountryInputRef.current.focus();
+        if (homeCountryInputRef.current) {
+            homeCountryInputRef.current.focus();
+        }
     };
 
     const handleHomeCityChange = (e) => {
@@ -71,7 +73,7 @@ const HomeLocationSection = () => {
                     onAdd={addHomeCountry}
                     suggestions={filteredHomeCountrySuggestions}
                     onSelectSuggestion={selectHomeCountrySuggestion}
-                    items={homeCountry.name ? [homeCountry] : []}
+                    items={homeCountry.name ? [homeCountry] : []} // This passes the country object
                     onRemove={removeHomeCountry}
                     placeholder="e.g., Australia"
                     error={homeCountryError}
