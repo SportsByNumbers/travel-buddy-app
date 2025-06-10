@@ -87,7 +87,6 @@ const App = () => {
     ]);
 
     let calculatedPeople = 0;
-    // CRITICAL DEBUG LOGS AND REINFORCED CHECK:
     console.log('App.js (Top Level Render) - travelingParties initial/current state:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
     console.log('App.js (Top Level Render) - partiesToProcess AFTER Array.isArray check:', partiesToProcess, 'Type:', typeof partiesToProcess, 'IsArray:', Array.isArray(partiesToProcess));
@@ -98,7 +97,6 @@ const App = () => {
             console.log('App.js (Top Level Render) - Processing party (in loop):', party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
             console.log('App.js (Top Level Render) - Party details (if object): ID=', party && party.id, ' Name=', party && party.name, ' Adults=', party && party.adults, ' Children=', party && party.children);
 
-            // Defensive check for party object structure before accessing properties
             if (typeof party === 'object' && party !== null && 'adults' in party && 'children' in party) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
             } else {
@@ -560,7 +558,7 @@ const App = () => {
                 setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []);
                 setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []);
                 setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []);
-                setSelectedSuggestedTouristSpots(tripData.selectedTouristSpots || []);
+                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []);
                 setSelectedSuggestedTours(tripData.selectedSuggestedTours || []);
                 setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
 
@@ -721,6 +719,8 @@ const App = () => {
         const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
         const totalFoodCost = totalDailyFoodAllowance * overallDuration;
 
+        const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100); // Defined here
+
         const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
                                                         (carRental ? parseFloat(carRentalCost) : 0) +
                                                         (shuttle ? parseFloat(shuttleCost) : 0) +
@@ -742,8 +742,6 @@ const App = () => {
 
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
         const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
-
-        const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
 
         const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
 
@@ -780,7 +778,7 @@ const App = () => {
             moneyAvailable,
             moneySaved,
             contingencyPercentage,
-            contingencyAmount,
+            contingencyAmount, // Used here correctly
 
             estimatedFlightCost,
             estimatedHotelCost,
