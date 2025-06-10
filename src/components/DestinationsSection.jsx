@@ -1,3 +1,4 @@
+// src/components/DestinationsSection.jsx
 import React, { useContext, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 import { TripContext } from '../App.js';
