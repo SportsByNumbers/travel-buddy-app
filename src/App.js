@@ -88,17 +88,21 @@ const App = () => {
 
     let calculatedPeople = 0;
     // CRITICAL DEBUG LOGS AND REINFORCED CHECK:
-    console.log('App.js - Current travelingParties state:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
+    console.log('App.js (render cycle) - travelingParties STATE before processing:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
+    console.log('App.js (render cycle) - partiesToProcess AFTER Array.isArray check:', partiesToProcess, 'Type:', typeof partiesToProcess, 'IsArray:', Array.isArray(partiesToProcess));
+
 
     if (partiesToProcess.length > 0) {
         for (const party of partiesToProcess) {
-            console.log('App.js - Processing party:', party, 'Type:', typeof party);
+            console.log('App.js (render cycle) - Processing party (in loop):', party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
+            console.log('App.js (render cycle) - Party details (if object):', party && party.id, party && party.name, party && party.adults, party && party.children);
+
             // Defensive check for party object structure before accessing properties
             if (typeof party === 'object' && party !== null && 'adults' in party && 'children' in party) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
             } else {
-                console.warn("App.js - Invalid party object found in travelingParties (for calculation), skipping:", party);
+                console.error("App.js (render cycle) - !!! CRITICAL: Invalid party object found in travelingParties (for calculation), skipping:", party);
             }
         }
     }
@@ -243,6 +247,7 @@ const App = () => {
 
     // --- EFFECT: Firebase Initialization and Authentication ---
     useEffect(() => {
+        console.log('App.js (useEffect auth) - Starting Firebase initialization...');
         try {
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
@@ -252,6 +257,7 @@ const App = () => {
             setDb(firestoreInstance);
 
             const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
+                console.log('App.js (onAuthStateChanged) - User:', user);
                 if (user) {
                     setUserId(user.uid);
                     setUserName(user.displayName || user.email || user.uid);
@@ -284,6 +290,7 @@ const App = () => {
 
     // --- EFFECT: Fetch trips when user is authenticated ---
     useEffect(() => {
+        console.log('App.js (useEffect trips) - isAuthReady:', isAuthReady, 'userId:', userId, 'db:', db);
         if (isAuthReady && userId && db) {
             const projectIdForPaths = firebaseConfig.projectId;
             const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
@@ -294,18 +301,22 @@ const App = () => {
                     id: doc.id,
                     ...doc.data()
                 }));
+                console.log('App.js (onSnapshot trips) - Fetched trips:', fetchedTrips);
                 setTrips(fetchedTrips);
             }, (error) => {
                 console.error("Error fetching trips:", error);
             });
 
             return () => unsubscribe();
+        } else {
+            console.log('App.js (useEffect trips) - Not fetching trips (auth not ready or no user/db)');
         }
     }, [isAuthReady, userId, db]);
 
 
     // --- EFFECT: Fetch expenses for the current trip ---
     useEffect(() => {
+        console.log('App.js (useEffect expenses) - isAuthReady:', isAuthReady, 'userId:', userId, 'db:', db, 'currentTripId:', currentTripId);
         if (isAuthReady && userId && db && currentTripId) {
             const projectIdForPaths = firebaseConfig.projectId;
             const expensesRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips/${currentTripId}/expenses`);
@@ -317,6 +328,7 @@ const App = () => {
                     ...doc.data(),
                     date: doc.data().date?.toDate ? doc.data().date.toDate() : doc.data().date
                 }));
+                console.log('App.js (onSnapshot expenses) - Fetched expenses:', fetchedExpenses);
                 setExpenses(fetchedExpenses);
 
                 let totalActualFood = 0;
@@ -370,6 +382,7 @@ const App = () => {
             setActualMiscellaneousCost(0);
             setActualHotelCost(0);
             setActualFlightCost(0);
+            console.log('App.js (useEffect expenses) - Not fetching expenses (no current trip or auth not ready)');
         }
     }, [isAuthReady, userId, db, currentTripId]);
 
@@ -377,6 +390,7 @@ const App = () => {
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
     useEffect(() => {
         const fetchAllCountries = async () => {
+            console.log('App.js (useEffect countries) - Fetching all countries...');
             try {
                 const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags');
                 const data = await response.json();
@@ -384,6 +398,7 @@ const App = () => {
                     name: country.name.common,
                     flag: country.flags.svg
                 })));
+                console.log('App.js (useEffect countries) - Countries fetched successfully.');
             } catch (error) {
                 console.error("Error fetching all countries for suggestions:", error);
             }
@@ -393,6 +408,7 @@ const App = () => {
 
     // --- Helper to reset all trip-related states for a new trip ---
     const resetTripStates = useCallback(() => {
+        console.log('App.js (resetTripStates) - Resetting all trip states.');
         setCountries([]);
         setCities([]);
         setStartDate(null);
@@ -473,8 +489,9 @@ const App = () => {
 
     // --- Function to load a selected trip ---
     const loadTrip = async (tripId) => {
+        console.log('App.js (loadTrip) - Attempting to load trip:', tripId);
         if (!db || !userId) {
-            console.error("Firestore not initialized or user not authenticated.");
+            console.error("App.js (loadTrip) - Firestore not initialized or user not authenticated.");
             return;
         }
         const projectIdForPaths = firebaseConfig.projectId;
@@ -483,6 +500,7 @@ const App = () => {
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
+                console.log('App.js (loadTrip) - Fetched tripData from Firestore:', tripData);
                 resetTripStates(); // Call reset before populating states
 
                 setCountries(tripData.countries || []);
@@ -504,7 +522,7 @@ const App = () => {
                 if (Array.isArray(tripData.travelingParties)) {
                     setTravelingParties(tripData.travelingParties);
                 } else {
-                    console.warn("tripData.travelingParties for trip ID:", tripId, " is not an array. Resetting to default [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]. This likely indicates old or corrupted saved data.");
+                    console.error("App.js (loadTrip) - !!! CRITICAL: tripData.travelingParties for trip ID:", tripId, " is NOT an array. It is:", tripData.travelingParties, "Type:", typeof tripData.travelingParties, ". Resetting to default.");
                     setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
                 }
 
@@ -542,22 +560,23 @@ const App = () => {
                 setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []);
                 setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []);
                 setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []);
-                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []);
+                setSelectedSuggestedTouristSpots(tripData.selectedTouristSpots || []);
                 setSelectedSuggestedTours(tripData.selectedSuggestedTours || []);
                 setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
 
                 setCurrentTripId(tripId);
                 setIsNewTripStarted(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                console.log('App.js (loadTrip) - Trip loaded successfully for:', tripId);
             } else {
-                console.warn("No such trip document!");
+                console.warn("App.js (loadTrip) - No such trip document found for ID:", tripId);
                 setTravelPlanSummary(null);
                 setCurrentTripId(null);
                 resetTripStates(); // Resets to default initial state
                 setIsNewTripStarted(false);
             }
         } catch (error) {
-            console.error("Error loading trip:", error);
+            console.error("App.js (loadTrip) - Error loading trip:", error, error.stack);
             setTravelPlanSummary(null);
             setCurrentTripId(null);
             resetTripStates(); // Resets to default initial state
@@ -567,8 +586,9 @@ const App = () => {
 
     // --- Function to create a new trip ---
     const createNewTrip = () => {
+        console.log('App.js (createNewTrip) - Starting new trip.');
         setCurrentTripId(null);
-        resetTripStates();
+        resetTripStates(); // This ensures travelingParties is set to initial array
         setTravelPlanSummary(null);
         setIsNewTripStarted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -576,8 +596,9 @@ const App = () => {
 
     // --- Function to save the current trip ---
     const saveCurrentTrip = async (summaryData) => {
+        console.log('App.js (saveCurrentTrip) - Attempting to save trip.');
         if (!db || !userId) {
-            console.error("Firestore not initialized or user not authenticated.");
+            console.error("App.js (saveCurrentTrip) - Firestore not initialized or user not authenticated.");
             return;
         }
         const projectIdForPaths = firebaseConfig.projectId;
@@ -633,16 +654,18 @@ const App = () => {
                 selectedSuggestedTours,
                 selectedSuggestedSportingEvents,
             };
+            console.log('App.js (saveCurrentTrip) - Trip data to save:', tripDataToSave);
+
 
             if (currentTripId) {
                 const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
-                console.log("Trip updated with ID:", currentTripId);
+                console.log("App.js (saveCurrentTrip) - Trip updated with ID:", currentTripId);
             } else {
                 const tripsCollectionRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id);
-                console.log("New trip created with ID:", newTripDocRef.id);
+                console.log("App.js (saveCurrentTrip) - New trip created with ID:", newTripDocRef.id);
             }
             setTravelPlanSummary(summaryData);
             setTimeout(() => {
@@ -653,21 +676,22 @@ const App = () => {
             }, 100);
 
         } catch (error) {
-            console.error("Error saving trip:", error);
+            console.error("App.js (saveCurrentTrip) - Error saving trip:", error, error.stack);
         }
     };
 
 
     // --- MAIN TRAVEL PLAN CALCULATION (modified to call saveCurrentTrip) ---
     const calculateTravelPlan = () => {
+        console.log('App.js (calculateTravelPlan) - Calculating travel plan.');
         let hasError = false;
         if (homeCountry.name === '') { setHomeCountryError("Please set your home country."); hasError = true; } else { setHomeCountryError(''); }
         if (homeCity === '') { setHomeCityError("Please set your home city."); hasError = true; } else { setHomeCityError(''); }
         if (countries.length === 0 && cities.length === 0) { setDestCountryError("Please add at least one destination country or city."); setDestCityError("Please add at least one destination country or city."); hasError = true; } else { setDestCountryError(''); setDestCityError(''); }
         if (!startDate || !endDate || overallDuration < 1) { setDateError("Please select valid start and end dates."); hasError = true; } else { setDateError(''); }
 
-        const totalAdults = travelingParties.reduce((sum, party) => sum + party.adults, 0);
-        const totalChildren = travelingParties.reduce((sum, party) => sum + party.children, 0);
+        const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); // Use partiesToProcess for safety
+        const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); // Use partiesToProcess for safety
 
         // RE-ADDED Validation
         if (totalAdults < 1) { setNumberOfAdultsError("Total adults must be at least 1."); hasError = true; } else { setNumberOfAdultsError(''); }
@@ -679,6 +703,7 @@ const App = () => {
 
 
         if (hasError) {
+            console.warn('App.js (calculateTravelPlan) - Validation errors detected, not generating summary.');
             setTravelPlanSummary(null);
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
