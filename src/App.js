@@ -6,7 +6,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
-// Import ALL refactored components with explicit .jsx extension (now fully uncommented)
+// Import ALL refactored components with explicit .jsx extension
 import HomeLocationSection from './components/HomeLocationSection.jsx';
 import DestinationsSection from './components/DestinationsSection.jsx';
 import TripDatesSection from './components/TripDatesSection.jsx';
@@ -74,7 +74,7 @@ const App = () => {
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
     const [homeCity, setHomeCity] = useState('');
-    const [newHomeCityInput, setNewHomeCityInput] = useState('');
+    const [newHomeCityInput, setNewHomeCityInput] = '';
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
@@ -88,21 +88,21 @@ const App = () => {
 
     let calculatedPeople = 0;
     // CRITICAL DEBUG LOGS AND REINFORCED CHECK:
-    console.log('App.js (render cycle) - travelingParties STATE before processing:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
+    console.log('App.js (Top Level Render) - travelingParties initial/current state:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
-    console.log('App.js (render cycle) - partiesToProcess AFTER Array.isArray check:', partiesToProcess, 'Type:', typeof partiesToProcess, 'IsArray:', Array.isArray(partiesToProcess));
+    console.log('App.js (Top Level Render) - partiesToProcess AFTER Array.isArray check:', partiesToProcess, 'Type:', typeof partiesToProcess, 'IsArray:', Array.isArray(partiesToProcess));
 
 
     if (partiesToProcess.length > 0) {
         for (const party of partiesToProcess) {
-            console.log('App.js (render cycle) - Processing party (in loop):', party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
-            console.log('App.js (render cycle) - Party details (if object):', party && party.id, party && party.name, party && party.adults, party && party.children);
+            console.log('App.js (Top Level Render) - Processing party (in loop):', party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
+            console.log('App.js (Top Level Render) - Party details (if object): ID=', party && party.id, ' Name=', party && party.name, ' Adults=', party && party.adults, ' Children=', party && party.children);
 
             // Defensive check for party object structure before accessing properties
             if (typeof party === 'object' && party !== null && 'adults' in party && 'children' in party) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
             } else {
-                console.error("App.js (render cycle) - !!! CRITICAL: Invalid party object found in travelingParties (for calculation), skipping:", party);
+                console.error("App.js (Top Level Render) - !!! CRITICAL: Invalid party object found in travelingParties (for calculation), skipping:", party);
             }
         }
     }
@@ -605,8 +605,8 @@ const App = () => {
 
         try {
             // Calculate total adults/children for summary data from travelingParties
-            const totalAdults = travelingParties.reduce((sum, party) => sum + (party.adults || 0), 0);
-            const totalChildren = travelingParties.reduce((sum, party) => sum + (party.children || 0), 0);
+            const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); // Use partiesToProcess for safety
+            const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); // Use partiesToProcess for safety
 
             const tripDataToSave = {
                 ...summaryData,
@@ -623,6 +623,8 @@ const App = () => {
                 moneyAvailable,
                 moneySaved,
                 contingencyPercentage,
+                contingencyAmount,
+
                 estimatedFlightCost,
                 estimatedHotelCost,
                 estimatedActivityCost,
