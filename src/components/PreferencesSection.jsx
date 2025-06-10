@@ -1,3 +1,4 @@
+// src/components/PreferencesSection.jsx
 import React, { useContext } from 'react';
 import { Star } from 'lucide-react';
 import { TripContext } from '../App.js';
