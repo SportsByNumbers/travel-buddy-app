@@ -1,3 +1,4 @@
+// src/components/SectionWrapper.jsx
 import React from 'react';
 
 const SectionWrapper = ({ title, icon: Icon, children }) => {
