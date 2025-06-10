@@ -1,6 +1,6 @@
 // src/components/PartyDetailsDisplay.jsx
 import React from 'react';
-import { XCircle } from 'lucide-react'; // Keep this imported, as it's part of the component structure
+// import { XCircle } from 'lucide-react'; // Comment out XCircle as it's not used in this test
 
 const PartyDetailsDisplay = ({ party, handlePartyChange, removeParty, isRemovable }) => {
     // Basic validation, should not cause the error
@@ -9,13 +9,18 @@ const PartyDetailsDisplay = ({ party, handlePartyChange, removeParty, isRemovabl
     }
 
     return (
+        // KEY: This div uses party.id for the key. This is usually safe.
+        // The error indicates 'object with keys {id, name, adults, children}' is the issue,
+        // suggesting the *content* of the div, not necessarily the key itself.
         <div key={party.id} className="p-4 border border-gray-200 rounded-md bg-gray-50 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Step 1: Start by commenting out EVERYTHING inside this div except the p tag and the button (if isRemovable is true) */}
-            {/* We will test this minimal rendering first. */}
 
-            <p>Debug: Party ID: {party.id || 'N/A'}</p> {/* Use `|| 'N/A'` to ensure primitive string display */}
+            {/* TEST 1: Absolute minimum rendering inside the loop */}
+            {/* Display only primitive values for debugging */}
+            <p>Party Debug - ID: {String(party.id)} Name: {String(party.name || 'N/A')}</p>
+            {/* Ensure any value displayed is explicitly converted to string for safety */}
 
-            {/* Comment out this entire inner div for the first test */}
+
+            {/* Comment out the entire input div for this test */}
             {/* <div className="flex-grow grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                 <div>
                     <label htmlFor={`party-name-${party.id}`} className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
@@ -54,7 +59,8 @@ const PartyDetailsDisplay = ({ party, handlePartyChange, removeParty, isRemovabl
                 </div>
             </div> */}
 
-            {isRemovable && (
+            {/* Comment out the remove button for this test */}
+            {/* {isRemovable && (
                 <button
                     onClick={() => removeParty(party.id)}
                     className="p-2 text-red-500 hover:text-red-700 transition-colors duration-200"
@@ -62,7 +68,7 @@ const PartyDetailsDisplay = ({ party, handlePartyChange, removeParty, isRemovabl
                 >
                     <XCircle size={20} />
                 </button>
-            )}
+            )} */}
         </div>
     );
 };
