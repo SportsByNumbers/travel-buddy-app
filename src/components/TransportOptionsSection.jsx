@@ -1,3 +1,4 @@
+// src/components/TransportOptionsSection.jsx
 import React, { useContext } from 'react';
 import { Plane /* Removed: Car, Train */ } from 'lucide-react'; // Removed unused imports
 import { TripContext } from '../App.js';
