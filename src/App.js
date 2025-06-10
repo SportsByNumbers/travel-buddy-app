@@ -87,6 +87,7 @@ const App = () => {
     ]);
 
     let calculatedPeople = 0;
+    // CRITICAL DEBUG LOGS AND REINFORCED CHECK:
     console.log('App.js (Top Level Render) - travelingParties initial/current state:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
     console.log('App.js (Top Level Render) - partiesToProcess AFTER Array.isArray check:', partiesToProcess, 'Type:', typeof partiesToProcess, 'IsArray:', Array.isArray(partiesToProcess));
@@ -558,7 +559,7 @@ const App = () => {
                 setSelectedSuggestedActivities(tripData.selectedSuggestedActivities || []);
                 setSelectedSuggestedFoodLocations(tripData.selectedSuggestedFoodLocations || []);
                 setSelectedSuggestedThemeParks(tripData.selectedSuggestedThemeParks || []);
-                setSelectedSuggestedTouristSpots(tripData.selectedSuggestedTouristSpots || []);
+                setSelectedSuggestedTouristSpots(tripData.selectedTouristSpots || []);
                 setSelectedSuggestedTours(tripData.selectedSuggestedTours || []);
                 setSelectedSuggestedSportingEvents(tripData.selectedSuggestedSportingEvents || []);
 
@@ -606,6 +607,8 @@ const App = () => {
             const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); // Use partiesToProcess for safety
             const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); // Use partiesToProcess for safety
 
+            const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100); // Defined here
+
             const tripDataToSave = {
                 ...summaryData,
                 startDate: startDate ? startDate.toISOString() : null,
@@ -621,7 +624,7 @@ const App = () => {
                 moneyAvailable,
                 moneySaved,
                 contingencyPercentage,
-                contingencyAmount,
+                contingencyAmount, // Used here correctly
 
                 estimatedFlightCost,
                 estimatedHotelCost,
