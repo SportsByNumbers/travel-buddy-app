@@ -3,9 +3,9 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle } /* Removed XCircle from here */ from 'lucide-react'; // Removed XCircle from this import
+import { PlusCircle } from 'lucide-react'; // XCircle is used in PartyDetailsDisplay, keep it out of here for this test
 
-// NEW: Import PartyDetailsDisplay
+// Import PartyDetailsDisplay (we'll comment out its usage for this test)
 import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
 
 const BudgetPlanningSection = () => {
@@ -116,15 +116,14 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
+            {/* CRITICAL TEST: Render only the primitive party.id within the map */}
             <div className="space-y-4">
                 {travelingParties.map(party => (
-                    <PartyDetailsDisplay
-                        key={party.id}
-                        party={party}
-                        handlePartyChange={handlePartyChange}
-                        removeParty={removeParty}
-                        isRemovable={travelingParties.length > 1}
-                    />
+                    // THIS IS THE ONLY LINE IN THE LOOP'S BODY
+                    <div key={String(party.id)}>
+                        {/* Render ONLY the ID, explicitly converted to a string */}
+                        <p>Party ID: {String(party.id)}</p>
+                    </div>
                 ))}
             </div>
 
