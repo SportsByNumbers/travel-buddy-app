@@ -5,8 +5,8 @@ import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import { PlusCircle } from 'lucide-react';
 
-// Import PartyDetailsDisplay
-import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
+// PartyDetailsDisplay is NOT USED in this extreme debugging test.
+// import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
 
 const BudgetPlanningSection = () => {
     const {
@@ -48,6 +48,16 @@ const BudgetPlanningSection = () => {
     const removeParty = (idToRemove) => {
         setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
+
+    // CRITICAL DEBUGGING LOGS FOR BudgetPlanningSection.jsx
+    console.log('BudgetPlanningSection - Received travelingParties:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
+    if (Array.isArray(travelingParties)) {
+        travelingParties.forEach((party, index) => {
+            console.log(`BudgetPlanningSection - Party ${index}:`, party, 'Type:', typeof party);
+            console.log(`BudgetPlanningSection - Party ${index} details: ID=${party.id} Name=${party.name} Adults=${party.adults} Children=${party.children}`);
+        });
+    }
+
 
     return (
         <SectionWrapper
@@ -116,16 +126,23 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
+            {/* EXTREME DEBUGGING RENDER: Stringify the whole array and individual items */}
             <div className="space-y-4">
-                {travelingParties.map(party => (
-                    <PartyDetailsDisplay
-                        key={party.id}
-                        party={party}
-                        handlePartyChange={handlePartyChange}
-                        removeParty={removeParty}
-                        isRemovable={travelingParties.length > 1}
-                    />
-                ))}
+                <p>Debugging travelingParties Array (JSON.stringify):</p>
+                <pre>{JSON.stringify(travelingParties, null, 2)}</pre> {/* Render the whole array as string */}
+
+                {/* Only map if it's explicitly an array, then stringify each item */}
+                {Array.isArray(travelingParties) ? (
+                    travelingParties.map((party, index) => (
+                        <div key={String(party.id || `_idx_${index}`)} className="p-4 border border-gray-200 rounded-md bg-gray-50">
+                            <p>Debugging Party Item {index}:</p>
+                            <pre>{JSON.stringify(party, null, 2)}</pre> {/* Render each item as string */}
+                            {/* No inputs, no buttons in this extreme test */}
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-red-500">travelingParties is NOT an array! Type: {typeof travelingParties}</p>
+                )}
             </div>
 
             <div className="mt-4 flex justify-between items-center">
