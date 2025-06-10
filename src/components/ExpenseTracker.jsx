@@ -1,3 +1,4 @@
+// src/components/ExpenseTracker.jsx
 import React, { useContext, useState, useEffect } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
