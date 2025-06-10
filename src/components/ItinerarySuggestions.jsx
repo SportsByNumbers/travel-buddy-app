@@ -10,11 +10,6 @@ const ItinerarySuggestions = () => {
         // ... (keep any other context values you were already destructuring and using)
     } = useContext(TripContext);
 
-    // ... rest of your existing ItinerarySuggestions.jsx code
-    // Ensure you are actually using `isGeneratingSuggestions` in your JSX,
-    // and if you need the other `suggested...` or `setSelectedSuggested...` variables,
-    // make sure to uncomment them and use them in your component's logic or JSX.
-
     return (
         <section className="mt-8 p-6 bg-white rounded-xl shadow-md">
             <h2 className="text-2xl font-semibold text-indigo-800 mb-4">Itinerary Suggestions</h2>
