@@ -1,3 +1,4 @@
+// src/components/FoodAllowanceSection.jsx
 import React, { useContext } from 'react';
 import { Utensils } from 'lucide-react';
 import { TripContext } from '../App.js';
