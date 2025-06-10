@@ -3,9 +3,9 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle } /* Removed XCircle from here as it's unused in this version */ from 'lucide-react';
 
-// PartyDetailsDisplay is NOT USED in this extreme debugging test.
+// PartyDetailsDisplay is NOT USED in this extreme debugging test, so no import needed
 // import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
 
 const BudgetPlanningSection = () => {
@@ -26,27 +26,17 @@ const BudgetPlanningSection = () => {
         numberOfChildrenError,
     } = useContext(TripContext);
 
-    // Handler to update a specific party's details
-    const handlePartyChange = (id, field, value) => {
-        setTravelingParties(prevParties =>
-            prevParties.map(party =>
-                party.id === id ? { ...party, [field]: value } : party
-            )
-        );
-    };
+    // Removed handlePartyChange and removeParty functions temporarily
+    // as they are unused in the JSX for this debugging step.
+    // We will re-add them when PartyDetailsDisplay is re-integrated.
 
-    // Handler to add a new party
+    // Handler to add a new party (still used by the Add Another Group button)
     const addParty = () => {
         const newId = travelingParties.length > 0 ? Math.max(...travelingParties.map(p => p.id)) + 1 : 1;
         setTravelingParties(prevParties => [
             ...prevParties,
             { id: newId, name: `Group ${newId}`, adults: 0, children: 0 }
         ]);
-    };
-
-    // Handler to remove a party
-    const removeParty = (idToRemove) => {
-        setTravelingParties(prevParties => prevParties.filter(party => party.id !== idToRemove));
     };
 
     // CRITICAL DEBUGGING LOGS FOR BudgetPlanningSection.jsx
