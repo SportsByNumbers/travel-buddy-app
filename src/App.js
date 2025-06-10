@@ -74,7 +74,7 @@ const App = () => {
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
     const [homeCity, setHomeCity] = useState('');
-    const [newHomeCityInput, setNewHomeCityInput] = '';
+    const [newHomeCityInput, setNewHomeCityInput] = useState(''); // Corrected: Should be useState, not direct assignment
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
@@ -607,7 +607,33 @@ const App = () => {
             const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); // Use partiesToProcess for safety
             const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); // Use partiesToProcess for safety
 
-            const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100); // Defined here
+            // These variables must be defined here, as they are used below in tripDataToSave
+            // Recalculate them or ensure they are passed as arguments if needed
+            // For now, let's assume they are derived based on the summaryData or states
+            const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
+            const totalFoodCost = totalDailyFoodAllowance * overallDuration;
+            const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
+                                                     (carRental ? parseFloat(carRentalCost) : 0) +
+                                                     (shuttle ? parseFloat(shuttleCost) : 0) +
+                                                     (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+                                                     (airportParking ? parseFloat(airportParkingCost) : 0) +
+                                                     parseFloat(estimatedInterCityFlightCost) +
+                                                     parseFloat(estimatedInterCityTrainCost) +
+                                                     parseFloat(estimatedInterCityBusCost) +
+                                                     (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
+                                                     (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
+
+            const totalEstimatedCostBeforeFoodAndContingency =
+                parseFloat(estimatedFlightCost) +
+                parseFloat(estimatedHotelCost) +
+                parseFloat(estimatedActivityCost) +
+                combinedEstimatedTransportCost +
+                parseFloat(estimatedMiscellaneousCost);
+
+            const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
+            const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
+            const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
+
 
             const tripDataToSave = {
                 ...summaryData,
@@ -722,18 +748,16 @@ const App = () => {
         const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
         const totalFoodCost = totalDailyFoodAllowance * overallDuration;
 
-        const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100); // Defined here
-
         const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
-                                                        (carRental ? parseFloat(carRentalCost) : 0) +
-                                                        (shuttle ? parseFloat(shuttleCost) : 0) +
-                                                        (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
-                                                        (airportParking ? parseFloat(airportParkingCost) : 0) +
-                                                        parseFloat(estimatedInterCityFlightCost) +
-                                                        parseFloat(estimatedInterCityTrainCost) +
-                                                        parseFloat(estimatedInterCityBusCost) +
-                                                        (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
-                                                        (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
+                                                     (carRental ? parseFloat(carRentalCost) : 0) +
+                                                     (shuttle ? parseFloat(shuttleCost) : 0) +
+                                                     (airportTransfers ? parseFloat(airportTransfersCost) : 0) +
+                                                     (airportParking ? parseFloat(airportParkingCost) : 0) +
+                                                     parseFloat(estimatedInterCityFlightCost) +
+                                                     parseFloat(estimatedInterCityTrainCost) +
+                                                     parseFloat(estimatedInterCityBusCost) +
+                                                     (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
+                                                     (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
 
 
         const totalEstimatedCostBeforeFoodAndContingency =
@@ -743,8 +767,11 @@ const App = () => {
             combinedEstimatedTransportCost +
             parseFloat(estimatedMiscellaneousCost);
 
+        // Define these variables BEFORE they are used in contingencyAmount
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
         const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
+
+        const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
 
         const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
 
