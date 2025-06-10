@@ -55,7 +55,7 @@ const App = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [authError, setAuthError] = useState('');
-    const [isLoginMode, setIsLoginMode] = useState(true);
+    const [isLoginMode, setIsLoginMode] = true;
 
     const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
 
@@ -623,6 +623,7 @@ const App = () => {
                                                      (localPublicTransport ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0) +
                                                      (taxiRideShare ? (parseFloat(dailyLocalTransportAllowance) * overallDuration) : 0);
 
+
             const totalEstimatedCostBeforeFoodAndContingency =
                 parseFloat(estimatedFlightCost) +
                 parseFloat(estimatedHotelCost) +
@@ -814,32 +815,10 @@ const App = () => {
             estimatedHotelCost,
             estimatedActivityCost,
             estimatedMiscellaneousCost,
-            combinedEstimatedTransportCost,
-            totalEstimatedCost: subTotalEstimatedCost,
-            grandTotalEstimated,
-
-            actualFlightCost,
-            actualHotelCost,
-            actualActivityCost,
-            actualMiscellaneousCost,
-            actualTransportCost: combinedActualTransportCostFromExpenses,
-            actualFoodCost,
-            actualGrandTotal,
-
-            breakfastAllowance,
-            lunchAllowance,
-            dinnerAllowance,
-            snacksAllowance,
-            totalDailyFoodAllowance,
-            totalFoodCost: finalTotalFoodCost,
-
-            carRental,
+            estimatedTransportCost,
             carRentalCost,
-            shuttle,
             shuttleCost,
-            airportTransfers,
             airportTransfersCost,
-            airportParking,
             airportParkingCost,
             estimatedInterCityFlightCost,
             estimatedInterCityTrainCost,
@@ -848,10 +827,14 @@ const App = () => {
             taxiRideShare,
             walking,
             dailyLocalTransportAllowance,
-
-            remainingBudgetEstimated,
-            remainingBudgetActual,
-            topicsOfInterest,
+            breakfastAllowance,
+            lunchAllowance,
+            dinnerAllowance,
+            snacksAllowance,
+            carRental,
+            shuttle,
+            airportTransfers,
+            airportParking,
             selectedSuggestedActivities,
             selectedSuggestedFoodLocations,
             selectedSuggestedThemeParks,
