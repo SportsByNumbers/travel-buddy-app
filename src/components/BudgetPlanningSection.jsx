@@ -1,11 +1,11 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react'; // Added useState
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle } /* Removed XCircle from here as it's unused in this version */ from 'lucide-react';
+import { PlusCircle } from 'lucide-react'; // PlusCircle is still used here
 
-// PartyDetailsDisplay is NOT USED in this extreme debugging test, so no import needed
+// PartyDetailsDisplay is NOT USED in this version
 // import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
 
 const BudgetPlanningSection = () => {
@@ -20,33 +20,33 @@ const BudgetPlanningSection = () => {
         estimatedMiscellaneousCost, setEstimatedMiscellaneousCost,
         estimatedTransportCost, setEstimatedTransportCost,
         isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties,
-        numberOfPeople,
-        numberOfAdultsError,
-        numberOfChildrenError,
+        // Removed travelingParties, setTravelingParties from destructuring here
+        numberOfPeople, // This is derived from App.js's (simplified) travelingParties
+        numberOfAdultsError, // These are still passed from App.js, but now for general validation
+        numberOfChildrenError, // These are still passed from App.js, but now for general validation
+        // Access setTravelingParties directly from useContext below when updating
     } = useContext(TripContext);
 
-    // Removed handlePartyChange and removeParty functions temporarily
-    // as they are unused in the JSX for this debugging step.
-    // We will re-add them when PartyDetailsDisplay is re-integrated.
+    // Local states for the fixed Adults/Children inputs
+    const [localAdults, setLocalAdults] = useState(useContext(TripContext).travelingParties[0]?.adults || 1);
+    const [localChildren, setLocalChildren] = useState(useContext(TripContext).travelingParties[0]?.children || 0);
 
-    // Handler to add a new party (still used by the Add Another Group button)
-    const addParty = () => {
-        const newId = travelingParties.length > 0 ? Math.max(...travelingParties.map(p => p.id)) + 1 : 1;
-        setTravelingParties(prevParties => [
-            ...prevParties,
-            { id: newId, name: `Group ${newId}`, adults: 0, children: 0 }
-        ]);
-    };
+    // This function will update the main App.js state
+    const updateAppTravelingParties = useCallback((adults, children) => {
+        useContext(TripContext).setTravelingParties([{ id: 1, name: 'Main Group', adults: adults, children: children }]);
+    }, []); // No dependencies as it directly uses context setter
 
-    // CRITICAL DEBUGGING LOGS FOR BudgetPlanningSection.jsx
-    console.log('BudgetPlanningSection - Received travelingParties:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
-    if (Array.isArray(travelingParties)) {
-        travelingParties.forEach((party, index) => {
-            console.log(`BudgetPlanningSection - Party ${index}:`, party, 'Type:', typeof party);
-            console.log(`BudgetPlanningSection - Party ${index} details: ID=${party.id} Name=${party.name} Adults=${party.adults} Children=${party.children}`);
-        });
-    }
+    // Sync local state with global state on initial render and subsequent changes if needed
+    useEffect(() => {
+        setLocalAdults(useContext(TripContext).travelingParties[0]?.adults || 1);
+        setLocalChildren(useContext(TripContext).travelingParties[0]?.children || 0);
+    }, [useContext(TripContext).travelingParties]); // Re-sync if App.js's state changes
+
+    // No handlePartyChange or removeParty needed for this simplified UI
+    // No addParty button (for dynamic groups) in this simplified UI
+
+    // Debugging logs (these should now run without errors if the root is the map rendering)
+    console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', useContext(TripContext).travelingParties, 'Type:', typeof useContext(TripContext).travelingParties, 'IsArray:', Array.isArray(useContext(TripContext).travelingParties));
 
 
     return (
@@ -116,32 +116,41 @@ const BudgetPlanningSection = () => {
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
 
-            {/* EXTREME DEBUGGING RENDER: Stringify the whole array and individual items */}
-            <div className="space-y-4">
-                <p>Debugging travelingParties Array (JSON.stringify):</p>
-                <pre>{JSON.stringify(travelingParties, null, 2)}</pre> {/* Render the whole array as string */}
-
-                {/* Only map if it's explicitly an array, then stringify each item */}
-                {Array.isArray(travelingParties) ? (
-                    travelingParties.map((party, index) => (
-                        <div key={String(party.id || `_idx_${index}`)} className="p-4 border border-gray-200 rounded-md bg-gray-50">
-                            <p>Debugging Party Item {index}:</p>
-                            <pre>{JSON.stringify(party, null, 2)}</pre> {/* Render each item as string */}
-                            {/* No inputs, no buttons in this extreme test */}
-                        </div>
-                    ))
-                ) : (
-                    <p className="text-red-500">travelingParties is NOT an array! Type: {typeof travelingParties}</p>
-                )}
+            {/* NEW: Fixed inputs for Adults/Children and Debug Message */}
+            <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-6">
+                <p className="font-semibold mb-2">Note: Multi-party breakdown temporarily disabled.</p>
+                <p className="text-sm">Please use the total number of adults and children for now. We are resolving a technical issue with dynamic party rendering.</p>
             </div>
 
-            <div className="mt-4 flex justify-between items-center">
-                <button
-                    onClick={addParty}
-                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-sm"
-                >
-                    <PlusCircle size={16} className="mr-1" /> Add Another Group
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField
+                    label="Total Adults"
+                    type="number"
+                    value={localAdults}
+                    onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setLocalAdults(val);
+                        updateAppTravelingParties(val, localChildren); // Update App.js state
+                    }}
+                    placeholder="e.g., 2"
+                    min="1"
+                />
+                <InputField
+                    label="Total Children"
+                    type="number"
+                    value={localChildren}
+                    onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setLocalChildren(val);
+                        updateAppTravelingParties(localAdults, val); // Update App.js state
+                    }}
+                    placeholder="e.g., 1"
+                    min="0"
+                />
+            </div>
+
+            <div className="mt-4 flex justify-end items-center">
+                {/* No addParty button needed anymore */}
                 <p className="text-md font-semibold text-gray-800">
                     Total Travelers: <span className="text-indigo-600 text-lg">{numberOfPeople}</span>
                 </p>
