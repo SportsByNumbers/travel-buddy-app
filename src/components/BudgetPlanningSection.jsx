@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-// REMOVE THIS LINE: import { PlusCircle } from 'lucide-react';
+// REMOVED: import { PlusCircle } from 'lucide-react'; // This import was removed as it was unused
 
 const BudgetPlanningSection = () => {
     // Get context values at the top level of the component
