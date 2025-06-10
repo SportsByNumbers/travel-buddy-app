@@ -768,7 +768,6 @@ const App = () => {
             combinedEstimatedTransportCost +
             parseFloat(estimatedMiscellaneousCost);
 
-        // Define these variables BEFORE they are used in contingencyAmount
         const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
         const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
 
@@ -776,7 +775,11 @@ const App = () => {
 
         const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
 
-        // Add eslint-disable-line comments for the unused variables
+        // --- Corrected order for actualGrandTotal ---
+        const combinedActualTransportCostFromExpenses = actualTransportCost;
+        const actualGrandTotal = actualFlightCost + actualHotelCost + actualActivityCost + actualMiscellaneousCost + actualFoodCost + combinedActualTransportCostFromExpenses;
+        // --- End corrected order ---
+
         const remainingBudgetEstimated = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotalEstimated; // eslint-disable-line no-unused-vars
         const remainingBudgetActual = parseFloat(moneyAvailable) + parseFloat(moneySaved) - actualGrandTotal; // eslint-disable-line no-unused-vars
 
@@ -813,10 +816,32 @@ const App = () => {
             estimatedHotelCost,
             estimatedActivityCost,
             estimatedMiscellaneousCost,
-            estimatedTransportCost,
+            combinedEstimatedTransportCost,
+            totalEstimatedCost: subTotalEstimatedCost,
+            grandTotalEstimated,
+
+            actualFlightCost,
+            actualHotelCost,
+            actualActivityCost,
+            actualMiscellaneousCost,
+            actualTransportCost: combinedActualTransportCostFromExpenses,
+            actualFoodCost,
+            actualGrandTotal, // Make sure actualGrandTotal is also included in summaryData
+
+            breakfastAllowance,
+            lunchAllowance,
+            dinnerAllowance,
+            snacksAllowance,
+            totalDailyFoodAllowance,
+            totalFoodCost: finalTotalFoodCost,
+
+            carRental,
             carRentalCost,
+            shuttle,
             shuttleCost,
+            airportTransfers,
             airportTransfersCost,
+            airportParking,
             airportParkingCost,
             estimatedInterCityFlightCost,
             estimatedInterCityTrainCost,
@@ -825,22 +850,16 @@ const App = () => {
             taxiRideShare,
             walking,
             dailyLocalTransportAllowance,
-            breakfastAllowance,
-            lunchAllowance,
-            dinnerAllowance,
-            snacksAllowance,
-            carRental,
-            shuttle,
-            airportTransfers,
-            airportParking,
+
+            remainingBudgetEstimated, // Include them in summaryData
+            remainingBudgetActual,    // Include them in summaryData
+            topicsOfInterest,
             selectedSuggestedActivities,
             selectedSuggestedFoodLocations,
             selectedSuggestedThemeParks,
             selectedSuggestedTouristSpots,
             selectedSuggestedTours,
             selectedSuggestedSportingEvents,
-            remainingBudgetEstimated, // Include them in summaryData
-            remainingBudgetActual,    // Include them in summaryData
         };
 
         saveCurrentTrip(summaryData);
