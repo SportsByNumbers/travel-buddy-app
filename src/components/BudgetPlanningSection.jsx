@@ -1,12 +1,9 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext, useState } from 'react'; // Added useState
+import React, { useContext, useState, useEffect, useCallback } from 'react'; // Added useEffect, useCallback
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import { PlusCircle } from 'lucide-react'; // PlusCircle is still used here
-
-// PartyDetailsDisplay is NOT USED in this version
-// import PartyDetailsDisplay from './PartyDetailsDisplay.jsx';
 
 const BudgetPlanningSection = () => {
     const {
@@ -27,27 +24,38 @@ const BudgetPlanningSection = () => {
         // Access setTravelingParties directly from useContext below when updating
     } = useContext(TripContext);
 
+    // Get the setter for travelingParties from context
+    const { setTravelingParties } = useContext(TripContext);
+
     // Local states for the fixed Adults/Children inputs
-    const [localAdults, setLocalAdults] = useState(useContext(TripContext).travelingParties[0]?.adults || 1);
-    const [localChildren, setLocalChildren] = useState(useContext(TripContext).travelingParties[0]?.children || 0);
+    const [localAdults, setLocalAdults] = useState(1);
+    const [localChildren, setLocalChildren] = useState(0);
 
-    // This function will update the main App.js state
-    const updateAppTravelingParties = useCallback((adults, children) => {
-        useContext(TripContext).setTravelingParties([{ id: 1, name: 'Main Group', adults: adults, children: children }]);
-    }, []); // No dependencies as it directly uses context setter
-
-    // Sync local state with global state on initial render and subsequent changes if needed
+    // Sync local state with global state on initial render and whenever the global travelingParties changes
     useEffect(() => {
-        setLocalAdults(useContext(TripContext).travelingParties[0]?.adults || 1);
-        setLocalChildren(useContext(TripContext).travelingParties[0]?.children || 0);
-    }, [useContext(TripContext).travelingParties]); // Re-sync if App.js's state changes
+        // Ensure that useContext(TripContext).travelingParties is an array before accessing its elements
+        const currentGlobalParties = useContext(TripContext).travelingParties;
+        if (Array.isArray(currentGlobalParties) && currentGlobalParties.length > 0) {
+            setLocalAdults(currentGlobalParties[0]?.adults || 1);
+            setLocalChildren(currentGlobalParties[0]?.children || 0);
+        }
+    }, [useContext(TripContext).travelingParties]); // Dependency on useContext().travelingParties
 
-    // No handlePartyChange or removeParty needed for this simplified UI
-    // No addParty button (for dynamic groups) in this simplified UI
+    // Callback to update App.js's travelingParties state
+    const updateAppTravelingParties = useCallback((adults, children) => {
+        setTravelingParties([{ id: 1, name: 'Main Group', adults: adults, children: children }]);
+    }, [setTravelingParties]); // Dependency on setTravelingParties from context
 
-    // Debugging logs (these should now run without errors if the root is the map rendering)
+    // Debugging console logs
     console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', useContext(TripContext).travelingParties, 'Type:', typeof useContext(TripContext).travelingParties, 'IsArray:', Array.isArray(useContext(TripContext).travelingParties));
-
+    if (Array.isArray(useContext(TripContext).travelingParties)) {
+        useContext(TripContext).travelingParties.forEach((party, index) => {
+            console.log(`BudgetPlanningSection (render) - Party ${index}:`, party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
+            if (typeof party === 'object' && party !== null) {
+                console.log(`BudgetPlanningSection (render) - Party ${index} details: ID=${party.id} Name=${party.name} Adults=${party.adults} Children=${party.children}`);
+            }
+        });
+    }
 
     return (
         <SectionWrapper
@@ -150,7 +158,6 @@ const BudgetPlanningSection = () => {
             </div>
 
             <div className="mt-4 flex justify-end items-center">
-                {/* No addParty button needed anymore */}
                 <p className="text-md font-semibold text-gray-800">
                     Total Travelers: <span className="text-indigo-600 text-lg">{numberOfPeople}</span>
                 </p>
