@@ -55,7 +55,7 @@ const App = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [authError, setAuthError] = useState('');
-    const [isLoginMode, setIsLoginMode] = true;
+    const [isLoginMode, setIsLoginMode] = useState(true);
 
     const googleProvider = useMemo(() => auth ? new GoogleAuthProvider() : null, [auth]);
 
@@ -776,11 +776,9 @@ const App = () => {
 
         const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
 
-        const remainingBudgetEstimated = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotalEstimated;
-
-        const combinedActualTransportCostFromExpenses = actualTransportCost;
-        const actualGrandTotal = actualFlightCost + actualHotelCost + actualActivityCost + actualMiscellaneousCost + actualFoodCost + combinedActualTransportCostFromExpenses;
-        const remainingBudgetActual = parseFloat(moneyAvailable) + parseFloat(moneySaved) - actualGrandTotal;
+        // Add eslint-disable-line comments for the unused variables
+        const remainingBudgetEstimated = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotalEstimated; // eslint-disable-line no-unused-vars
+        const remainingBudgetActual = parseFloat(moneyAvailable) + parseFloat(moneySaved) - actualGrandTotal; // eslint-disable-line no-unused-vars
 
 
         const summaryData = {
@@ -841,6 +839,8 @@ const App = () => {
             selectedSuggestedTouristSpots,
             selectedSuggestedTours,
             selectedSuggestedSportingEvents,
+            remainingBudgetEstimated, // Include them in summaryData
+            remainingBudgetActual,    // Include them in summaryData
         };
 
         saveCurrentTrip(summaryData);
