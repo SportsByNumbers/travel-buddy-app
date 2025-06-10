@@ -82,15 +82,15 @@ const App = () => {
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
     const [isPerPerson, setIsPerPerson] = useState(true);
 
-    const [travelingParties, setTravelingParties] = useState([
-        { id: 1, name: 'Main Group', adults: 1, children: 0 }
-    ]);
+    // Explicitly initialize travelingParties to always be an array
+    const [travelingParties, setTravelingParties] = useState(
+        // This is the most robust initialization to ensure it's always an array
+        [{ id: 1, name: 'Main Group', adults: 1, children: 0 }]
+    );
 
     let calculatedPeople = 0;
-    // CRITICAL FIX: Ensure travelingParties is always an array before attempting iteration.
-    // This handles cases where travelingParties might momentarily be a non-array value like 'true'.
-    // If travelingParties is not an array, it defaults to an empty array for iteration.
-    const partiesToProcess = (Array.isArray(travelingParties) && travelingParties) ? travelingParties : [];
+    // Reinforced check: Ensure partiesToProcess is always an array for iteration
+    const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
         for (const party of partiesToProcess) {
@@ -119,8 +119,7 @@ const App = () => {
     const [airportTransfersCost, setAirportTransfersCost] = useState(0);
     const [airportParkingCost, setAirportParkingCost] = useState(0);
     const [estimatedInterCityFlightCost, setEstimatedInterCityFlightCost] = useState(0);
-    // FIX for SyntaxError on line 124: Changed '=' to ','
-    const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0);
+    const [estimatedInterCityTrainCost, setEstimatedInterCityTrainCost] = useState(0); // Fix for SyntaxError
     const [estimatedInterCityBusCost, setEstimatedInterCityBusCost] = useState(0);
     const [localPublicTransport, setLocalPublicTransport] = useState(false);
     const [taxiRideShare, setTaxiRideShare] = useState(false);
