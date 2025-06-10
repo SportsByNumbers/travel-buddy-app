@@ -2,8 +2,6 @@
 import React from 'react';
 
 function InputField({ label, value, type = 'text', error, options, selectedItems = [], ...props }) {
-    // Ensure selectedItems is an array, and check if 'value' is a primitive.
-    // This prevents errors if 'value' is unexpectedly an object (e.g., a full party object).
     const isSelected = Array.isArray(selectedItems) &&
                        (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') &&
                        selectedItems.includes(value);
@@ -16,16 +14,14 @@ function InputField({ label, value, type = 'text', error, options, selectedItems
 
     let renderInput;
     if (type === 'select') {
-        // Render a <select> element if type is 'select'
         renderInput = (
             <select
                 id={label}
                 name={label}
                 value={value}
                 className={inputClasses}
-                {...props} // Pass through any other props like onChange
+                {...props}
             >
-                {/* Ensure options is an array before mapping */}
                 {options && Array.isArray(options) && options.map((option, index) => (
                     <option key={option.value || index} value={option.value}>
                         {option.label}
@@ -34,7 +30,6 @@ function InputField({ label, value, type = 'text', error, options, selectedItems
             </select>
         );
     } else {
-        // Render a standard <input> element for other types
         renderInput = (
             <input
                 type={type}
@@ -42,7 +37,7 @@ function InputField({ label, value, type = 'text', error, options, selectedItems
                 name={label}
                 value={value}
                 className={inputClasses}
-                {...props} // Pass through any other props like onChange, min, placeholder, required etc.
+                {...props}
             />
         );
     }
