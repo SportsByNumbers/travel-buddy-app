@@ -1,3 +1,4 @@
+// src/components/TagInput.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react'; // Assuming you use X icon for removing tags
 
