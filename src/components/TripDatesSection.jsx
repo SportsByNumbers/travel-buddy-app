@@ -1,3 +1,4 @@
+// src/components/TripDatesSection.jsx
 import React, { useContext } from 'react';
 import { Calendar } from 'lucide-react';
 import { TripContext } from '../App.js';
