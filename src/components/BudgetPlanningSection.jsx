@@ -1,9 +1,9 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext, useState, useEffect, useCallback } from 'react'; // ADDED useState, useEffect, useCallback imports
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { PlusCircle } from 'lucide-react';
+// REMOVE THIS LINE: import { PlusCircle } from 'lucide-react';
 
 const BudgetPlanningSection = () => {
     // Get context values at the top level of the component
@@ -48,7 +48,7 @@ const BudgetPlanningSection = () => {
     console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', context.travelingParties, 'Type:', typeof context.travelingParties, 'IsArray:', Array.isArray(context.travelingParties));
     if (Array.isArray(context.travelingParties)) {
         context.travelingParties.forEach((party, index) => {
-            console.log(`BudgetPlanningSection (render) - Party ${index}:`, party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
+            console.log(`BudgetPlanningSection (render) - Party ${index}:`, party, 'Type:', typeof party === 'object' && party !== null);
             if (typeof party === 'object' && party !== null) {
                 console.log(`BudgetPlanningSection (render) - Party ${index} details: ID=${party.id} Name=${party.name} Adults=${party.adults} Children=${party.children}`);
             }
