@@ -1,13 +1,13 @@
 // src/components/HomeLocationSection.jsx
 import React, { useContext, useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { TripContext } from '../App.js'; // Explicit .js extension
-import SectionWrapper from './SectionWrapper.jsx'; // Explicit .jsx extension
-import TagInput from './TagInput.jsx'; // Explicit .jsx extension
-import InputField from './InputField.jsx'; // Explicit .jsx extension
-import { useCountrySearch } from '../hooks/useCountrySearch.js'; // Explicit .js extension
-import { fetchCountryData } from '../services/apiService.js'; // Explicit .js extension
-import { safeRender } from '../utils/safeRender.js'; // Import safeRender
+import { TripContext } from '../App.js';
+import SectionWrapper from './SectionWrapper.jsx';
+import TagInput from './TagInput.jsx';
+import InputField from './InputField.jsx';
+import { useCountrySearch } from '../hooks/useCountrySearch.js';
+import { fetchCountryData } from '../services/apiService.js';
+// Removed: import { safeRender } from '../utils/safeRender.js'; // This line is no longer needed here
 
 const HomeLocationSection = () => {
     const {
@@ -15,7 +15,7 @@ const HomeLocationSection = () => {
         homeCity, setHomeCity,
         homeCountryError, setHomeCountryError,
         homeCityError, setHomeCityError,
-        allCountries // From App.js context
+        allCountries
     } = useContext(TripContext);
 
     const homeCountryInputRef = useRef(null);
@@ -50,7 +50,7 @@ const HomeLocationSection = () => {
 
     const selectHomeCountrySuggestion = (country) => {
         setHomeCountry(country);
-        setHomeCountryInputValue(''); // Clear input after selection
+        setHomeCountryInputValue('');
         clearHomeCountrySuggestions();
         setHomeCountryError('');
         if (homeCountryInputRef.current) {
@@ -60,7 +60,7 @@ const HomeLocationSection = () => {
 
     const handleHomeCityChange = (e) => {
         setHomeCity(e.target.value);
-        setHomeCityError(''); // Clear error on change
+        setHomeCityError('');
     };
 
     return (
@@ -85,7 +85,7 @@ const HomeLocationSection = () => {
                 <InputField
                     id="homeCity"
                     label="Home City"
-                    value={homeCity} // This value will be safeRendered internally by InputField
+                    value={homeCity}
                     onChange={handleHomeCityChange}
                     placeholder="e.g., Sydney"
                     error={homeCityError}
