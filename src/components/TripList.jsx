@@ -3,28 +3,25 @@ import React, { useContext, useState } from 'react';
 import { TripContext } from '../App.js';
 import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { doc, deleteDoc } from 'firebase/firestore';
+import { safeRender } from '../utils/safeRender.js'; // Import safeRender
 
 const TripList = () => {
-    // FIX: Added 'appId' to destructuring from TripContext
-    const { trips, loadTrip, currentTripId, db, userId, /* Removed: setTravelPlanSummary, */ createNewTrip, appId } = useContext(TripContext);
+    const { trips, loadTrip, currentTripId, db, userId, createNewTrip, appId } = useContext(TripContext);
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // Stores trip ID to confirm deletion
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
     const handleDeleteTrip = async (tripId) => {
         if (!db || !userId) {
             console.error("Firestore not initialized or user not authenticated.");
             return;
         }
-        // FIX: Removed this line as appId is now correctly sourced from context
-        // const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         try {
             await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/trips`, tripId));
             console.log("Trip successfully deleted:", tripId);
-            // If the deleted trip was the current one, reset the form
             if (currentTripId === tripId) {
-                createNewTrip(); // Clears all form data and sets currentTripId to null
+                createNewTrip();
             }
-            setShowDeleteConfirm(null); // Hide confirmation dialog
+            setShowDeleteConfirm(null);
         } catch (error) {
             console.error("Error deleting trip:", error);
         }
@@ -32,7 +29,7 @@ const TripList = () => {
 
     const handleLoadClick = (tripId) => {
         loadTrip(tripId);
-        setDropdownOpen(false); // Close dropdown after selection
+        setDropdownOpen(false);
     };
 
     const handleConfirmDelete = (tripId) => {
@@ -49,7 +46,7 @@ const TripList = () => {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center px-4 py-2 bg-indigo-500 text-white rounded-md text-sm font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md"
             >
-                <FolderOpen size={16} className="mr-2" /> Load Trip ({trips.length})
+                <FolderOpen size={16} className="mr-2" /> Load Trip ({safeRender(trips.length)}) {/* Apply safeRender */}
                 <ChevronDown size={16} className={`ml-2 transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'} transition-transform duration-200`} />
             </button>
 
@@ -60,17 +57,17 @@ const TripList = () => {
                     ) : (
                         <ul>
                             {trips.map((trip) => (
-                                <li key={trip.id} className="border-b last:border-b-0">
+                                <li key={safeRender(trip.id)} className="border-b last:border-b-0"> {/* Apply safeRender to key */}
                                     <div className={`flex justify-between items-center p-3 hover:bg-gray-50 ${currentTripId === trip.id ? 'bg-indigo-50 font-medium' : ''}`}>
                                         <button
                                             onClick={() => handleLoadClick(trip.id)}
                                             className="flex-grow text-left text-gray-800 text-sm truncate pr-2"
-                                            title={trip.homeCity ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}` : `Trip ID: ${trip.id}`}
+                                            title={safeRender(trip.homeCity ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}` : `Trip ID: ${trip.id}`)} // Apply safeRender to title
                                         >
-                                            {trip.homeCity && (trip.cities.length > 0 || trip.countries.length > 0)
+                                            {safeRender(trip.homeCity && (trip.cities.length > 0 || trip.countries.length > 0)
                                                 ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}`
-                                                : `Trip: ${trip.id.substring(0, 8)}...`}
-                                            {trip.startDate && <span className="text-xs text-gray-500 block">{trip.startDate}</span>}
+                                                : `Trip: ${trip.id.substring(0, 8)}...`)} {/* Apply safeRender */}
+                                            {trip.startDate && <span className="text-xs text-gray-500 block">{safeRender(trip.startDate)}</span>} {/* Apply safeRender */}
                                         </button>
                                         <button
                                             onClick={() => handleConfirmDelete(trip.id)}
