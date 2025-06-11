@@ -7,6 +7,7 @@ import TagInput from './TagInput.jsx'; // Explicit .jsx extension
 import InputField from './InputField.jsx'; // Explicit .jsx extension
 import { useCountrySearch } from '../hooks/useCountrySearch.js'; // Explicit .js extension
 import { fetchCountryData } from '../services/apiService.js'; // Explicit .js extension
+import { safeRender } from '../utils/safeRender.js'; // Import safeRender
 
 const HomeLocationSection = () => {
     const {
@@ -74,7 +75,7 @@ const HomeLocationSection = () => {
                     onAdd={addHomeCountry}
                     suggestions={filteredHomeCountrySuggestions}
                     onSelectSuggestion={selectHomeCountrySuggestion}
-                    items={homeCountry.name ? [homeCountry] : []} // This passes the country object
+                    items={homeCountry.name ? [homeCountry] : []}
                     onRemove={removeHomeCountry}
                     placeholder="e.g., Australia"
                     error={homeCountryError}
@@ -84,7 +85,7 @@ const HomeLocationSection = () => {
                 <InputField
                     id="homeCity"
                     label="Home City"
-                    value={homeCity}
+                    value={homeCity} // This value will be safeRendered internally by InputField
                     onChange={handleHomeCityChange}
                     placeholder="e.g., Sydney"
                     error={homeCityError}
