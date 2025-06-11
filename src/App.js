@@ -3,7 +3,7 @@
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; // Added getRedirectResult for redirect auth
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import ALL refactored components with explicit .jsx extension
@@ -196,7 +196,8 @@ const App = () => {
         }
         setAuthError('');
         try {
-            await signInWithPopup(auth, googleProvider);
+            // Using signInWithRedirect for better COOP compatibility in production
+            await signInWithPopup(auth, googleProvider); // Keep popup for now as redirect needs result handling
             console.log("Signed in with Google successfully.");
         } catch (error) {
             console.error("Google Sign-in Error:", error);
@@ -243,8 +244,7 @@ const App = () => {
         }
     };
 
-
-    // --- EFFECT: Firebase Initialization and Authentication ---
+    // --- EFFECT: Firebase Initialization and Authentication (Handles Redirect Result) ---
     useEffect(() => {
         console.log('App.js (useEffect auth) - Starting Firebase initialization...');
         try {
@@ -262,17 +262,25 @@ const App = () => {
                     setUserName(user.displayName || user.email || user.uid);
                     console.log("Firebase user authenticated:", user.uid);
                 } else {
-                    console.log("No Firebase user. Waiting for explicit login/signup.");
-                    if (typeof window !== 'undefined' && typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-                        try {
-                            await signInWithCustomToken(authInstance, window.__initial_auth_token);
-                            console.log("Signed in with custom token.");
-                        } catch (signInError) {
-                            console.error("Firebase Custom Token Sign-in Error:", signInError);
-                            setAuthError(signInError.message);
+                    console.log("No Firebase user. Checking for redirect result or waiting for explicit login/signup.");
+                    // Handle redirect result if it's a redirect sign-in flow
+                    try {
+                        const result = await getRedirectResult(authInstance);
+                        if (result) {
+                            // User signed in via redirect
+                            const signedInUser = result.user;
+                            setUserId(signedInUser.uid);
+                            setUserName(signedInUser.displayName || signedInUser.email || signedInUser.uid);
+                            console.log("Signed in with redirect result:", signedInUser.uid);
+                        } else {
+                            // No user and no redirect result, so clear user state
+                            setUserId(null);
+                            setUserName(null);
                         }
-                    } else {
-                        setUserId(null);
+                    } catch (redirectError) {
+                        console.error("Firebase Redirect Sign-in Error:", redirectError);
+                        setAuthError(redirectError.message);
+                        setUserId(null); // Ensure user is null on redirect error
                         setUserName(null);
                     }
                 }
