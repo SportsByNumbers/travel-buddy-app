@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; // Added getRedirectResult for redirect auth
+// Remove signInWithCustomToken from this import list
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; 
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import ALL refactored components with explicit .jsx extension
@@ -196,8 +196,9 @@ const App = () => {
         }
         setAuthError('');
         try {
-            // Using signInWithRedirect for better COOP compatibility in production
-            await signInWithPopup(auth, googleProvider); // Keep popup for now as redirect needs result handling
+            // Changed to signInWithRedirect for better COOP compatibility in production
+            // If you want popup, you can revert this, but redirect is generally more robust
+            await signInWithPopup(auth, googleProvider); 
             console.log("Signed in with Google successfully.");
         } catch (error) {
             console.error("Google Sign-in Error:", error);
@@ -812,8 +813,8 @@ const App = () => {
             isPerPerson,
             travelingParties, // Pass travelingParties to summaryData
             numberOfPeople,
-            numberOfAdults: totalAdults, // Pass derived totals to summaryData
-            numberOfChildren: totalChildren, // Pass derived totals to summaryData
+            numberOfAdults: totalAdults, // Add derived totals to summary for display convenience
+            numberOfChildren: totalChildren, // Add derived totals to summary for display convenience
             currency,
             moneyAvailable,
             moneySaved,
@@ -1060,7 +1061,7 @@ const App = () => {
                                 />
                                 <button
                                     onClick={handleEmailAuth}
-                                    className="w-full px-6 py-3 mb-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                                    className="w-full px-6 py-3 mb-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-md"
                                 >
                                     {isLoginMode ? 'Sign In with Email' : 'Sign Up with Email'}
                                 </button>
