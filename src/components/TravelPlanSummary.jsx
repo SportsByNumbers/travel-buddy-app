@@ -39,7 +39,7 @@ const TravelPlanSummary = () => {
         const variance = calculateVariance(estimated, actual);
         return (
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                <span className="text-gray-700 font-medium">{label}:</span>
+                <span className="text-gray-700 font-medium">{safeRender(label)}:</span> {/* Apply safeRender here too */}
                 <div className="flex flex-col items-end">
                     <span className="text-gray-900">{getFormattedCurrency(estimated)} (Est.)</span>
                     {actual !== undefined && (
@@ -58,12 +58,12 @@ const TravelPlanSummary = () => {
     const topicsOfInterest = Array.isArray(travelPlanSummary.topicsOfInterest) ? travelPlanSummary.topicsOfInterest : [];
     const hotelAmenities = Array.isArray(travelPlanSummary.hotelAmenities) ? travelPlanSummary.hotelAmenities : [];
 
-
     return (
         <SectionWrapper title="Travel Plan Summary" icon={FileText} className="mt-12">
             <div id="travel-plan-summary" className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
                 <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Trip Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
+                    {/* Apply safeRender to all dynamic text content */}
                     <p><strong className="font-semibold">Home:</strong> {safeRender(travelPlanSummary.homeCity)}, {safeRender(travelPlanSummary.homeCountry?.name)}</p>
                     <p><strong className="font-semibold">Destinations:</strong>
                         {safeRender(cities.map(c => c.name).join(', ') || countries.map(c => c.name).join(', ') || 'N/A')}
