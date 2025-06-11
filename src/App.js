@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
-import { initializeApp } from 'firebase/app'; // Re-added initializeApp
+import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; 
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -196,8 +196,6 @@ const App = () => {
         }
         setAuthError('');
         try {
-            // Changed to signInWithRedirect for better COOP compatibility in production
-            // If you want popup, you can revert this, but redirect is generally more robust
             await signInWithPopup(auth, googleProvider); 
             console.log("Signed in with Google successfully.");
         } catch (error) {
@@ -264,24 +262,21 @@ const App = () => {
                     console.log("Firebase user authenticated:", user.uid);
                 } else {
                     console.log("No Firebase user. Checking for redirect result or waiting for explicit login/signup.");
-                    // Handle redirect result if it's a redirect sign-in flow
                     try {
                         const result = await getRedirectResult(authInstance);
                         if (result) {
-                            // User signed in via redirect
                             const signedInUser = result.user;
                             setUserId(signedInUser.uid);
                             setUserName(signedInUser.displayName || signedInUser.email || signedInUser.uid);
                             console.log("Signed in with redirect result:", signedInUser.uid);
                         } else {
-                            // No user and no redirect result, so clear user state
                             setUserId(null);
                             setUserName(null);
                         }
                     } catch (redirectError) {
                         console.error("Firebase Redirect Sign-in Error:", redirectError);
                         setAuthError(redirectError.message);
-                        setUserId(null); // Ensure user is null on redirect error
+                        setUserId(null);
                         setUserName(null);
                     }
                 }
@@ -785,10 +780,8 @@ const App = () => {
 
         const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
 
-        // --- Corrected order for actualGrandTotal ---
         const combinedActualTransportCostFromExpenses = actualTransportCost;
         const actualGrandTotal = actualFlightCost + actualHotelCost + actualActivityCost + actualMiscellaneousCost + actualFoodCost + combinedActualTransportCostFromExpenses;
-        // --- End corrected order ---
 
         const remainingBudgetEstimated = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotalEstimated; // eslint-disable-line no-unused-vars
         const remainingBudgetActual = parseFloat(moneyAvailable) + parseFloat(moneySaved) - actualGrandTotal; // eslint-disable-line no-unused-vars
@@ -981,20 +974,23 @@ const App = () => {
 
                             {/* Main content area for authenticated users */}
                             {currentTripId !== null || isNewTripStarted ? (
-                                // Wrap the potentially problematic content with an ErrorBoundary
                                 <ErrorBoundary>
-                                    <HomeLocationSection />
-                                    <DestinationsSection />
-                                    <TripDatesSection />
-                                    <PreferencesSection />
-                                    <ItinerarySuggestions />
+                                    {/* TEMPORARY DEBUGGING: COMMENT OUT SECTIONS ONE BY ONE */}
+                                    {/* Start by commenting ALL of these out, then uncomment one by one and redeploy */}
 
-                                    {/* BudgetPlanningSection will now handle multiple parties again */}
-                                    <BudgetPlanningSection />
+                                    {/* <HomeLocationSection /> */}
+                                    {/* <DestinationsSection /> */}
+                                    {/* <TripDatesSection /> */}
+                                    {/* <PreferencesSection /> */}
+                                    {/* <ItinerarySuggestions /> */} 
+                                    {/* <BudgetPlanningSection /> */}
+                                    {/* <FoodAllowanceSection /> */}
+                                    {/* <TransportOptionsSection /> */}
+                                    {/* <TravelPlanSummary /> */} 
+                                    {/* <ExpenseTracker /> */}
 
-                                    <FoodAllowanceSection />
-                                    <TransportOptionsSection />
 
+                                    {/* LEAVE this button section for now, as it's just a button */}
                                     <div className="text-center mt-10 print:hidden">
                                         <button
                                             onClick={calculateTravelPlan}
@@ -1011,8 +1007,6 @@ const App = () => {
                                         </button>
                                     </div>
 
-                                    <TravelPlanSummary />
-                                    <ExpenseTracker />
                                 </ErrorBoundary>
                             ) : (
                                 <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
