@@ -9,7 +9,7 @@
  * @returns {string|number|null} A string, number, or null.
  */
 export const safeRender = (value) => {
-    if (value === null || value === undefined) {
+    if (value === null || value === undefined || value === '') { // Also treat empty string as null for cleaner render
         return null; // React can safely render null as nothing
     }
     if (typeof value === 'string' || typeof value === 'number') {
@@ -19,15 +19,15 @@ export const safeRender = (value) => {
         return String(value); // Convert booleans to their string representation
     }
     if (Array.isArray(value)) {
-        // If it's an array, map its elements to safe strings and join.
-        return value.map(item => safeRender(item)).filter(item => item !== null).join(', ');
+        // Recursively call safeRender for each element and filter out any nulls before joining.
+        return value.map(item => safeRender(item)).filter(item => item !== null && item !== '').join(', ');
     }
-    if (typeof value === 'object' && value !== null) {
-        // --- CRITICAL CHANGE HERE ---
-        // Log the problematic object to the console for debugging
-        console.error("SAFE_RENDER_DEBUG: Attempted to render an unexpected object directly. Problematic object:", value);
+    if (typeof value === 'object') { // Check for object, including functions for React components
+        // --- CRITICAL DEBUGGING POINT ---
+        // Log the problematic object to the console for deep inspection
+        console.error("DEBUG_REACT_ERROR_130_OBJECT_DETECTED: Attempted to render an unexpected object directly.", { value, type: typeof value, isArray: Array.isArray(value), keys: Object.keys(value) });
 
-        // Try to extract a common display property
+        // Try to extract a common display property from the object
         if (value.name !== undefined) {
             return String(value.name);
         }
@@ -36,13 +36,12 @@ export const safeRender = (value) => {
         }
         // If it's a React component itself passed as text child (shouldn't happen with proper JSX)
         if (typeof value === 'function' && value.prototype && value.prototype.isReactComponent) {
-             console.error("SAFE_RENDER_DEBUG: React Component passed as text child:", value);
+             console.error("DEBUG_REACT_ERROR_130_REACT_COMPONENT_RENDERED_AS_TEXT: React Component passed as text child:", value);
              return null; // Don't render component as text
         }
-        // If it's any other unhandled object, return null so React doesn't crash,
-        // but the console.error above will provide details.
+        // Fallback for any other unhandled object. Returning null prevents the React crash.
         return null;
     }
-    // Fallback for any other unexpected types (e.g., symbols, bigints if relevant)
+    // Fallback for any other unexpected primitive types (e.g., symbols, bigints if relevant)
     return String(value);
 };
