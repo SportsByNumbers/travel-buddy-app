@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
-// Remove signInWithCustomToken from this import list
+import { initializeApp } from 'firebase/app'; // Re-added initializeApp
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; 
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -642,6 +642,7 @@ const App = () => {
 
             const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
             const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
+
             const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
 
 
