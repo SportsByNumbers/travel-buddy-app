@@ -978,16 +978,16 @@ const App = () => {
                                     {/* TEMPORARY DEBUGGING: COMMENT OUT SECTIONS ONE BY ONE */}
                                     {/* Start by commenting ALL of these out, then uncomment one by one and redeploy */}
 
-                                    {/* <HomeLocationSection /> */}
-                                    {/* <DestinationsSection /> */}
-                                    {/* <TripDatesSection /> */}
-                                    {/* <PreferencesSection /> */}
-                                    {/* <ItinerarySuggestions /> */} 
-                                    {/* <BudgetPlanningSection /> */}
-                                    {/* <FoodAllowanceSection /> */}
-                                    {/* <TransportOptionsSection /> */}
-                                    {/* <TravelPlanSummary /> */} 
-                                    {/* <ExpenseTracker /> */}
+                                    <HomeLocationSection /> {/* UNCOMMENTED for testing */}
+                                    <DestinationsSection /> {/* UNCOMMENTED for testing */}
+                                    <TripDatesSection /> {/* UNCOMMENTED for testing */}
+                                    <PreferencesSection /> {/* UNCOMMENTED for testing */}
+                                    <ItinerarySuggestions /> 
+                                    <BudgetPlanningSection /> {/* UNCOMMENTED for testing */}
+                                    <FoodAllowanceSection /> {/* UNCOMMENTED for testing */}
+                                    <TransportOptionsSection /> {/* UNCOMMENTED for testing */}
+                                    <TravelPlanSummary /> 
+                                    <ExpenseTracker /> 
 
 
                                     {/* LEAVE this button section for now, as it's just a button */}
