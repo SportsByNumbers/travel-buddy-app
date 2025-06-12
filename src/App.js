@@ -72,7 +72,6 @@ const App = () => {
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
-    // REMOVED: const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
     const [homeCity, setHomeCity] = useState('');
     const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
@@ -395,9 +394,9 @@ const App = () => {
                     flag: country.flags.svg
                 })));
                 console.log('App.js (useEffect countries) - Countries fetched successfully.');
-            }                           } catch (error) {
+            } catch (error) { // Ensured catch block is correctly paired
                 console.error("Error fetching all countries for suggestions:", error);
-            }
+            } 
         };
         fetchAllCountries();
     }, []);
