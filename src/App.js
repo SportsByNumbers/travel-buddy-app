@@ -72,6 +72,8 @@ const App = () => {
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
+    // NEW: State for home currency
+    const [homeCurrency, setHomeCurrency] = useState(null); 
     const [homeCity, setHomeCity] = useState('');
     const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
@@ -100,7 +102,7 @@ const App = () => {
     const numberOfPeople = calculatedPeople;
 
 
-    const [currency, setCurrency] = useState('USD');
+    const [currency, setCurrency] = useState('USD'); // Default currency, will be updated by home currency
     const [moneyAvailable, setMoneyAvailable] = useState(0);
     const [moneySaved, setMoneySaved] = useState(0);
     const [contingencyPercentage, setContingencyPercentage] = useState(10);
@@ -387,14 +389,22 @@ const App = () => {
         const fetchAllCountries = async () => {
             console.log('App.js (useEffect countries) - Fetching all countries...');
             try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags');
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,currencies'); // Request currencies
                 const data = await response.json();
-                setAllCountries(data.map(country => ({
-                    name: country.name.common,
-                    flag: country.flags.svg
-                })));
+                setAllCountries(data.map(country => {
+                    let currencyCode = null;
+                    if (country.currencies) {
+                        const firstCurrencyKey = Object.keys(country.currencies)[0];
+                        currencyCode = firstCurrencyKey;
+                    }
+                    return {
+                        name: country.name.common,
+                        flag: country.flags.svg,
+                        currencyCode: currencyCode, // Store currency code
+                    };
+                }));
                 console.log('App.js (useEffect countries) - Countries fetched successfully.');
-            } catch (error) { // Ensured catch block is correctly paired
+            } catch (error) { 
                 console.error("Error fetching all countries for suggestions:", error);
             } 
         };
@@ -410,6 +420,7 @@ const App = () => {
         setEndDate(null);
         setStarRating('');
         setHomeCountry({ name: '', flag: '' });
+        setHomeCurrency(null); // Reset home currency
         setHomeCity('');
         setTopicsOfInterest([]);
         setTravelStyle('');
@@ -418,7 +429,7 @@ const App = () => {
         // Ensure reset always sets to a valid array
         setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
 
-        setCurrency('USD');
+        setCurrency('USD'); // Default back to USD
         setMoneyAvailable(0);
         setMoneySaved(0);
         setContingencyPercentage(10);
@@ -504,6 +515,7 @@ const App = () => {
                 setEndDate(tripData.endDate ? new Date(tripData.endDate) : null);
                 setStarRating(tripData.starRating || '');
                 setHomeCountry(tripData.homeCountry || { name: '', flag: '' });
+                setHomeCurrency(tripData.homeCurrency || null); // Load home currency
                 setHomeCity(tripData.homeCity || '');
                 setTopicsOfInterest(tripData.topicsOfInterest || []);
                 setTravelStyle(tripData.travelStyle || '');
@@ -800,7 +812,8 @@ const App = () => {
             travelingParties, // Pass travelingParties to summaryData
             numberOfAdults: totalAdults, // Add derived totals to summary for display convenience
             numberOfChildren: totalChildren, // Add derived totals to summary for display convenience
-            currency,
+            currency, // Store current planning currency
+            homeCurrency, // Store home country currency
             moneyAvailable,
             moneySaved,
             contingencyPercentage,
@@ -883,7 +896,8 @@ const App = () => {
         availableAmenities, isPerPerson, setIsPerPerson,
         travelingParties, setTravelingParties, // Provide travelingParties
         numberOfPeople,
-        currency, setCurrency,
+        currency, setCurrency, // Pass currency and setter
+        homeCurrency, setHomeCurrency, // Pass homeCurrency and setter
         moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
         estimatedFlightCost, setEstimatedFlightCost, estimatedHotelCost, setEstimatedHotelCost, estimatedActivityCost,
         setEstimatedActivityCost, estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, estimatedTransportCost,
