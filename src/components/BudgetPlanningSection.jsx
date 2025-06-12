@@ -3,8 +3,8 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { DollarSign } from 'lucide-react'; // Changed to DollarSign as discussed
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+import { DollarSign } from 'lucide-react'; 
+import { safeRender } from '../utils/safeRender.js'; 
 
 const BudgetPlanningSection = () => {
     const context = useContext(TripContext);
@@ -24,10 +24,29 @@ const BudgetPlanningSection = () => {
         numberOfPeople,
         numberOfAdultsError,
         numberOfChildrenError,
+        homeCurrency, // NEW: Access homeCurrency from context
     } = context;
 
     const [localAdults, setLocalAdults] = useState(travelingParties[0]?.adults || 1);
     const [localChildren, setLocalChildren] = useState(travelingParties[0]?.children || 0);
+
+    // Option for currency dropdown
+    const currencyOptions = useMemo(() => {
+        const commonCurrencies = [
+            { value: 'USD', label: 'USD ($) - US Dollar' },
+            { value: 'EUR', label: 'EUR (€) - Euro' },
+            { value: 'GBP', label: 'GBP (£) - British Pound' },
+            { value: 'JPY', label: 'JPY (¥) - Japanese Yen' },
+            { value: 'AUD', label: 'AUD ($) - Australian Dollar' },
+            { value: 'CAD', label: 'CAD ($) - Canadian Dollar' },
+        ];
+        // Add home currency if it's not already in the common list
+        if (homeCurrency && !commonCurrencies.some(opt => opt.value === homeCurrency)) {
+            return [{ value: homeCurrency, label: `${homeCurrency} (Home Currency)` }, ...commonCurrencies];
+        }
+        return commonCurrencies;
+    }, [homeCurrency]);
+
 
     const updateAppTravelingParties = useCallback((adults, children) => {
         setTravelingParties([{ id: 1, name: 'Main Group', adults: adults, children: children }]);
@@ -44,7 +63,7 @@ const BudgetPlanningSection = () => {
 
     return (
         <SectionWrapper
-            icon={DollarSign} // Pass the imported component directly
+            icon={DollarSign}
             title="Budget Planning"
             description="Plan your trip's finances. Estimate costs and track savings."
         >
@@ -57,13 +76,11 @@ const BudgetPlanningSection = () => {
                         onChange={(e) => setCurrency(e.target.value)}
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                     >
-                        <option value="USD">USD ($) - US Dollar</option>
-                        <option value="EUR">EUR (€) - Euro</option>
-                        <option value="GBP">GBP (£) - British Pound</option>
-                        <option value="JPY">JPY (¥) - Japanese Yen</option>
-                        <option value="AUD">AUD ($) - Australian Dollar</option>
-                        <option value="CAD">CAD ($) - Canadian Dollar</option>
-                        {/* Add more currencies as needed */}
+                        {currencyOptions.map(opt => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
@@ -105,11 +122,10 @@ const BudgetPlanningSection = () => {
                 </label>
             </div>
 
-            {/* Removed the temporary note div here */}
-
-            {/* Display overall validation error messages */}
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfAdultsError)}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfChildrenError)}</p>}
+
+            {/* Removed the temporary note div */}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InputField
