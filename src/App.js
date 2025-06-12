@@ -3,7 +3,7 @@
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; 
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import ALL refactored components with explicit .jsx extension
@@ -24,6 +24,10 @@ import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Import custom hooks with explicit .js extension
 import { useMultiSelection } from './hooks/useMultiSelection.js';
+
+// Import centralized options
+import { STAR_RATING_OPTIONS, AVAILABLE_TOPICS, TRAVEL_STYLE_OPTIONS, EXPENSE_CATEGORIES } from './constants/options.js';
+
 
 // Create a context for sharing state
 export const TripContext = createContext();
@@ -65,19 +69,19 @@ const App = () => {
     const [cities, setCities] = useState([]);
     const [newCityName, setNewCityName] = useState('');
     const [newCityDuration, setNewCityDuration] = useState(0);
-    const [newCityStarRating, setNewCityStarRating] = useState('');
+    // MODIFIED: newCityStarRating will now be an array for city-specific multi-selection
+    const [newCityStarRating, setNewCityStarRating] = useState([]);
     const [newCityTopics, setNewCityTopics] = useState([]);
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
-    const [starRating, setStarRating] = useState('');
+    // MODIFIED: starRating will now be an array for overall multi-selection
+    const [starRating, setStarRating] = useState([]);
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
-    // NEW: State for home currency
-    const [homeCurrency, setHomeCurrency] = useState(null); 
+    const [homeCurrency, setHomeCurrency] = useState(null);
     const [homeCity, setHomeCity] = useState('');
     const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
-    const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access', 'Wifi', 'Laundry Services', 'Laundry Facilities']; 
@@ -102,7 +106,7 @@ const App = () => {
     const numberOfPeople = calculatedPeople;
 
 
-    const [currency, setCurrency] = useState('USD'); // Default currency, will be updated by home currency
+    const [currency, setCurrency] = useState('USD'); 
     const [moneyAvailable, setMoneyAvailable] = useState(0);
     const [moneySaved, setMoneySaved] = useState(0);
     const [contingencyPercentage, setContingencyPercentage] = useState(10);
@@ -389,11 +393,13 @@ const App = () => {
         const fetchAllCountries = async () => {
             console.log('App.js (useEffect countries) - Fetching all countries...');
             try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,currencies'); // Request currencies
+                // Request currencies field from RestCountries API
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,currencies');
                 const data = await response.json();
                 setAllCountries(data.map(country => {
                     let currencyCode = null;
                     if (country.currencies) {
+                        // Get the first currency code from the currencies object
                         const firstCurrencyKey = Object.keys(country.currencies)[0];
                         currencyCode = firstCurrencyKey;
                     }
@@ -411,6 +417,19 @@ const App = () => {
         fetchAllCountries();
     }, []);
 
+    // --- Helper to set home country and update main currency state ---
+    // This is a custom setter function that also updates homeCurrency and default currency
+    const handleSetHomeCountry = useCallback((countryData) => {
+        setHomeCountry(countryData);
+        if (countryData && countryData.currencyCode) {
+            setHomeCurrency(countryData.currencyCode);
+            setCurrency(countryData.currencyCode); // Set main currency to home currency by default
+        } else {
+            setHomeCurrency(null);
+            setCurrency('USD'); // Fallback if no currency code
+        }
+    }, [setHomeCountry, setHomeCurrency, setCurrency]);
+
     // --- Helper to reset all trip-related states for a new trip ---
     const resetTripStates = useCallback(() => {
         console.log('App.js (resetTripStates) - Resetting all trip states.');
@@ -418,7 +437,8 @@ const App = () => {
         setCities([]);
         setStartDate(null);
         setEndDate(null);
-        setStarRating('');
+        // MODIFIED: starRating now resets to an empty array for multi-selection
+        setStarRating([]);
         setHomeCountry({ name: '', flag: '' });
         setHomeCurrency(null); // Reset home currency
         setHomeCity('');
@@ -426,7 +446,6 @@ const App = () => {
         setTravelStyle('');
         setHotelAmenities([]);
         setIsPerPerson(true);
-        // Ensure reset always sets to a valid array
         setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
 
         setCurrency('USD'); // Default back to USD
@@ -477,7 +496,7 @@ const App = () => {
         setNewCityDurationError('');
         setExpenses([]);
     }, [
-        setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity,
+        setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity, setHomeCurrency, // Added homeCurrency
         setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
         setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
         setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
@@ -513,7 +532,8 @@ const App = () => {
                 setCities(tripData.cities || []);
                 setStartDate(tripData.startDate ? new Date(tripData.startDate) : null);
                 setEndDate(tripData.endDate ? new Date(tripData.endDate) : null);
-                setStarRating(tripData.starRating || '');
+                // MODIFIED: starRating loaded as array
+                setStarRating(Array.isArray(tripData.starRating) ? tripData.starRating : (tripData.starRating ? [tripData.starRating] : []));
                 setHomeCountry(tripData.homeCountry || { name: '', flag: '' });
                 setHomeCurrency(tripData.homeCurrency || null); // Load home currency
                 setHomeCity(tripData.homeCity || '');
@@ -522,10 +542,6 @@ const App = () => {
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
 
-                // CRITICAL FIX FOR "true is not iterable" ERROR:
-                // Ensure tripData.travelingParties is explicitly an array.
-                // If it's not, it means saved data might be corrupted from a previous bug,
-                // so we reset it to the default initial array.
                 if (Array.isArray(tripData.travelingParties)) {
                     setTravelingParties(tripData.travelingParties);
                 } else {
@@ -534,7 +550,7 @@ const App = () => {
                 }
 
 
-                setCurrency(tripData.currency || 'USD');
+                setCurrency(tripData.currency || 'USD'); // Load planning currency
                 setMoneyAvailable(tripData.moneyAvailable || 0);
                 setMoneySaved(tripData.moneySaved || 0);
                 setContingencyPercentage(tripData.contingencyPercentage || 10);
@@ -579,14 +595,14 @@ const App = () => {
                 console.warn("App.js (loadTrip) - No such trip document found for ID:", tripId);
                 setTravelPlanSummary(null);
                 setCurrentTripId(null);
-                resetTripStates(); // Resets to default initial state
+                resetTripStates(); 
                 setIsNewTripStarted(false);
             }
         } catch (error) {
             console.error("App.js (loadTrip) - Error loading trip:", error, error.stack);
             setTravelPlanSummary(null);
             setCurrentTripId(null);
-            resetTripStates(); // Resets to default initial state
+            resetTripStates(); 
             setIsNewTripStarted(false);
         }
     };
@@ -595,7 +611,7 @@ const App = () => {
     const createNewTrip = () => {
         console.log('App.js (createNewTrip) - Starting new trip.');
         setCurrentTripId(null);
-        resetTripStates(); // This ensures travelingParties is set to initial array
+        resetTripStates(); 
         setTravelPlanSummary(null);
         setIsNewTripStarted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -611,13 +627,9 @@ const App = () => {
         const projectIdForPaths = firebaseConfig.projectId;
 
         try {
-            // Calculate total adults/children for summary data from travelingParties
-            const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); // Use partiesToProcess for safety
-            const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); // Use partiesToProcess for safety
+            const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0);
+            const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0);
 
-            // These variables must be defined here, as they are used below in tripDataToSave
-            // Recalculate them or ensure they are passed as arguments if needed
-            // For now, let's assume they are derived based on the summaryData or states
             const totalDailyFoodAllowance = parseFloat(breakfastAllowance) + parseFloat(lunchAllowance) + parseFloat(dinnerAllowance) + parseFloat(snacksAllowance);
             const totalFoodCost = totalDailyFoodAllowance * overallDuration;
             const combinedEstimatedTransportCost = parseFloat(estimatedTransportCost) +
@@ -651,16 +663,20 @@ const App = () => {
                 endDate: endDate ? endDate.toISOString() : null,
                 createdAt: currentTripId ? summaryData.createdAt : serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                countries, cities, starRating, homeCountry, homeCity, topicsOfInterest,
+                countries, cities,
+                // MODIFIED: starRating saved as array
+                starRating: starRating, 
+                homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
-                travelingParties, // Keep this as the source of truth for saving
-                numberOfAdults: totalAdults, // Add derived totals to summary for display convenience
-                numberOfChildren: totalChildren, // Add derived totals to summary for display convenience
-                currency,
+                travelingParties, 
+                numberOfAdults: totalAdults, 
+                numberOfChildren: totalChildren, 
+                currency, 
+                homeCurrency, // Save home currency
                 moneyAvailable,
                 moneySaved,
                 contingencyPercentage,
-                contingencyAmount, // Used here correctly
+                contingencyAmount, 
 
                 estimatedFlightCost,
                 estimatedHotelCost,
@@ -729,17 +745,15 @@ const App = () => {
         if (countries.length === 0 && cities.length === 0) { setDestCountryError("Please add at least one destination country or city."); setDestCityError("Please add at least one destination country or city."); hasError = true; } else { setDestCountryError(''); setDestCityError(''); }
         if (!startDate || !endDate || overallDuration < 1) { setDateError("Please select valid start and end dates."); hasError = true; } else { setDateError(''); }
 
-        const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); // Use partiesToProcess for safety
-        const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); // Use partiesToProcess for safety
+        const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0); 
+        const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0); 
 
-        // RE-ADDED Validation
         if (totalAdults < 1) { setNumberOfAdultsError("Total adults must be at least 1."); hasError = true; } else { setNumberOfAdultsError(''); }
         if (totalChildren < 0) { setNumberOfChildrenError("Total children cannot be negative."); hasError = true; } else { setNumberOfChildrenError(''); }
         if (numberOfPeople < 1) {
-            setNumberOfAdultsError("Total number of people (adults + children) must be at least 1."); // Using adult error for total check
+            setNumberOfAdultsError("Total number of people (adults + children) must be at least 1."); 
             hasError = true;
         }
-
 
         if (hasError) {
             console.warn('App.js (calculateTravelPlan) - Validation errors detected, not generating summary.');
@@ -799,7 +813,8 @@ const App = () => {
             overallDuration,
             startDate: startDate ? startDate.toLocaleDateString() : 'Not set',
             endDate: endDate ? endDate.toLocaleDateString() : 'Not set',
-            starRating,
+            // MODIFIED: starRating saved as array
+            starRating: starRating, 
             travelStyle,
             hotelAmenities,
             activities: finalActivities,
@@ -809,15 +824,15 @@ const App = () => {
             touristSpots: finalTouristSpots,
             tours: finalTours,
             isPerPerson,
-            travelingParties, // Pass travelingParties to summaryData
-            numberOfAdults: totalAdults, // Add derived totals to summary for display convenience
-            numberOfChildren: totalChildren, // Add derived totals to summary for display convenience
-            currency, // Store current planning currency
-            homeCurrency, // Store home country currency
+            travelingParties, 
+            numberOfAdults: totalAdults, 
+            numberOfChildren: totalChildren, 
+            currency, 
+            homeCurrency, // Save home currency
             moneyAvailable,
             moneySaved,
             contingencyPercentage,
-            contingencyAmount, // Used here correctly
+            contingencyAmount, 
 
             estimatedFlightCost,
             estimatedHotelCost,
@@ -833,7 +848,7 @@ const App = () => {
             actualMiscellaneousCost,
             actualTransportCost: combinedActualTransportCostFromExpenses,
             actualFoodCost,
-            actualGrandTotal, // Make sure actualGrandTotal is also included in summaryData
+            actualGrandTotal, 
 
             breakfastAllowance,
             lunchAllowance,
@@ -858,8 +873,8 @@ const App = () => {
             walking,
             dailyLocalTransportAllowance,
 
-            remainingBudgetEstimated, // Include them in summaryData
-            remainingBudgetActual,    // Include them in summaryData
+            remainingBudgetEstimated, 
+            remainingBudgetActual,    
             topicsOfInterest,
             selectedSuggestedActivities,
             selectedSuggestedFoodLocations,
@@ -890,14 +905,24 @@ const App = () => {
         isNewTripStarted, setIsNewTripStarted,
 
         countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
-        newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics,
-        startDate, setStartDate, endDate, setEndDate, overallDuration, starRating, setStarRating, travelStyle,
-        setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, topicsOfInterest, setTopicsOfInterest, availableTopics,
-        availableAmenities, isPerPerson, setIsPerPerson,
-        travelingParties, setTravelingParties, // Provide travelingParties
-        numberOfPeople,
-        currency, setCurrency, // Pass currency and setter
+        newCityDuration, setNewCityDuration, 
+        // MODIFIED: newCityStarRating is now an array
+        newCityStarRating, setNewCityStarRating, 
+        newCityTopics, setNewCityTopics,
+        startDate, setStartDate, endDate, setEndDate, overallDuration, 
+        // MODIFIED: starRating is now an array
+        starRating, setStarRating, 
+        travelStyle, setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, 
+        handleSetHomeCountry, // Pass the new setter
         homeCurrency, setHomeCurrency, // Pass homeCurrency and setter
+        topicsOfInterest, setTopicsOfInterest, 
+        // Import from constants
+        availableTopics: AVAILABLE_TOPICS, 
+        availableAmenities, 
+        isPerPerson, setIsPerPerson,
+        travelingParties, setTravelingParties, 
+        numberOfPeople,
+        currency, setCurrency, 
         moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
         estimatedFlightCost, setEstimatedFlightCost, estimatedHotelCost, setEstimatedHotelCost, estimatedActivityCost,
         setEstimatedActivityCost, estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, estimatedTransportCost,
@@ -931,6 +956,8 @@ const App = () => {
 
         getFormattedCurrency, toggleSuggestionSelection,
         newHomeCityInput, setNewHomeCityInput, 
+        // Import from constants
+        STAR_RATING_OPTIONS, TRAVEL_STYLE_OPTIONS, EXPENSE_CATEGORIES // Pass to context for child components
     };
 
     if (!isAuthReady) {
