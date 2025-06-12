@@ -20,7 +20,7 @@ const FoodAllowanceSection = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <InputField
                     id="breakfastAllowance"
-                    label={`Breakfast (${currency})`}
+                    label="Breakfast" // Removed (USD)
                     type="number"
                     value={breakfastAllowance}
                     onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)}
@@ -29,7 +29,7 @@ const FoodAllowanceSection = () => {
                 />
                 <InputField
                     id="lunchAllowance"
-                    label={`Lunch (${currency})`}
+                    label="Lunch" // Removed (USD)
                     type="number"
                     value={lunchAllowance}
                     onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)}
@@ -38,7 +38,7 @@ const FoodAllowanceSection = () => {
                 />
                 <InputField
                     id="dinnerAllowance"
-                    label={`Dinner (${currency})`}
+                    label="Dinner" // Removed (USD)
                     type="number"
                     value={dinnerAllowance}
                     onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)}
@@ -47,7 +47,7 @@ const FoodAllowanceSection = () => {
                 />
                 <InputField
                     id="snacksAllowance"
-                    label={`Snacks & Drinks (${currency})`}
+                    label="Snacks & Drinks" // Removed (USD)
                     type="number"
                     value={snacksAllowance}
                     onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)}
