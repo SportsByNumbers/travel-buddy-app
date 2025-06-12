@@ -72,14 +72,15 @@ const App = () => {
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
-    // Removed: newHomeCountryInput as it's handled by useCountrySearch's internal state
+    const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
     const [homeCity, setHomeCity] = useState('');
-    const [newHomeCityInput, setNewHomeCityInput] = useState(''); // Corrected to useState, if needed for context
+    const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
-    const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access'];
+    // UPDATED: Added Wifi, Laundry Services, Laundry Facilities
+    const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access', 'Wifi', 'Laundry Services', 'Laundry Facilities']; 
     const [isPerPerson, setIsPerPerson] = useState(true);
 
     const [travelingParties, setTravelingParties] = useState([
@@ -87,7 +88,6 @@ const App = () => {
     ]);
 
     let calculatedPeople = 0;
-    // Removed redundant top-level console logs related to travelingParties
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
 
     if (partiesToProcess.length > 0) {
@@ -919,7 +919,6 @@ const App = () => {
 
         getFormattedCurrency, toggleSuggestionSelection,
         newHomeCityInput, setNewHomeCityInput, // Moved here as it's still being passed in the context value.
-                                              // If it's truly not used, it could be removed from context and App.js state.
     };
 
     if (!isAuthReady) {
