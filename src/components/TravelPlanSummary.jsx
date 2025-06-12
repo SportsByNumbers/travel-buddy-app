@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import { FileText } from 'lucide-react';
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+import { safeRender } from '../utils/safeRender.js'; 
 
 const TravelPlanSummary = () => {
     const { travelPlanSummary, getFormattedCurrency, currentTripId } = useContext(TripContext);
@@ -37,7 +37,7 @@ const TravelPlanSummary = () => {
         const variance = calculateVariance(estimated, actual);
         return (
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                <span className="text-gray-700 font-medium">{label}:</span> {/* label is a static string, no safeRender needed */}
+                <span className="text-gray-700 font-medium">{label}:</span> 
                 <div className="flex flex-col items-end">
                     <span className="text-gray-900">{getFormattedCurrency(estimated)} (Est.)</span>
                     {actual !== undefined && (
@@ -67,7 +67,8 @@ const TravelPlanSummary = () => {
                     <p><strong className="font-semibold">Dates:</strong> {safeRender(travelPlanSummary.startDate)} - {safeRender(travelPlanSummary.endDate)} ({safeRender(travelPlanSummary.overallDuration)} days)</p>
                     <p><strong className="font-semibold">Travelers:</strong> {safeRender(travelPlanSummary.numberOfAdults)} Adults, {safeRender(travelPlanSummary.numberOfChildren)} Children (Total: {safeRender(travelPlanSummary.numberOfPeople)})</p>
                     <p><strong className="font-semibold">Travel Style:</strong> {safeRender(travelPlanSummary.travelStyle || 'Not specified')}</p>
-                    <p><strong className="font-semibold">Hotel Rating:</strong> {safeRender(travelPlanSummary.starRating || 'Any')}</p>
+                    {/* MODIFIED: Render starRating as a joined array */}
+                    <p><strong className="font-semibold">Hotel Rating:</strong> {safeRender(Array.isArray(travelPlanSummary.starRating) && travelPlanSummary.starRating.length > 0 ? `${travelPlanSummary.starRating.join(', ')} Star` : 'Any')}</p>
                     <p><strong className="font-semibold">Topics:</strong> {safeRender(topicsOfInterest.join(', ') || 'None')}</p>
                     <p><strong className="font-semibold">Hotel Amenities:</strong> {safeRender(hotelAmenities.join(', ') || 'None')}</p>
                 </div>
@@ -79,8 +80,10 @@ const TravelPlanSummary = () => {
                             {cities.map((city, index) => (
                                 <div key={safeRender(city.name || index)} className="bg-indigo-50 p-4 rounded-lg shadow-sm">
                                     <p className="font-semibold text-indigo-800">{safeRender(city.name)} ({safeRender(city.duration)} days)</p>
-                                    {city.starRating && <p className="text-sm text-gray-600">Hotel: {safeRender(city.starRating)} Star</p>}
-                                    {(Array.isArray(city.topics) && city.topics.length > 0) && <p className="text-sm text-gray-600">Topics: {safeRender(city.topics.join(', '))}</p>}
+                                    {/* Render multiple city.starRating values if available */}
+                                    {Array.isArray(city.starRating) && city.starRating.length > 0 && <p className="text-sm text-gray-600">Hotel: {safeRender(city.starRating.map(s => `${s} Star`).join(', '))}</p>}
+                                    {/* Ensure city.topics is an array before joining and rendering */}
+                                    {Array.isArray(city.topics) && city.topics.length > 0 && <p className="text-sm text-gray-600">Topics: {safeRender(city.topics)}</p>}
                                 </div>
                             ))}
                         </div>
