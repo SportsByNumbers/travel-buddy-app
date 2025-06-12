@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import { FileText } from 'lucide-react';
-import { safeRender } from '../utils/safeRender.js'; // Import the new utility
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const TravelPlanSummary = () => {
     const { travelPlanSummary, getFormattedCurrency, currentTripId } = useContext(TripContext);
@@ -20,14 +20,12 @@ const TravelPlanSummary = () => {
         );
     }
 
-    // Helper to calculate variance
     const calculateVariance = (estimated, actual) => {
         const est = parseFloat(estimated) || 0;
         const act = parseFloat(actual) || 0;
         return act - est;
     };
 
-    // Helper to format variance
     const formatVariance = (variance) => {
         const formatted = getFormattedCurrency(Math.abs(variance));
         if (variance > 0) return `(+${formatted} over budget)`;
@@ -39,7 +37,7 @@ const TravelPlanSummary = () => {
         const variance = calculateVariance(estimated, actual);
         return (
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                <span className="text-gray-700 font-medium">{safeRender(label)}:</span> {/* Apply safeRender here too */}
+                <span className="text-gray-700 font-medium">{safeRender(label)}:</span>
                 <div className="flex flex-col items-end">
                     <span className="text-gray-900">{getFormattedCurrency(estimated)} (Est.)</span>
                     {actual !== undefined && (
@@ -52,7 +50,6 @@ const TravelPlanSummary = () => {
         );
     };
 
-    // Defensive handling for potentially missing/non-array properties
     const cities = Array.isArray(travelPlanSummary.cities) ? travelPlanSummary.cities : [];
     const countries = Array.isArray(travelPlanSummary.countries) ? travelPlanSummary.countries : [];
     const topicsOfInterest = Array.isArray(travelPlanSummary.topicsOfInterest) ? travelPlanSummary.topicsOfInterest : [];
@@ -63,7 +60,6 @@ const TravelPlanSummary = () => {
             <div id="travel-plan-summary" className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
                 <h3 className="text-2xl font-bold text-indigo-800 mb-4 pb-2 border-b-2 border-indigo-200">Trip Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
-                    {/* Apply safeRender to all dynamic text content */}
                     <p><strong className="font-semibold">Home:</strong> {safeRender(travelPlanSummary.homeCity)}, {safeRender(travelPlanSummary.homeCountry?.name)}</p>
                     <p><strong className="font-semibold">Destinations:</strong>
                         {safeRender(cities.map(c => c.name).join(', ') || countries.map(c => c.name).join(', ') || 'N/A')}
@@ -81,7 +77,7 @@ const TravelPlanSummary = () => {
                         <h4 className="text-xl font-bold text-indigo-700 mb-3 pb-1 border-b border-indigo-100">City Breakdown</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {cities.map((city, index) => (
-                                <div key={index} className="bg-indigo-50 p-4 rounded-lg shadow-sm">
+                                <div key={safeRender(city.name || index)} className="bg-indigo-50 p-4 rounded-lg shadow-sm"> {/* Apply safeRender to key */}
                                     <p className="font-semibold text-indigo-800">{safeRender(city.name)} ({safeRender(city.duration)} days)</p>
                                     {city.starRating && <p className="text-sm text-gray-600">Hotel: {safeRender(city.starRating)} Star</p>}
                                     {(Array.isArray(city.topics) && city.topics.length > 0) && <p className="text-sm text-gray-600">Topics: {safeRender(city.topics.join(', '))}</p>}
