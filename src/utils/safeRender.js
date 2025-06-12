@@ -9,7 +9,7 @@
  * @returns {string|number|null} A string, number, or null.
  */
 export const safeRender = (value) => {
-    if (value === null || value === undefined || value === '') { // Also treat empty string as null for cleaner render
+    if (value === null || value === undefined || value === '') {
         return null; // React can safely render null as nothing
     }
     if (typeof value === 'string' || typeof value === 'number') {
@@ -22,12 +22,12 @@ export const safeRender = (value) => {
         // Recursively call safeRender for each element and filter out any nulls before joining.
         return value.map(item => safeRender(item)).filter(item => item !== null && item !== '').join(', ');
     }
-    if (typeof value === 'object') { // Check for object, including functions for React components
+    if (typeof value === 'object') {
         // --- CRITICAL DEBUGGING POINT ---
         // Log the problematic object to the console for deep inspection
-        console.error("DEBUG_REACT_ERROR_130_OBJECT_DETECTED: Attempted to render an unexpected object directly.", { value, type: typeof value, isArray: Array.isArray(value), keys: Object.keys(value) });
+        console.error("DEBUG_REACT_ERROR_130_OBJECT_DETECTED: Attempted to render an unexpected object directly. Problematic object:", value, "Type:", typeof value, "IsArray:", Array.isArray(value), "Keys:", Object.keys(value));
 
-        // Try to extract a common display property from the object
+        // Try to extract a common display property
         if (value.name !== undefined) {
             return String(value.name);
         }
@@ -39,7 +39,8 @@ export const safeRender = (value) => {
              console.error("DEBUG_REACT_ERROR_130_REACT_COMPONENT_RENDERED_AS_TEXT: React Component passed as text child:", value);
              return null; // Don't render component as text
         }
-        // Fallback for any other unhandled object. Returning null prevents the React crash.
+        // If it's any other unhandled object, return null so React doesn't crash,
+        // but the console.error above will provide details.
         return null;
     }
     // Fallback for any other unexpected primitive types (e.g., symbols, bigints if relevant)
