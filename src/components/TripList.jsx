@@ -3,7 +3,7 @@ import React, { useContext, useState } from 'react';
 import { TripContext } from '../App.js';
 import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { doc, deleteDoc } from 'firebase/firestore';
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+import { safeRender } from '../utils/safeRender.js';
 
 const TripList = () => {
     const { trips, loadTrip, currentTripId, db, userId, createNewTrip, appId } = useContext(TripContext);
@@ -62,11 +62,23 @@ const TripList = () => {
                                         <button
                                             onClick={() => handleLoadClick(trip.id)}
                                             className="flex-grow text-left text-gray-800 text-sm truncate pr-2"
-                                            title={safeRender(trip.homeCity ? `${trip.homeCity} to ${trip.cities?.map(c => c.name).join(', ') || trip.countries?.map(c => c.name).join(', ')}` : `Trip ID: ${trip.id}`)}
+                                            // CORRECTED LINE: Added more parentheses for clarity
+                                            title={safeRender(
+                                                trip.homeCity ?
+                                                `${trip.homeCity} to ${
+                                                    (trip.cities?.map(c => c.name).join(', ') || (trip.countries?.map(c => c.name).join(', ')))
+                                                }` :
+                                                `Trip ID: ${trip.id}`
+                                            )}
                                         >
-                                            {safeRender(trip.homeCity && (Array.isArray(trip.cities) && trip.cities.length > 0 || Array.isArray(trip.countries) && trip.countries.length > 0)
-                                                ? `${trip.homeCity} to ${trip.cities?.map(c => c.name).join(', ') || trip.countries?.map(c => c.name).join(', ')}`
-                                                : `Trip: ${trip.id?.substring(0, 8)}...`)}
+                                            {/* CORRECTED LINE: Added more parentheses for clarity */}
+                                            {safeRender(
+                                                trip.homeCity && ((Array.isArray(trip.cities) && trip.cities.length > 0) || (Array.isArray(trip.countries) && trip.countries.length > 0)) ?
+                                                `${trip.homeCity} to ${
+                                                    (trip.cities?.map(c => c.name).join(', ') || (trip.countries?.map(c => c.name).join(', ')))
+                                                }` :
+                                                `Trip: ${trip.id?.substring(0, 8)}...`
+                                            )}
                                             {trip.startDate && <span className="text-xs text-gray-500 block">{safeRender(trip.startDate)}</span>}
                                         </button>
                                         <button
