@@ -62,7 +62,6 @@ const TripList = () => {
                                         <button
                                             onClick={() => handleLoadClick(trip.id)}
                                             className="flex-grow text-left text-gray-800 text-sm truncate pr-2"
-                                            // CORRECTED LINE: Added more parentheses for clarity
                                             title={safeRender(
                                                 trip.homeCity ?
                                                 `${trip.homeCity} to ${
@@ -71,7 +70,6 @@ const TripList = () => {
                                                 `Trip ID: ${trip.id}`
                                             )}
                                         >
-                                            {/* CORRECTED LINE: Added more parentheses for clarity */}
                                             {safeRender(
                                                 trip.homeCity && ((Array.isArray(trip.cities) && trip.cities.length > 0) || (Array.isArray(trip.countries) && trip.countries.length > 0)) ?
                                                 `${trip.homeCity} to ${
