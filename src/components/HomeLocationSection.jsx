@@ -7,7 +7,7 @@ import TagInput from './TagInput.jsx';
 import InputField from './InputField.jsx';
 import { useCountrySearch } from '../hooks/useCountrySearch.js';
 import { fetchCountryData } from '../services/apiService.js';
-// Removed: import { safeRender } from '../utils/safeRender.js'; // This line is no longer needed here
+// Removed: import { safeRender } from '../utils/safeRender.js'; // This import is no longer needed here
 
 const HomeLocationSection = () => {
     const {
