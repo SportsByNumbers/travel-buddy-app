@@ -3,8 +3,9 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-// REMOVED: import { PlusCircle } from 'lucide-react'; // This import was removed as it was unused
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+// Import a suitable Lucide icon for money, e.g., DollarSign or Banknote if available
+import { DollarSign } from 'lucide-react'; // <-- IMPORT A PROPER LUCIDE ICON
+import { safeRender } from '../utils/safeRender.js';
 
 const BudgetPlanningSection = () => {
     const context = useContext(TripContext);
@@ -50,7 +51,6 @@ const BudgetPlanningSection = () => {
         });
     }
 
-    // --- NEW LOGGING HERE ---
     console.log('BudgetPlanningSection DEBUG: currency:', currency, 'Type:', typeof currency);
     console.log('BudgetPlanningSection DEBUG: moneyAvailable:', moneyAvailable, 'Type:', typeof moneyAvailable);
     console.log('BudgetPlanningSection DEBUG: moneySaved:', moneySaved, 'Type:', typeof moneySaved);
@@ -66,12 +66,11 @@ const BudgetPlanningSection = () => {
     console.log('BudgetPlanningSection DEBUG: numberOfPeople:', numberOfPeople, 'Type:', typeof numberOfPeople);
     console.log('BudgetPlanningSection DEBUG: numberOfAdultsError:', numberOfAdultsError, 'Type:', typeof numberOfAdultsError);
     console.log('BudgetPlanningSection DEBUG: numberOfChildrenError:', numberOfChildrenError, 'Type:', typeof numberOfChildrenError);
-    // --- END NEW LOGGING ---
 
 
     return (
         <SectionWrapper
-            icon={<span className="text-xl">💰</span>}
+            icon={DollarSign} // <-- CHANGE THIS: Pass the imported component directly
             title="Budget Planning"
             description="Plan your trip's finances. Estimate costs and track savings."
         >
@@ -80,7 +79,7 @@ const BudgetPlanningSection = () => {
                     <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
                     <select
                         id="currency"
-                        value={safeRender(currency)} // Apply safeRender to value
+                        value={safeRender(currency)}
                         onChange={(e) => setCurrency(e.target.value)}
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                     >
@@ -97,21 +96,21 @@ const BudgetPlanningSection = () => {
                 <InputField
                     label="Money Available for Trip"
                     type="number"
-                    value={moneyAvailable} // safeRender applied internally by InputField
+                    value={moneyAvailable}
                     onChange={(e) => setMoneyAvailable(parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 5000"
                 />
                 <InputField
                     label="Money Already Saved"
                     type="number"
-                    value={moneySaved} // safeRender applied internally by InputField
+                    value={moneySaved}
                     onChange={(e) => setMoneySaved(parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 1000"
                 />
                 <InputField
                     label="Contingency Percentage (%)"
                     type="number"
-                    value={contingencyPercentage} // safeRender applied internally by InputField
+                    value={contingencyPercentage}
                     onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 10"
                     min="0"
