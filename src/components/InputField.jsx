@@ -27,7 +27,7 @@ const InputField = ({
             case 'password':
             case 'date':
             case 'time':
-            case 'datetime-local': // Added for completeness if you use it
+            case 'datetime-local':
                 return (
                     <input
                         id={id}
@@ -62,8 +62,9 @@ const InputField = ({
                         className={inputClasses}
                         required={required}
                     >
-                        {options && options.map((option) => (
-                            <option key={option.value} value={option.value}>
+                        {/* Ensure options exist and are iterable */}
+                        {options && Array.isArray(options) && options.map((option, index) => (
+                            <option key={safeRender(option.value || index)} value={safeRender(option.value)}>
                                 {safeRender(option.label)} {/* Apply safeRender to option.label */}
                             </option>
                         ))}
@@ -90,7 +91,7 @@ const InputField = ({
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
             {renderInput()}
-            {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-1 text-sm text-red-600">{safeRender(error)}</p>}
         </div>
     );
 };
