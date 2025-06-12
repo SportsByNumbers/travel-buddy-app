@@ -1,12 +1,12 @@
-// components/BudgetPlanningSection.jsx
+// src/components/BudgetPlanningSection.jsx
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 // REMOVED: import { PlusCircle } from 'lucide-react'; // This import was removed as it was unused
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const BudgetPlanningSection = () => {
-    // Get context values at the top level of the component
     const context = useContext(TripContext);
     const {
         currency, setCurrency,
@@ -19,32 +19,27 @@ const BudgetPlanningSection = () => {
         estimatedMiscellaneousCost, setEstimatedMiscellaneousCost,
         estimatedTransportCost, setEstimatedTransportCost,
         isPerPerson, setIsPerPerson,
-        travelingParties, // Now explicitly from context
-        setTravelingParties, // Now explicitly from context
+        travelingParties,
+        setTravelingParties,
         numberOfPeople,
         numberOfAdultsError,
         numberOfChildrenError,
-    } = context; // Use 'context' here
+    } = context;
 
-    // Local states for the fixed Adults/Children inputs
     const [localAdults, setLocalAdults] = useState(travelingParties[0]?.adults || 1);
     const [localChildren, setLocalChildren] = useState(travelingParties[0]?.children || 0);
 
-    // Callback to update App.js's travelingParties state
     const updateAppTravelingParties = useCallback((adults, children) => {
         setTravelingParties([{ id: 1, name: 'Main Group', adults: adults, children: children }]);
-    }, [setTravelingParties]); // Dependency on setTravelingParties from context
+    }, [setTravelingParties]);
 
-    // Sync local state with global state on initial render and whenever the global travelingParties changes
     useEffect(() => {
-        // Ensure that context.travelingParties is an array before accessing its elements
         if (Array.isArray(context.travelingParties) && context.travelingParties.length > 0) {
             setLocalAdults(context.travelingParties[0]?.adults || 1);
             setLocalChildren(context.travelingParties[0]?.children || 0);
         }
-    }, [context.travelingParties]); // Dependency on travelingParties from context
+    }, [context.travelingParties]);
 
-    // Debugging console logs
     console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', context.travelingParties, 'Type:', typeof context.travelingParties, 'IsArray:', Array.isArray(context.travelingParties));
     if (Array.isArray(context.travelingParties)) {
         context.travelingParties.forEach((party, index) => {
@@ -54,6 +49,25 @@ const BudgetPlanningSection = () => {
             }
         });
     }
+
+    // --- NEW LOGGING HERE ---
+    console.log('BudgetPlanningSection DEBUG: currency:', currency, 'Type:', typeof currency);
+    console.log('BudgetPlanningSection DEBUG: moneyAvailable:', moneyAvailable, 'Type:', typeof moneyAvailable);
+    console.log('BudgetPlanningSection DEBUG: moneySaved:', moneySaved, 'Type:', typeof moneySaved);
+    console.log('BudgetPlanningSection DEBUG: contingencyPercentage:', contingencyPercentage, 'Type:', typeof contingencyPercentage);
+    console.log('BudgetPlanningSection DEBUG: estimatedFlightCost:', estimatedFlightCost, 'Type:', typeof estimatedFlightCost);
+    console.log('BudgetPlanningSection DEBUG: estimatedHotelCost:', estimatedHotelCost, 'Type:', typeof estimatedHotelCost);
+    console.log('BudgetPlanningSection DEBUG: estimatedActivityCost:', estimatedActivityCost, 'Type:', typeof estimatedActivityCost);
+    console.log('BudgetPlanningSection DEBUG: estimatedMiscellaneousCost:', estimatedMiscellaneousCost, 'Type:', typeof estimatedMiscellaneousCost);
+    console.log('BudgetPlanningSection DEBUG: estimatedTransportCost:', estimatedTransportCost, 'Type:', typeof estimatedTransportCost);
+    console.log('BudgetPlanningSection DEBUG: isPerPerson:', isPerPerson, 'Type:', typeof isPerPerson);
+    console.log('BudgetPlanningSection DEBUG: localAdults:', localAdults, 'Type:', typeof localAdults);
+    console.log('BudgetPlanningSection DEBUG: localChildren:', localChildren, 'Type:', typeof localChildren);
+    console.log('BudgetPlanningSection DEBUG: numberOfPeople:', numberOfPeople, 'Type:', typeof numberOfPeople);
+    console.log('BudgetPlanningSection DEBUG: numberOfAdultsError:', numberOfAdultsError, 'Type:', typeof numberOfAdultsError);
+    console.log('BudgetPlanningSection DEBUG: numberOfChildrenError:', numberOfChildrenError, 'Type:', typeof numberOfChildrenError);
+    // --- END NEW LOGGING ---
+
 
     return (
         <SectionWrapper
@@ -66,7 +80,7 @@ const BudgetPlanningSection = () => {
                     <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
                     <select
                         id="currency"
-                        value={currency}
+                        value={safeRender(currency)} // Apply safeRender to value
                         onChange={(e) => setCurrency(e.target.value)}
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                     >
@@ -83,21 +97,21 @@ const BudgetPlanningSection = () => {
                 <InputField
                     label="Money Available for Trip"
                     type="number"
-                    value={moneyAvailable}
+                    value={moneyAvailable} // safeRender applied internally by InputField
                     onChange={(e) => setMoneyAvailable(parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 5000"
                 />
                 <InputField
                     label="Money Already Saved"
                     type="number"
-                    value={moneySaved}
+                    value={moneySaved} // safeRender applied internally by InputField
                     onChange={(e) => setMoneySaved(parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 1000"
                 />
                 <InputField
                     label="Contingency Percentage (%)"
                     type="number"
-                    value={contingencyPercentage}
+                    value={contingencyPercentage} // safeRender applied internally by InputField
                     onChange={(e) => setContingencyPercentage(parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 10"
                     min="0"
@@ -119,10 +133,9 @@ const BudgetPlanningSection = () => {
             </div>
 
             {/* Display overall validation error messages */}
-            {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{numberOfAdultsError}</p>}
-            {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{numberOfChildrenError}</p>}
+            {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfAdultsError)}</p>}
+            {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfChildrenError)}</p>}
 
-            {/* Fixed inputs for Adults/Children and Debug Message */}
             <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-6">
                 <p className="font-semibold mb-2">Note: Multi-party breakdown temporarily disabled.</p>
                 <p className="text-sm">Please use the total number of adults and children for now. We are resolving a technical issue with dynamic party rendering.</p>
@@ -136,7 +149,7 @@ const BudgetPlanningSection = () => {
                     onChange={(e) => {
                         const val = parseInt(e.target.value) || 0;
                         setLocalAdults(val);
-                        updateAppTravelingParties(val, localChildren); // Update App.js state
+                        updateAppTravelingParties(val, localChildren);
                     }}
                     placeholder="e.g., 2"
                     min="1"
@@ -148,7 +161,7 @@ const BudgetPlanningSection = () => {
                     onChange={(e) => {
                         const val = parseInt(e.target.value) || 0;
                         setLocalChildren(val);
-                        updateAppTravelingParties(localAdults, val); // Update App.js state
+                        updateAppTravelingParties(localAdults, val);
                     }}
                     placeholder="e.g., 1"
                     min="0"
@@ -157,7 +170,7 @@ const BudgetPlanningSection = () => {
 
             <div className="mt-4 flex justify-end items-center">
                 <p className="text-md font-semibold text-gray-800">
-                    Total Travelers: <span className="text-indigo-600 text-lg">{numberOfPeople}</span>
+                    Total Travelers: <span className="text-indigo-600 text-lg">{safeRender(numberOfPeople)}</span>
                 </p>
             </div>
 
