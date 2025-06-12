@@ -3,7 +3,7 @@ import React, { useContext, useState } from 'react';
 import { TripContext } from '../App.js';
 import { ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { doc, deleteDoc } from 'firebase/firestore';
-import { safeRender } from '../utils/safeRender.js'; // Import safeRender
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const TripList = () => {
     const { trips, loadTrip, currentTripId, db, userId, createNewTrip, appId } = useContext(TripContext);
@@ -46,7 +46,7 @@ const TripList = () => {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center px-4 py-2 bg-indigo-500 text-white rounded-md text-sm font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md"
             >
-                <FolderOpen size={16} className="mr-2" /> Load Trip ({safeRender(trips.length)}) {/* Apply safeRender */}
+                <FolderOpen size={16} className="mr-2" /> Load Trip ({safeRender(trips.length)})
                 <ChevronDown size={16} className={`ml-2 transform ${dropdownOpen ? 'rotate-180' : 'rotate-0'} transition-transform duration-200`} />
             </button>
 
@@ -57,17 +57,17 @@ const TripList = () => {
                     ) : (
                         <ul>
                             {trips.map((trip) => (
-                                <li key={safeRender(trip.id)} className="border-b last:border-b-0"> {/* Apply safeRender to key */}
+                                <li key={safeRender(trip.id)} className="border-b last:border-b-0">
                                     <div className={`flex justify-between items-center p-3 hover:bg-gray-50 ${currentTripId === trip.id ? 'bg-indigo-50 font-medium' : ''}`}>
                                         <button
                                             onClick={() => handleLoadClick(trip.id)}
                                             className="flex-grow text-left text-gray-800 text-sm truncate pr-2"
-                                            title={safeRender(trip.homeCity ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}` : `Trip ID: ${trip.id}`)} // Apply safeRender to title
+                                            title={safeRender(trip.homeCity ? `${trip.homeCity} to ${trip.cities?.map(c => c.name).join(', ') || trip.countries?.map(c => c.name).join(', ')}` : `Trip ID: ${trip.id}`)}
                                         >
-                                            {safeRender(trip.homeCity && (trip.cities.length > 0 || trip.countries.length > 0)
-                                                ? `${trip.homeCity} to ${trip.cities.map(c => c.name).join(', ') || trip.countries.map(c => c.name).join(', ')}`
-                                                : `Trip: ${trip.id.substring(0, 8)}...`)} {/* Apply safeRender */}
-                                            {trip.startDate && <span className="text-xs text-gray-500 block">{safeRender(trip.startDate)}</span>} {/* Apply safeRender */}
+                                            {safeRender(trip.homeCity && (Array.isArray(trip.cities) && trip.cities.length > 0 || Array.isArray(trip.countries) && trip.countries.length > 0)
+                                                ? `${trip.homeCity} to ${trip.cities?.map(c => c.name).join(', ') || trip.countries?.map(c => c.name).join(', ')}`
+                                                : `Trip: ${trip.id?.substring(0, 8)}...`)}
+                                            {trip.startDate && <span className="text-xs text-gray-500 block">{safeRender(trip.startDate)}</span>}
                                         </button>
                                         <button
                                             onClick={() => handleConfirmDelete(trip.id)}
