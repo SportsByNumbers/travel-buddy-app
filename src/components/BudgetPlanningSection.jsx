@@ -1,5 +1,5 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext, useState, useEffect, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react'; // ADDED useMemo
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
@@ -24,13 +24,12 @@ const BudgetPlanningSection = () => {
         numberOfPeople,
         numberOfAdultsError,
         numberOfChildrenError,
-        homeCurrency, // NEW: Access homeCurrency from context
+        homeCurrency,
     } = context;
 
     const [localAdults, setLocalAdults] = useState(travelingParties[0]?.adults || 1);
     const [localChildren, setLocalChildren] = useState(travelingParties[0]?.children || 0);
 
-    // Option for currency dropdown
     const currencyOptions = useMemo(() => {
         const commonCurrencies = [
             { value: 'USD', label: 'USD ($) - US Dollar' },
@@ -40,7 +39,6 @@ const BudgetPlanningSection = () => {
             { value: 'AUD', label: 'AUD ($) - Australian Dollar' },
             { value: 'CAD', label: 'CAD ($) - Canadian Dollar' },
         ];
-        // Add home currency if it's not already in the common list
         if (homeCurrency && !commonCurrencies.some(opt => opt.value === homeCurrency)) {
             return [{ value: homeCurrency, label: `${homeCurrency} (Home Currency)` }, ...commonCurrencies];
         }
@@ -58,8 +56,6 @@ const BudgetPlanningSection = () => {
             setLocalChildren(context.travelingParties[0]?.children || 0);
         }
     }, [context.travelingParties]);
-
-    // Removed excessive debug console logs from here
 
     return (
         <SectionWrapper
@@ -124,8 +120,6 @@ const BudgetPlanningSection = () => {
 
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfAdultsError)}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfChildrenError)}</p>}
-
-            {/* Removed the temporary note div */}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InputField
