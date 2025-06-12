@@ -10,6 +10,16 @@ import { useCountrySearch } from '../hooks/useCountrySearch.js';
 import { fetchCountryData } from '../services/apiService.js';
 import { safeRender } from '../utils/safeRender.js'; // Import safeRender
 
+// Moved static options outside the component for optimization
+const cityStarRatingOptions = [
+    { value: '', label: 'City Hotel Rating (Optional)' },
+    { value: '1', label: '1 Star (Budget)' },
+    { value: '2', label: '2 Star (Economy)' },
+    { value: '3', label: '3 Star (Mid-Range)' },
+    { value: '4', label: '4 Star (First Class)' },
+    { value: '5', label: '5 Star (Luxury)' },
+];
+
 const DestinationsSection = () => {
     const {
         countries, setCountries,
@@ -61,7 +71,7 @@ const DestinationsSection = () => {
     };
 
     const selectDestCountrySuggestion = (country) => {
-        setDestCountryInputValue(safeRender(country.name)); // Apply safeRender
+        setDestCountryInputValue(safeRender(country.name));
         if (!countries.some(c => c.name.toLowerCase() === country.name.toLowerCase())) {
             setCountries([...countries, country]);
         }
@@ -117,15 +127,6 @@ const DestinationsSection = () => {
         );
     };
 
-    const cityStarRatingOptions = [
-        { value: '', label: 'City Hotel Rating (Optional)' },
-        { value: '1', label: '1 Star (Budget)' },
-        { value: '2', label: '2 Star (Economy)' },
-        { value: '3', label: '3 Star (Mid-Range)' },
-        { value: '4', label: '4 Star (First Class)' },
-        { value: '5', label: '5 Star (Luxury)' },
-    ];
-
     return (
         <SectionWrapper title="Travel Destinations" icon={MapPin}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -141,7 +142,7 @@ const DestinationsSection = () => {
                     items={countries}
                     onRemove={removeCountry}
                     placeholder="e.g., Japan"
-                    error={destCountryError && countries.length === 0 ? destCountryError : ''}
+                    error={destCountryError && countries.length === 0 ? safeRender(destCountryError) : ''}
                     showFlags
                     required
                 />
@@ -180,21 +181,23 @@ const DestinationsSection = () => {
                         />
                         <CheckboxGroup
                             label="City-Specific Topics"
-                            options={availableTopics.map(topic => safeRender(topic.split(' ')[0]))} // Apply safeRender
+                            options={availableTopics.map(topic => ({ value: topic, label: topic }))} // Map to {value, label} objects
                             selected={newCityTopics}
                             onChange={handleNewCityTopicChange}
                             columns={2}
                         />
                     </div>
                     <button type="button" onClick={addCity} className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md w-full">Add City</button>
-                    {destCityError && cities.length === 0 && <p className="text-red-500 text-xs mt-1">{safeRender(destCityError)}</p>} {/* Apply safeRender */}
+                    {destCityError && cities.length === 0 && <p className="text-red-500 text-xs mt-1">{safeRender(destCityError)}</p>}
                     <div className="mt-4 flex flex-col gap-3">
-                        {cities.map((city) => (
-                            <span key={safeRender(city.name)} className="bg-green-100 text-green-800 px-4 py-2 rounded-full flex justify-between items-center text-sm font-medium shadow-sm">
+                        {cities.map((city, index) => (
+                            // Ensure key is unique and a primitive
+                            <span key={safeRender(city.name || index)} className="bg-green-100 text-green-800 px-4 py-2 rounded-full flex justify-between items-center text-sm font-medium shadow-sm">
                                 <span>
                                     {safeRender(city.name)} ({safeRender(city.duration)} days)
                                     {city.starRating && ` - ${safeRender(city.starRating)} Star`}
-                                    {city.topics && city.topics.length > 0 && ` [${safeRender(city.topics)}]`} {/* Apply safeRender for array join */}
+                                    {/* Ensure city.topics is an array before joining and rendering */}
+                                    {Array.isArray(city.topics) && city.topics.length > 0 && ` [${safeRender(city.topics)}]`}
                                 </span>
                                 <button type="button" onClick={() => removeCity(city)} className="ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out">&times;</button>
                             </span>
