@@ -1,5 +1,5 @@
 // src/components/DestinationsSection.jsx
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useRef, useCallback } from 'react'; // ADDED useCallback
 import { MapPin } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
@@ -9,8 +9,11 @@ import CheckboxGroup from './CheckboxGroup.jsx';
 import { useCountrySearch } from '../hooks/useCountrySearch.js';
 import { fetchCountryData } from '../services/apiService.js';
 import { safeRender } from '../utils/safeRender.js'; 
-// Import centralized options
 import { STAR_RATING_OPTIONS, AVAILABLE_TOPICS } from '../constants/options.js';
+
+
+// Moved static options outside the component for optimization
+const cityStarRatingOptions = STAR_RATING_OPTIONS; // Using the imported constant directly
 
 
 const DestinationsSection = () => {
@@ -19,7 +22,6 @@ const DestinationsSection = () => {
         cities, setCities,
         newCityName, setNewCityName,
         newCityDuration, setNewCityDuration,
-        // MODIFIED: newCityStarRating is now an array
         newCityStarRating, setNewCityStarRating, 
         newCityTopics, setNewCityTopics,
         destCountryError, setDestCountryError,
@@ -41,7 +43,6 @@ const DestinationsSection = () => {
         }
         const existingCountry = countries.find(c => c.name.toLowerCase() === trimmedCountry.toLowerCase());
         if (!existingCountry) {
-            // fetchCountryData now also returns currencyCode, ensure it's handled if needed later
             const countryData = await fetchCountryData(trimmedCountry, allCountries); 
             if (countryData?.name) { 
                 setCountries([...countries, countryData]);
@@ -92,15 +93,13 @@ const DestinationsSection = () => {
         setCities([...cities, {
             name: newCityName.trim(),
             duration: parseInt(newCityDuration),
-            // MODIFIED: newCityStarRating is now an array
             starRating: newCityStarRating, 
             topics: newCityTopics
         }]);
 
         setNewCityName('');
         setNewCityDuration(0);
-        // MODIFIED: Reset newCityStarRating to empty array
-        setNewCityStarRating([]); 
+        setNewCityStarRating([]); // Reset newCityStarRating to empty array
         setNewCityTopics([]);
         setNewCityNameError('');
         setNewCityDurationError('');
@@ -116,17 +115,15 @@ const DestinationsSection = () => {
         }
     };
 
-    // This handles multi-select for city-specific topics
-    const handleNewCityTopicChange = (topic) => {
+    const handleNewCityTopicChange = useCallback((topic) => { // Use useCallback
         setNewCityTopics(prevTopics =>
             prevTopics.includes(topic)
                 ? prevTopics.filter(t => t !== topic)
                 : [...prevTopics, topic]
         );
-    };
+    }, [setNewCityTopics]);
 
-    // This handles multi-select for city-specific star ratings
-    const handleNewCityStarRatingChange = useCallback((selectedRatings) => {
+    const handleNewCityStarRatingChange = useCallback((selectedRatings) => { // Use useCallback
         setNewCityStarRating(selectedRatings);
     }, [setNewCityStarRating]);
 
@@ -174,17 +171,16 @@ const DestinationsSection = () => {
                         />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                        {/* MODIFIED: Changed to CheckboxGroup for multi-select star ratings */}
                         <CheckboxGroup
                             label="City Hotel Rating (Optional)"
-                            options={STAR_RATING_OPTIONS.filter(opt => opt.value !== '').map(opt => ({ value: opt.value, label: opt.label }))} // Filter out 'Any' option
+                            options={cityStarRatingOptions.filter(opt => opt.value !== '').map(opt => ({ value: opt.value, label: opt.label }))} 
                             selected={newCityStarRating}
                             onChange={handleNewCityStarRatingChange}
-                            columns={1} // Or adjust columns as needed
+                            columns={1} 
                         />
                         <CheckboxGroup
                             label="City-Specific Topics"
-                            options={AVAILABLE_TOPICS.map(topic => ({ value: topic, label: topic }))} // Map raw topics to {value, label}
+                            options={AVAILABLE_TOPICS.map(topic => ({ value: topic, label: topic }))} 
                             selected={newCityTopics}
                             onChange={handleNewCityTopicChange}
                             columns={2}
@@ -197,9 +193,7 @@ const DestinationsSection = () => {
                             <span key={safeRender(city.name || index)} className="bg-green-100 text-green-800 px-4 py-2 rounded-full flex justify-between items-center text-sm font-medium shadow-sm">
                                 <span>
                                     {safeRender(city.name)} ({safeRender(city.duration)} days)
-                                    {/* Render multiple star ratings if available */}
                                     {Array.isArray(city.starRating) && city.starRating.length > 0 && ` - ${city.starRating.map(s => `${s} Star`).join(', ')}`}
-                                    {/* Ensure city.topics is an array before joining and rendering */}
                                     {Array.isArray(city.topics) && city.topics.length > 0 && ` [${safeRender(city.topics)}]`}
                                 </span>
                                 <button type="button" onClick={() => removeCity(city)} className="ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition duration-200 ease-in-out">&times;</button>
