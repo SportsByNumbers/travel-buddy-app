@@ -1,11 +1,10 @@
-// src/components/BudgetPlanningSection.jsx
+// components/BudgetPlanningSection.jsx
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-// Import a suitable Lucide icon for money, e.g., DollarSign or Banknote if available
-import { DollarSign } from 'lucide-react'; // <-- IMPORT A PROPER LUCIDE ICON
-import { safeRender } from '../utils/safeRender.js';
+import { DollarSign } from 'lucide-react'; // Changed to DollarSign as discussed
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const BudgetPlanningSection = () => {
     const context = useContext(TripContext);
@@ -41,36 +40,11 @@ const BudgetPlanningSection = () => {
         }
     }, [context.travelingParties]);
 
-    console.log('BudgetPlanningSection (render) - Received travelingParties (for debug):', context.travelingParties, 'Type:', typeof context.travelingParties, 'IsArray:', Array.isArray(context.travelingParties));
-    if (Array.isArray(context.travelingParties)) {
-        context.travelingParties.forEach((party, index) => {
-            console.log(`BudgetPlanningSection (render) - Party ${index}:`, party, 'Type:', typeof party === 'object' && party !== null);
-            if (typeof party === 'object' && party !== null) {
-                console.log(`BudgetPlanningSection (render) - Party ${index} details: ID=${party.id} Name=${party.name} Adults=${party.adults} Children=${party.children}`);
-            }
-        });
-    }
-
-    console.log('BudgetPlanningSection DEBUG: currency:', currency, 'Type:', typeof currency);
-    console.log('BudgetPlanningSection DEBUG: moneyAvailable:', moneyAvailable, 'Type:', typeof moneyAvailable);
-    console.log('BudgetPlanningSection DEBUG: moneySaved:', moneySaved, 'Type:', typeof moneySaved);
-    console.log('BudgetPlanningSection DEBUG: contingencyPercentage:', contingencyPercentage, 'Type:', typeof contingencyPercentage);
-    console.log('BudgetPlanningSection DEBUG: estimatedFlightCost:', estimatedFlightCost, 'Type:', typeof estimatedFlightCost);
-    console.log('BudgetPlanningSection DEBUG: estimatedHotelCost:', estimatedHotelCost, 'Type:', typeof estimatedHotelCost);
-    console.log('BudgetPlanningSection DEBUG: estimatedActivityCost:', estimatedActivityCost, 'Type:', typeof estimatedActivityCost);
-    console.log('BudgetPlanningSection DEBUG: estimatedMiscellaneousCost:', estimatedMiscellaneousCost, 'Type:', typeof estimatedMiscellaneousCost);
-    console.log('BudgetPlanningSection DEBUG: estimatedTransportCost:', estimatedTransportCost, 'Type:', typeof estimatedTransportCost);
-    console.log('BudgetPlanningSection DEBUG: isPerPerson:', isPerPerson, 'Type:', typeof isPerPerson);
-    console.log('BudgetPlanningSection DEBUG: localAdults:', localAdults, 'Type:', typeof localAdults);
-    console.log('BudgetPlanningSection DEBUG: localChildren:', localChildren, 'Type:', typeof localChildren);
-    console.log('BudgetPlanningSection DEBUG: numberOfPeople:', numberOfPeople, 'Type:', typeof numberOfPeople);
-    console.log('BudgetPlanningSection DEBUG: numberOfAdultsError:', numberOfAdultsError, 'Type:', typeof numberOfAdultsError);
-    console.log('BudgetPlanningSection DEBUG: numberOfChildrenError:', numberOfChildrenError, 'Type:', typeof numberOfChildrenError);
-
+    // Removed excessive debug console logs from here
 
     return (
         <SectionWrapper
-            icon={DollarSign} // <-- CHANGE THIS: Pass the imported component directly
+            icon={DollarSign} // Pass the imported component directly
             title="Budget Planning"
             description="Plan your trip's finances. Estimate costs and track savings."
         >
@@ -131,14 +105,11 @@ const BudgetPlanningSection = () => {
                 </label>
             </div>
 
+            {/* Removed the temporary note div here */}
+
             {/* Display overall validation error messages */}
             {numberOfAdultsError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfAdultsError)}</p>}
             {numberOfChildrenError && <p className="mt-1 text-sm text-red-600">{safeRender(numberOfChildrenError)}</p>}
-
-            <div className="p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-6">
-                <p className="font-semibold mb-2">Note: Multi-party breakdown temporarily disabled.</p>
-                <p className="text-sm">Please use the total number of adults and children for now. We are resolving a technical issue with dynamic party rendering.</p>
-            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InputField
