@@ -72,14 +72,13 @@ const App = () => {
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
-    const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
+    // REMOVED: const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
     const [homeCity, setHomeCity] = useState('');
     const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
-    // UPDATED: Added Wifi, Laundry Services, Laundry Facilities
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access', 'Wifi', 'Laundry Services', 'Laundry Facilities']; 
     const [isPerPerson, setIsPerPerson] = useState(true);
 
@@ -396,7 +395,7 @@ const App = () => {
                     flag: country.flags.svg
                 })));
                 console.log('App.js (useEffect countries) - Countries fetched successfully.');
-            } catch (error) {
+            }                           } catch (error) {
                 console.error("Error fetching all countries for suggestions:", error);
             }
         };
@@ -918,7 +917,7 @@ const App = () => {
         newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
 
         getFormattedCurrency, toggleSuggestionSelection,
-        newHomeCityInput, setNewHomeCityInput, // Moved here as it's still being passed in the context value.
+        newHomeCityInput, setNewHomeCityInput, 
     };
 
     if (!isAuthReady) {
