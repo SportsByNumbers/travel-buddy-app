@@ -1,5 +1,5 @@
 // src/components/PreferencesSection.jsx
-import React, { useContext, useCallback } from 'react'; // Added useCallback
+import React, { useContext, useCallback } from 'react';
 import { Star } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
@@ -10,7 +10,6 @@ import { STAR_RATING_OPTIONS, AVAILABLE_TOPICS, TRAVEL_STYLE_OPTIONS } from '../
 
 const PreferencesSection = () => {
     const {
-        // MODIFIED: starRating is now an array
         starRating, setStarRating, 
         travelStyle, setTravelStyle,
         hotelAmenities, setHotelAmenities, availableAmenities,
@@ -33,7 +32,6 @@ const PreferencesSection = () => {
         );
     }, [setHotelAmenities]);
 
-    // This handles multi-select for overall star ratings
     const handleStarRatingChange = useCallback((selectedRatings) => {
         setStarRating(selectedRatings);
     }, [setStarRating]);
@@ -48,15 +46,14 @@ const PreferencesSection = () => {
                     type="select"
                     value={travelStyle}
                     onChange={(e) => setTravelStyle(e.target.value)}
-                    options={TRAVEL_STYLE_OPTIONS} // Use imported constant
+                    options={TRAVEL_STYLE_OPTIONS} 
                 />
-                {/* MODIFIED: Changed to CheckboxGroup for multi-select star ratings */}
                 <CheckboxGroup
                     label="Overall Preferred Hotel Rating (Optional)"
                     options={STAR_RATING_OPTIONS.filter(opt => opt.value !== '').map(opt => ({ value: opt.value, label: opt.label }))} // Filter out 'Any' option
                     selected={starRating}
                     onChange={handleStarRatingChange}
-                    columns={1} // Or adjust columns as needed
+                    columns={1} 
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
