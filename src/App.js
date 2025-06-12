@@ -72,9 +72,9 @@ const App = () => {
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
     const [starRating, setStarRating] = useState('');
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
-    const [newHomeCountryInput, setNewHomeCountryInput] = useState('');
+    // Removed: newHomeCountryInput as it's handled by useCountrySearch's internal state
     const [homeCity, setHomeCity] = useState('');
-    const [newHomeCityInput, setNewHomeCityInput] = useState(''); // Corrected: Should be useState, not direct assignment
+    const [newHomeCityInput, setNewHomeCityInput] = useState(''); // Corrected to useState, if needed for context
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const availableTopics = ['Food', 'Sport', 'Culture', 'Theme Parks', 'Nature', 'Adventure', 'History', 'Shopping', 'Nightlife', 'Relaxation'];
     const [travelStyle, setTravelStyle] = useState('');
@@ -87,21 +87,15 @@ const App = () => {
     ]);
 
     let calculatedPeople = 0;
-    // CRITICAL DEBUG LOGS AND REINFORCED CHECK:
-    console.log('App.js (Top Level Render) - travelingParties initial/current state:', travelingParties, 'Type:', typeof travelingParties, 'IsArray:', Array.isArray(travelingParties));
+    // Removed redundant top-level console logs related to travelingParties
     const partiesToProcess = Array.isArray(travelingParties) ? travelingParties : [];
-    console.log('App.js (Top Level Render) - partiesToProcess AFTER Array.isArray check:', partiesToProcess, 'Type:', typeof partiesToProcess, 'IsArray:', Array.isArray(partiesToProcess));
-
 
     if (partiesToProcess.length > 0) {
         for (const party of partiesToProcess) {
-            console.log('App.js (Top Level Render) - Processing party (in loop):', party, 'Type:', typeof party, 'IsObject:', typeof party === 'object' && party !== null);
-            console.log('App.js (Top Level Render) - Party details (if object): ID=', party && party.id, ' Name=', party && party.name, ' Adults=', party && party.adults, ' Children=', party && party.children);
-
             if (typeof party === 'object' && party !== null && 'adults' in party && 'children' in party) {
                 calculatedPeople += (party.adults || 0) + (party.children || 0);
             } else {
-                console.error("App.js (Top Level Render) - !!! CRITICAL: Invalid party object found in travelingParties (for calculation), skipping:", party);
+                console.error("App.js - !!! CRITICAL: Invalid party object found in travelingParties (for calculation), skipping:", party);
             }
         }
     }
@@ -806,7 +800,6 @@ const App = () => {
             tours: finalTours,
             isPerPerson,
             travelingParties, // Pass travelingParties to summaryData
-            numberOfPeople,
             numberOfAdults: totalAdults, // Add derived totals to summary for display convenience
             numberOfChildren: totalChildren, // Add derived totals to summary for display convenience
             currency,
@@ -888,8 +881,7 @@ const App = () => {
         countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
         newCityDuration, setNewCityDuration, newCityStarRating, setNewCityStarRating, newCityTopics, setNewCityTopics,
         startDate, setStartDate, endDate, setEndDate, overallDuration, starRating, setStarRating, travelStyle,
-        setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, newHomeCountryInput, setNewHomeCountryInput,
-        homeCity, setHomeCity, newHomeCityInput, setNewHomeCityInput, topicsOfInterest, setTopicsOfInterest, availableTopics,
+        setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, setHomeCountry, topicsOfInterest, setTopicsOfInterest, availableTopics,
         availableAmenities, isPerPerson, setIsPerPerson,
         travelingParties, setTravelingParties, // Provide travelingParties
         numberOfPeople,
@@ -925,7 +917,9 @@ const App = () => {
         numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError,
         newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
 
-        getFormattedCurrency, toggleSuggestionSelection
+        getFormattedCurrency, toggleSuggestionSelection,
+        newHomeCityInput, setNewHomeCityInput, // Moved here as it's still being passed in the context value.
+                                              // If it's truly not used, it could be removed from context and App.js state.
     };
 
     if (!isAuthReady) {
@@ -975,22 +969,17 @@ const App = () => {
                             {/* Main content area for authenticated users */}
                             {currentTripId !== null || isNewTripStarted ? (
                                 <ErrorBoundary>
-                                    {/* TEMPORARY DEBUGGING: COMMENT OUT SECTIONS ONE BY ONE */}
-                                    {/* Start by commenting ALL of these out, then uncomment one by one and redeploy */}
-
-                                    <HomeLocationSection /> {/* UNCOMMENTED for testing */}
-                                    <DestinationsSection /> {/* UNCOMMENTED for testing */}
-                                    <TripDatesSection /> {/* UNCOMMENTED for testing */}
-                                    <PreferencesSection /> {/* UNCOMMENTED for testing */}
+                                    <HomeLocationSection /> 
+                                    <DestinationsSection /> 
+                                    <TripDatesSection /> 
+                                    <PreferencesSection /> 
                                     <ItinerarySuggestions /> 
-                                    <BudgetPlanningSection /> {/* UNCOMMENTED for testing */}
-                                    <FoodAllowanceSection /> {/* UNCOMMENTED for testing */}
-                                    <TransportOptionsSection /> {/* UNCOMMENTED for testing */}
+                                    <BudgetPlanningSection /> 
+                                    <FoodAllowanceSection /> 
+                                    <TransportOptionsSection /> 
                                     <TravelPlanSummary /> 
                                     <ExpenseTracker /> 
 
-
-                                    {/* LEAVE this button section for now, as it's just a button */}
                                     <div className="text-center mt-10 print:hidden">
                                         <button
                                             onClick={calculateTravelPlan}
