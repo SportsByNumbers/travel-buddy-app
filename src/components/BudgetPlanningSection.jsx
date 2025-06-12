@@ -24,7 +24,7 @@ const BudgetPlanningSection = () => {
         numberOfPeople,
         numberOfAdultsError,
         numberOfChildrenError,
-        homeCurrency,
+        homeCurrency, // NEW: Access homeCurrency from context
     } = context;
 
     const [localAdults, setLocalAdults] = useState(travelingParties[0]?.adults || 1);
@@ -38,7 +38,9 @@ const BudgetPlanningSection = () => {
             { value: 'JPY', label: 'JPY (¥) - Japanese Yen' },
             { value: 'AUD', label: 'AUD ($) - Australian Dollar' },
             { value: 'CAD', label: 'CAD ($) - Canadian Dollar' },
+            // Add more common currencies here as needed
         ];
+        // Add home currency if it's not already in the common list
         if (homeCurrency && !commonCurrencies.some(opt => opt.value === homeCurrency)) {
             return [{ value: homeCurrency, label: `${homeCurrency} (Home Currency)` }, ...commonCurrencies];
         }
