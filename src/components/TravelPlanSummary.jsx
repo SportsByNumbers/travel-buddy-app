@@ -37,7 +37,7 @@ const TravelPlanSummary = () => {
         const variance = calculateVariance(estimated, actual);
         return (
             <div className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
-                <span className="text-gray-700 font-medium">{safeRender(label)}:</span>
+                <span className="text-gray-700 font-medium">{label}:</span> {/* label is a static string, no safeRender needed */}
                 <div className="flex flex-col items-end">
                     <span className="text-gray-900">{getFormattedCurrency(estimated)} (Est.)</span>
                     {actual !== undefined && (
@@ -77,7 +77,7 @@ const TravelPlanSummary = () => {
                         <h4 className="text-xl font-bold text-indigo-700 mb-3 pb-1 border-b border-indigo-100">City Breakdown</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {cities.map((city, index) => (
-                                <div key={safeRender(city.name || index)} className="bg-indigo-50 p-4 rounded-lg shadow-sm"> {/* Apply safeRender to key */}
+                                <div key={safeRender(city.name || index)} className="bg-indigo-50 p-4 rounded-lg shadow-sm">
                                     <p className="font-semibold text-indigo-800">{safeRender(city.name)} ({safeRender(city.duration)} days)</p>
                                     {city.starRating && <p className="text-sm text-gray-600">Hotel: {safeRender(city.starRating)} Star</p>}
                                     {(Array.isArray(city.topics) && city.topics.length > 0) && <p className="text-sm text-gray-600">Topics: {safeRender(city.topics.join(', '))}</p>}
