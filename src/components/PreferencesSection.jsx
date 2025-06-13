@@ -5,8 +5,8 @@ import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import CheckboxGroup from './CheckboxGroup.jsx';
+// Import centralized options
 import { STAR_RATING_OPTIONS, AVAILABLE_TOPICS, TRAVEL_STYLE_OPTIONS } from '../constants/options.js';
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const PreferencesSection = () => {
     const {
@@ -15,10 +15,6 @@ const PreferencesSection = () => {
         hotelAmenities, setHotelAmenities, availableAmenities,
         topicsOfInterest, setTopicsOfInterest, 
     } = useContext(TripContext);
-
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('PreferencesSection RENDER: starRating:', starRating, 'travelStyle:', travelStyle, 'topicsOfInterest:', topicsOfInterest, 'hotelAmenities:', hotelAmenities);
-    // --- END NEW DEBUG LOGS ---
 
     const handleTopicsChange = useCallback((topic) => {
         setTopicsOfInterest(prevTopics =>
