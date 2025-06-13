@@ -4,23 +4,27 @@ import { Calendar } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const TripDatesSection = () => {
     const { startDate, setStartDate, endDate, setEndDate, overallDuration, dateError, setDateError } = useContext(TripContext);
 
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('TripDatesSection RENDER: startDate:', startDate, 'endDate:', endDate, 'overallDuration:', overallDuration, 'dateError:', dateError);
+    // --- END NEW DEBUG LOGS ---
+
     const handleStartDateChange = (e) => {
         const selectedDate = e.target.value;
         setStartDate(selectedDate ? new Date(selectedDate) : null);
-        setDateError(''); // Clear error on change
+        setDateError('');
     };
 
     const handleEndDateChange = (e) => {
         const selectedDate = e.target.value;
         setEndDate(selectedDate ? new Date(selectedDate) : null);
-        setDateError(''); // Clear error on change
+        setDateError('');
     };
 
-    // Format Date objects to YYYY-MM-DD string for input fields
     const formatToDateInput = (date) => {
         if (!date) return '';
         const d = new Date(date);
@@ -48,14 +52,14 @@ const TripDatesSection = () => {
                     type="date"
                     value={formatToDateInput(endDate)}
                     onChange={handleEndDateChange}
-                    min={formatToDateInput(startDate)} // End date cannot be before start date
+                    min={formatToDateInput(startDate)}
                     error={dateError}
                     required
                 />
             </div>
             {overallDuration > 0 && !dateError && (
                 <p className="mt-4 text-center text-lg font-semibold text-gray-700">
-                    Your trip duration: {overallDuration} days
+                    Your trip duration: {safeRender(overallDuration)} days
                 </p>
             )}
         </SectionWrapper>
