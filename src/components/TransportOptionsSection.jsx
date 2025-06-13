@@ -4,8 +4,7 @@ import { Plane } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { safeRender } from '../utils/safeRender.js'; 
-
+// Removed: import { safeRender } from '../utils/safeRender.js'; // This import is no longer needed here
 
 const TransportOptionsSection = () => {
     const {
