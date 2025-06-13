@@ -1,5 +1,5 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react'; 
+import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
@@ -56,11 +56,6 @@ const BudgetPlanningSection = () => {
             setLocalChildren(context.travelingParties[0]?.children || 0);
         }
     }, [context.travelingParties]);
-
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('BudgetPlanningSection RENDER: currency:', currency, 'homeCurrency:', homeCurrency, 'moneyAvailable:', moneyAvailable, 'numberOfPeople:', numberOfPeople);
-    console.log('BudgetPlanningSection RENDER: estimatedFlightCost:', estimatedFlightCost, 'estimatedHotelCost:', estimatedHotelCost);
-    // --- END NEW DEBUG LOGS ---
 
     return (
         <SectionWrapper
