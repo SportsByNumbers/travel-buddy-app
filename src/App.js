@@ -78,12 +78,10 @@ const App = () => {
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [homeCurrency, setHomeCurrency] = useState(null);
     const [homeCity, setHomeCity] = useState('');
-    // newHomeCityInput is passed through context, but not used in App.js directly
     const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
-    // UPDATED: Added Wifi, Laundry Services, Laundry Facilities
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access', 'Wifi', 'Laundry Services', 'Laundry Facilities']; 
     const [isPerPerson, setIsPerPerson] = useState(true);
 
@@ -106,7 +104,7 @@ const App = () => {
     const numberOfPeople = calculatedPeople;
 
 
-    const [currency, setCurrency] = useState('USD'); // Default currency, will be updated by home currency
+    const [currency, setCurrency] = useState('USD'); 
     const [moneyAvailable, setMoneyAvailable] = useState(0);
     const [moneySaved, setMoneySaved] = useState(0);
     const [contingencyPercentage, setContingencyPercentage] = useState(10);
@@ -174,7 +172,7 @@ const App = () => {
     const [allCountries, setAllCountries] = useState([]);
 
     const [homeCountryError, setHomeCountryError] = useState('');
-    const [homeCityError, setHomeCityError] = useState('');
+    const [homeCityError, setHomeCityError = useState('');
     const [destCountryError, setDestCountryError] = useState('');
     const [destCityError, setDestCityError] = useState('');
     const [dateError, setDateError] = useState('');
@@ -182,7 +180,7 @@ const App = () => {
     const [numberOfChildrenError, setNumberOfChildrenError] = useState('');
 
     const [newCityNameError, setNewCityNameError] = useState('');
-    const [newCityDurationError, setNewCityDurationError] = useState('');
+    const [newCityDurationError, setNewCityDurationError = useState('');
 
     // --- Authentication Handlers ---
 
@@ -518,7 +516,7 @@ const App = () => {
         }
         const projectIdForPaths = firebaseConfig.projectId;
         const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, tripId);
-        try {
+        try { 
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
@@ -594,7 +592,7 @@ const App = () => {
                 resetTripStates(); 
                 setIsNewTripStarted(false);
             }
-        }                           } catch (error) { // Ensured catch block is correctly paired
+        } catch (error) { 
             console.error("App.js (loadTrip) - Error loading trip:", error, error.stack);
             setTravelPlanSummary(null);
             setCurrentTripId(null);
