@@ -8,10 +8,6 @@ import { safeRender } from '../utils/safeRender.js';
 const TravelPlanSummary = () => {
     const { travelPlanSummary, getFormattedCurrency, currentTripId } = useContext(TripContext);
 
-    // --- NEW DEBUG LOG HERE ---
-    console.log('TravelPlanSummary RENDER: travelPlanSummary:', travelPlanSummary);
-    // --- END NEW DEBUG LOG ---
-
     if (!travelPlanSummary) {
         return (
             <SectionWrapper title="Travel Plan Summary" icon={FileText} className="mt-12 print:hidden">
