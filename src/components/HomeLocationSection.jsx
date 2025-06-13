@@ -51,7 +51,7 @@ const HomeLocationSection = () => {
     };
 
     const selectHomeCountrySuggestion = (country) => {
-        handleSetHomeCountry(country); 
+        setHomeCountry(country); // This will then trigger handleSetHomeCountry via effect
         setHomeCountryInputValue(''); 
         clearHomeCountrySuggestions();
         setHomeCountryError('');
