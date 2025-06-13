@@ -1,5 +1,5 @@
 // src/components/DestinationsSection.jsx
-import React, { useContext, useRef, useCallback } from 'react'; // ADDED useCallback
+import React, { useContext, useRef, useCallback } from 'react'; 
 import { MapPin } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
@@ -11,10 +11,7 @@ import { fetchCountryData } from '../services/apiService.js';
 import { safeRender } from '../utils/safeRender.js'; 
 import { STAR_RATING_OPTIONS, AVAILABLE_TOPICS } from '../constants/options.js';
 
-
-// Moved static options outside the component for optimization
-const cityStarRatingOptions = STAR_RATING_OPTIONS; // Using the imported constant directly
-
+const cityStarRatingOptions = STAR_RATING_OPTIONS; 
 
 const DestinationsSection = () => {
     const {
@@ -30,6 +27,12 @@ const DestinationsSection = () => {
         newCityDurationError, setNewCityDurationError,
         allCountries, 
     } = useContext(TripContext);
+
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('DestinationsSection RENDER: countries:', countries, 'cities:', cities);
+    console.log('DestinationsSection RENDER: newCityName:', newCityName, 'newCityDuration:', newCityDuration, 'newCityStarRating:', newCityStarRating, 'newCityTopics:', newCityTopics);
+    console.log('DestinationsSection RENDER: destCountryError:', destCountryError, 'destCityError:', destCityError);
+    // --- END NEW DEBUG LOGS ---
 
     const destCountryInputRef = useRef(null);
 
@@ -99,7 +102,7 @@ const DestinationsSection = () => {
 
         setNewCityName('');
         setNewCityDuration(0);
-        setNewCityStarRating([]); // Reset newCityStarRating to empty array
+        setNewCityStarRating([]); 
         setNewCityTopics([]);
         setNewCityNameError('');
         setNewCityDurationError('');
@@ -115,7 +118,7 @@ const DestinationsSection = () => {
         }
     };
 
-    const handleNewCityTopicChange = useCallback((topic) => { // Use useCallback
+    const handleNewCityTopicChange = useCallback((topic) => { 
         setNewCityTopics(prevTopics =>
             prevTopics.includes(topic)
                 ? prevTopics.filter(t => t !== topic)
@@ -123,7 +126,7 @@ const DestinationsSection = () => {
         );
     }, [setNewCityTopics]);
 
-    const handleNewCityStarRatingChange = useCallback((selectedRatings) => { // Use useCallback
+    const handleNewCityStarRatingChange = useCallback((selectedRatings) => { 
         setNewCityStarRating(selectedRatings);
     }, [setNewCityStarRating]);
 
