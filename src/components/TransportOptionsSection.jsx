@@ -1,13 +1,15 @@
 // src/components/TransportOptionsSection.jsx
 import React, { useContext } from 'react';
-import { Plane /* Removed: Car, Train */ } from 'lucide-react'; // Removed unused imports
+import { Plane } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+
 
 const TransportOptionsSection = () => {
     const {
-        estimatedTransportCost, setEstimatedTransportCost, // AI estimated total transport (optional use)
+        estimatedTransportCost, setEstimatedTransportCost, 
         carRental, setCarRental, carRentalCost, setCarRentalCost,
         shuttle, setShuttle, shuttleCost, setShuttleCost,
         airportTransfers, setAirportTransfers, airportTransfersCost, setAirportTransfersCost,
@@ -21,6 +23,11 @@ const TransportOptionsSection = () => {
         dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
         currency
     } = useContext(TripContext);
+
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('TransportOptionsSection RENDER: estimatedTransportCost:', estimatedTransportCost, 'currency:', currency);
+    console.log('TransportOptionsSection RENDER: carRental:', carRental, 'carRentalCost:', carRentalCost);
+    // --- END NEW DEBUG LOGS ---
 
     const renderCostInput = (id, label, value, onChange, isChecked, placeholder) => {
         return isChecked && (
@@ -98,7 +105,6 @@ const TransportOptionsSection = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Local Transport Options */}
                 <div className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Local Transport Options</h3>
                     {renderCheckboxInput("localPublicTransport", "Local Public Transport (Bus, Metro, Tram)", localPublicTransport, setLocalPublicTransport)}
@@ -120,7 +126,7 @@ const TransportOptionsSection = () => {
                             id="dailyTaxiRideShareAllowance"
                             label={`Daily Taxi/Ride-Share Allowance (${currency})`}
                             type="number"
-                            value={dailyLocalTransportAllowance} // Reusing for simplicity, could be separate
+                            value={dailyLocalTransportAllowance} 
                             onChange={(e) => setDailyLocalTransportAllowance(parseFloat(e.target.value) || 0)}
                             placeholder="e.g., 30"
                             min="0"
@@ -130,7 +136,6 @@ const TransportOptionsSection = () => {
                     {renderCheckboxInput("walking", "Primary Mode: Walking", walking, setWalking)}
                 </div>
 
-                {/* Specific Ground Transport Costs */}
                 <div className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Specific Ground Transport & Parking</h3>
                     {renderCheckboxInput("carRental", "Car Rental", carRental, setCarRental)}
