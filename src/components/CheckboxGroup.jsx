@@ -1,6 +1,6 @@
 // src/components/CheckboxGroup.jsx
 import React from 'react';
-import { safeRender } from '../utils/safeRender.js'; // Import safeRender
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const CheckboxGroup = ({ label, options, selected, onChange, columns = 1 }) => {
     return (
@@ -15,15 +15,15 @@ const CheckboxGroup = ({ label, options, selected, onChange, columns = 1 }) => {
                     const isSelected = selected.includes(optionValue); // Compare by the actual value
 
                     return (
-                        <label key={safeRender(optionValue || index)} className="inline-flex items-center"> {/* Use safeRender for key */}
+                        <label key={safeRender(optionValue || index)} className="inline-flex items-center">
                             <input
                                 type="checkbox"
-                                value={safeRender(optionValue)} // Apply safeRender to value
+                                value={safeRender(optionValue)}
                                 checked={isSelected}
-                                onChange={() => onChange(option)} // Pass original option object or value back depending on hook
+                                onChange={() => onChange(optionValue)} // Changed to pass optionValue directly for consistency
                                 className="form-checkbox h-4 w-4 text-indigo-600"
                             />
-                            <span className="ml-2 text-sm text-gray-700">{safeRender(optionLabel)}</span> {/* Apply safeRender */}
+                            <span className="ml-2 text-sm text-gray-700">{safeRender(optionLabel)}</span>
                         </label>
                     );
                 })}
