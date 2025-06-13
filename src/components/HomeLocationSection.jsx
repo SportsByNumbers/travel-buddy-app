@@ -1,20 +1,19 @@
 // src/components/HomeLocationSection.jsx
-
 import React, { useContext, useRef } from 'react';
-import { MapPin, DollarSign } from 'lucide-react'; // Import DollarSign icon
+import { MapPin, DollarSign } from 'lucide-react'; 
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import TagInput from './TagInput.jsx';
 import InputField from './InputField.jsx';
 import { useCountrySearch } from '../hooks/useCountrySearch.js';
 import { fetchCountryData } from '../services/apiService.js';
-import { safeRender } from '../utils/safeRender.js'; // Might still be needed if you apply it locally here
+import { safeRender } from '../utils/safeRender.js'; 
 
 const HomeLocationSection = () => {
     const {
         homeCountry, 
         handleSetHomeCountry, 
-        homeCurrency, // Get homeCurrency from context
+        homeCurrency, 
         homeCity, setHomeCity,
         homeCountryError, setHomeCountryError,
         homeCityError, setHomeCityError,
@@ -24,6 +23,12 @@ const HomeLocationSection = () => {
     const homeCountryInputRef = useRef(null);
 
     const { inputValue: homeCountryInputValue, setInputValue: setHomeCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleHomeCountryInputChange, clearSuggestions: clearHomeCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
+
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('HomeLocationSection RENDER: homeCountry:', homeCountry, 'homeCity:', homeCity, 'homeCurrency:', homeCurrency, 'homeCountryInputValue:', homeCountryInputValue);
+    console.log('HomeLocationSection RENDER: homeCountryError:', homeCountryError, 'homeCityError:', homeCityError);
+    console.log('HomeLocationSection RENDER: filteredHomeCountrySuggestions:', filteredHomeCountrySuggestions);
+    // --- END NEW DEBUG LOGS ---
 
     const addHomeCountry = async () => {
         const trimmedCountry = homeCountryInputValue.trim();
@@ -98,7 +103,7 @@ const HomeLocationSection = () => {
             {homeCountry.name && homeCurrency && (
                 <div className="mt-4 p-3 bg-indigo-50 rounded-md flex items-center text-indigo-700 font-semibold">
                     <DollarSign size={20} className="mr-2" />
-                    <p>Detected Home Currency: {safeRender(homeCurrency)}</p> {/* Display detected currency */}
+                    <p>Detected Home Currency: {safeRender(homeCurrency)}</p>
                 </div>
             )}
         </SectionWrapper>
