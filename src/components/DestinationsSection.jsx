@@ -11,7 +11,9 @@ import { fetchCountryData } from '../services/apiService.js';
 import { safeRender } from '../utils/safeRender.js'; 
 import { STAR_RATING_OPTIONS, AVAILABLE_TOPICS } from '../constants/options.js';
 
+
 const cityStarRatingOptions = STAR_RATING_OPTIONS; 
+
 
 const DestinationsSection = () => {
     const {
@@ -27,12 +29,6 @@ const DestinationsSection = () => {
         newCityDurationError, setNewCityDurationError,
         allCountries, 
     } = useContext(TripContext);
-
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('DestinationsSection RENDER: countries:', countries, 'cities:', cities);
-    console.log('DestinationsSection RENDER: newCityName:', newCityName, 'newCityDuration:', newCityDuration, 'newCityStarRating:', newCityStarRating, 'newCityTopics:', newCityTopics);
-    console.log('DestinationsSection RENDER: destCountryError:', destCountryError, 'destCityError:', destCityError);
-    // --- END NEW DEBUG LOGS ---
 
     const destCountryInputRef = useRef(null);
 
