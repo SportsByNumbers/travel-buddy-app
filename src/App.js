@@ -226,7 +226,7 @@ const App = () => {
             console.error("Firebase Auth not initialized.");
             return;
         }
-        try {
+        try { // Corrected: This try block is now correctly structured.
             await signOut(auth);
             console.log("User signed out.");
             setCurrentTripId(null);
@@ -234,7 +234,7 @@ const App = () => {
             resetTripStates();
             setTravelPlanSummary(null);
             setUserName(null);
-        }                           } catch (error) {
+        } catch (error) {
             console.error("Sign out Error:", error);
         }
     };
@@ -732,7 +732,7 @@ const App = () => {
 
 
     const calculateTravelPlan = () => {
-        console.log('App.js (calculateTravelPlan) - Starting calculation.');
+        console.log('App.js (calculateTravelPlan) - Calculating travel plan.');
         console.log('App.js (calculateTravelPlan) - States for calculation: homeCountry:', homeCountry, 'homeCity:', homeCity, 'countries:', countries, 'cities:', cities, 'startDate:', startDate, 'endDate:', endDate, 'numberOfPeople:', numberOfPeople);
 
         let hasError = false;
