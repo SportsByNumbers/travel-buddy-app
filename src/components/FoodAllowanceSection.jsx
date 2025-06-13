@@ -4,6 +4,7 @@ import { Utensils } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
+import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
 
 const FoodAllowanceSection = () => {
     const {
@@ -14,13 +15,17 @@ const FoodAllowanceSection = () => {
         currency
     } = useContext(TripContext);
 
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('FoodAllowanceSection RENDER: breakfastAllowance:', breakfastAllowance, 'currency:', currency);
+    // --- END NEW DEBUG LOGS ---
+
     return (
         <SectionWrapper title="Food Allowance" icon={Utensils}>
-            <p className="text-gray-700 mb-4">Estimate your daily food budget per person ({currency}).</p>
+            <p className="text-gray-700 mb-4">Estimate your daily food budget per person ({safeRender(currency)}).</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <InputField
                     id="breakfastAllowance"
-                    label="Breakfast" // Removed (USD)
+                    label={`Breakfast (${currency})`} // Dynamic currency
                     type="number"
                     value={breakfastAllowance}
                     onChange={(e) => setBreakfastAllowance(parseFloat(e.target.value) || 0)}
@@ -29,7 +34,7 @@ const FoodAllowanceSection = () => {
                 />
                 <InputField
                     id="lunchAllowance"
-                    label="Lunch" // Removed (USD)
+                    label={`Lunch (${currency})`} // Dynamic currency
                     type="number"
                     value={lunchAllowance}
                     onChange={(e) => setLunchAllowance(parseFloat(e.target.value) || 0)}
@@ -38,7 +43,7 @@ const FoodAllowanceSection = () => {
                 />
                 <InputField
                     id="dinnerAllowance"
-                    label="Dinner" // Removed (USD)
+                    label={`Dinner (${currency})`} // Dynamic currency
                     type="number"
                     value={dinnerAllowance}
                     onChange={(e) => setDinnerAllowance(parseFloat(e.target.value) || 0)}
@@ -47,7 +52,7 @@ const FoodAllowanceSection = () => {
                 />
                 <InputField
                     id="snacksAllowance"
-                    label="Snacks & Drinks" // Removed (USD)
+                    label={`Snacks & Drinks (${currency})`} // Dynamic currency
                     type="number"
                     value={snacksAllowance}
                     onChange={(e) => setSnacksAllowance(parseFloat(e.target.value) || 0)}
