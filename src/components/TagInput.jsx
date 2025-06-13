@@ -27,7 +27,7 @@ const TagInput = ({
         const handleClickOutside = (event) => {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
                 setShowSuggestions(false);
-                if (onInputBlur) onInputBlur(); // Call original onInputBlur if provided
+                if (onInputBlur) onInputBlur(); 
             }
         };
 
@@ -47,7 +47,7 @@ const TagInput = ({
         if (e.key === 'Enter' && inputValue.trim() !== '') {
             e.preventDefault();
             onAdd();
-            setShowSuggestions(false); // Hide suggestions after adding
+            setShowSuggestions(false);
         }
     };
 
@@ -60,7 +60,6 @@ const TagInput = ({
                 <div className="flex flex-wrap gap-2 mr-2">
                     {items.map((item, index) => (
                         <span
-                            // Ensure key is always a string or number. Prioritize unique IDs.
                             key={safeRender(item.id || item.name || index)}
                             className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm font-medium"
                         >
