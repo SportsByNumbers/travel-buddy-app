@@ -215,7 +215,7 @@ const App = () => {
                 await createUserWithEmailAndPassword(auth, email, password);
                 console.log("Signed up with Email/Password successfully.");
             }
-        }                           } catch (error) {
+        } catch (error) { // CORRECTED
             console.error("Email/Password Auth Error:", error);
             setAuthError(error.message);
         }
@@ -234,7 +234,7 @@ const App = () => {
             resetTripStates();
             setTravelPlanSummary(null);
             setUserName(null);
-        } catch (error) { // CORRECTED
+        } catch (error) { // CORRECTED: Removed extra '}'
             console.error("Sign out Error:", error);
         }
     };
