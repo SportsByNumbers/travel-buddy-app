@@ -8,6 +8,10 @@ import { safeRender } from '../utils/safeRender.js';
 const TravelPlanSummary = () => {
     const { travelPlanSummary, getFormattedCurrency, currentTripId } = useContext(TripContext);
 
+    // --- NEW DEBUG LOG HERE ---
+    console.log('TravelPlanSummary RENDER: travelPlanSummary:', travelPlanSummary);
+    // --- END NEW DEBUG LOG ---
+
     if (!travelPlanSummary) {
         return (
             <SectionWrapper title="Travel Plan Summary" icon={FileText} className="mt-12 print:hidden">
@@ -67,7 +71,6 @@ const TravelPlanSummary = () => {
                     <p><strong className="font-semibold">Dates:</strong> {safeRender(travelPlanSummary.startDate)} - {safeRender(travelPlanSummary.endDate)} ({safeRender(travelPlanSummary.overallDuration)} days)</p>
                     <p><strong className="font-semibold">Travelers:</strong> {safeRender(travelPlanSummary.numberOfAdults)} Adults, {safeRender(travelPlanSummary.numberOfChildren)} Children (Total: {safeRender(travelPlanSummary.numberOfPeople)})</p>
                     <p><strong className="font-semibold">Travel Style:</strong> {safeRender(travelPlanSummary.travelStyle || 'Not specified')}</p>
-                    {/* MODIFIED: Render starRating as a joined array */}
                     <p><strong className="font-semibold">Hotel Rating:</strong> {safeRender(Array.isArray(travelPlanSummary.starRating) && travelPlanSummary.starRating.length > 0 ? `${travelPlanSummary.starRating.join(', ')} Star` : 'Any')}</p>
                     <p><strong className="font-semibold">Topics:</strong> {safeRender(topicsOfInterest.join(', ') || 'None')}</p>
                     <p><strong className="font-semibold">Hotel Amenities:</strong> {safeRender(hotelAmenities.join(', ') || 'None')}</p>
@@ -80,9 +83,7 @@ const TravelPlanSummary = () => {
                             {cities.map((city, index) => (
                                 <div key={safeRender(city.name || index)} className="bg-indigo-50 p-4 rounded-lg shadow-sm">
                                     <p className="font-semibold text-indigo-800">{safeRender(city.name)} ({safeRender(city.duration)} days)</p>
-                                    {/* Render multiple city.starRating values if available */}
                                     {Array.isArray(city.starRating) && city.starRating.length > 0 && <p className="text-sm text-gray-600">Hotel: {safeRender(city.starRating.map(s => `${s} Star`).join(', '))}</p>}
-                                    {/* Ensure city.topics is an array before joining and rendering */}
                                     {Array.isArray(city.topics) && city.topics.length > 0 && <p className="text-sm text-gray-600">Topics: {safeRender(city.topics)}</p>}
                                 </div>
                             ))}
