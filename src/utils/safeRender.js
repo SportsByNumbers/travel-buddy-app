@@ -9,7 +9,7 @@
  * @returns {string|number|null} A string, number, or null.
  */
 export const safeRender = (value) => {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === '') { 
         return null; // React can safely render null as nothing
     }
     if (typeof value === 'string' || typeof value === 'number') {
