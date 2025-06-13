@@ -12,7 +12,7 @@ import { safeRender } from '../utils/safeRender.js';
 const HomeLocationSection = () => {
     const {
         homeCountry, 
-        handleSetHomeCountry, 
+        handleSetHomeCountry, // Now using handleSetHomeCountry from context
         homeCurrency, 
         homeCity, setHomeCity,
         homeCountryError, setHomeCountryError,
@@ -51,7 +51,7 @@ const HomeLocationSection = () => {
     };
 
     const selectHomeCountrySuggestion = (country) => {
-        setHomeCountry(country); // This will then trigger handleSetHomeCountry via effect
+        handleSetHomeCountry(country); // CORRECTED: Use handleSetHomeCountry
         setHomeCountryInputValue(''); 
         clearHomeCountrySuggestions();
         setHomeCountryError('');
