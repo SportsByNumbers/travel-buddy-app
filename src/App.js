@@ -172,7 +172,7 @@ const App = () => {
     const [allCountries, setAllCountries] = useState([]);
 
     const [homeCountryError, setHomeCountryError] = useState('');
-    const [homeCityError, setHomeCityError = useState('');
+    const [homeCityError, setHomeCityError] = useState(''); // Corrected syntax
     const [destCountryError, setDestCountryError] = useState('');
     const [destCityError, setDestCityError] = useState('');
     const [dateError, setDateError] = useState('');
@@ -180,7 +180,7 @@ const App = () => {
     const [numberOfChildrenError, setNumberOfChildrenError] = useState('');
 
     const [newCityNameError, setNewCityNameError] = useState('');
-    const [newCityDurationError, setNewCityDurationError = useState('');
+    const [newCityDurationError, setNewCityDurationError] = useState(''); // Corrected syntax
 
     // --- Authentication Handlers ---
 
@@ -234,7 +234,7 @@ const App = () => {
             resetTripStates();
             setTravelPlanSummary(null);
             setUserName(null);
-        } catch (error) {
+        } catch (error) { // CORRECTED: Removed extra '}'
             console.error("Sign out Error:", error);
         }
     };
