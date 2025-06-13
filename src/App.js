@@ -192,9 +192,9 @@ const App = () => {
         }
         setAuthError('');
         try {
-            await signInWithPopup(auth, googleProvider); 
+            await signInWithPopup(auth, googleProvider);
             console.log("Signed in with Google successfully.");
-        }                           } catch (error) {
+        } catch (error) { // CORRECTED: Removed the extra '}' before 'catch'
             console.error("Google Sign-in Error:", error);
             setAuthError(error.message);
         }
@@ -730,7 +730,7 @@ const App = () => {
                 }
             }, 100);
 
-        } catch (error) { // <-- This 'catch' block must directly follow the 'try' block
+        } catch (error) { // CORRECTED: This 'catch' block must directly follow the 'try' block
             console.error("App.js (saveCurrentTrip) - Error saving trip:", error, error.stack);
         }
     };
