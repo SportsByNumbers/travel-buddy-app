@@ -4,7 +4,7 @@ import { Plane } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+import { safeRender } from '../utils/safeRender.js'; 
 
 
 const TransportOptionsSection = () => {
@@ -23,11 +23,6 @@ const TransportOptionsSection = () => {
         dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
         currency
     } = useContext(TripContext);
-
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('TransportOptionsSection RENDER: estimatedTransportCost:', estimatedTransportCost, 'currency:', currency);
-    console.log('TransportOptionsSection RENDER: carRental:', carRental, 'carRentalCost:', carRentalCost);
-    // --- END NEW DEBUG LOGS ---
 
     const renderCostInput = (id, label, value, onChange, isChecked, placeholder) => {
         return isChecked && (
