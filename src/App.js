@@ -78,8 +78,7 @@ const App = () => {
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [homeCurrency, setHomeCurrency] = useState(null);
     const [homeCity, setHomeCity] = useState('');
-    // Removed newHomeCityInput if it's not used at App.js level
-    // const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
+    const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
@@ -195,7 +194,7 @@ const App = () => {
         try {
             await signInWithPopup(auth, googleProvider); 
             console.log("Signed in with Google successfully.");
-        } catch (error) {
+        }                           } catch (error) {
             console.error("Google Sign-in Error:", error);
             setAuthError(error.message);
         }
@@ -540,6 +539,10 @@ const App = () => {
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
 
+                // CRITICAL FIX FOR "true is not iterable" ERROR:
+                // Ensure tripData.travelingParties is explicitly an array.
+                // If it's not, it means saved data might be corrupted from a previous bug,
+                // so we reset it to the default initial array.
                 if (Array.isArray(tripData.travelingParties)) {
                     setTravelingParties(tripData.travelingParties);
                 } else {
@@ -624,7 +627,7 @@ const App = () => {
         }
         const projectIdForPaths = firebaseConfig.projectId;
 
-        try {
+        try { // This is line 627 where the try block starts
             const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0);
             const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0);
 
@@ -669,7 +672,7 @@ const App = () => {
                 numberOfAdults: totalAdults, 
                 numberOfChildren: totalChildren, 
                 currency, 
-                homeCurrency, // Save home currency
+                homeCurrency, 
                 moneyAvailable,
                 moneySaved,
                 contingencyPercentage,
@@ -727,7 +730,7 @@ const App = () => {
                 }
             }, 100);
 
-        }                           } catch (error) {
+        } catch (error) { // <-- This 'catch' block must directly follow the 'try' block
             console.error("App.js (saveCurrentTrip) - Error saving trip:", error, error.stack);
         }
     };
