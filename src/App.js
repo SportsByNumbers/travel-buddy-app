@@ -3,7 +3,7 @@
 import React, { useState, useEffect, createContext, useCallback, useMemo } from 'react';
 import { Loader, PlusCircle } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getRedirectResult } from 'firebase/auth'; 
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Import ALL refactored components with explicit .jsx extension
@@ -69,18 +69,17 @@ const App = () => {
     const [cities, setCities] = useState([]);
     const [newCityName, setNewCityName] = useState('');
     const [newCityDuration, setNewCityDuration] = useState(0);
-    // MODIFIED: newCityStarRating will now be an array for city-specific multi-selection
-    const [newCityStarRating, setNewCityStarRating] = useState([]);
+    const [newCityStarRating, setNewCityStarRating] = useState([]); // Array for city-specific multi-selection
     const [newCityTopics, setNewCityTopics] = useState([]);
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const overallDuration = (startDate && endDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
-    // MODIFIED: starRating will now be an array for overall multi-selection
-    const [starRating, setStarRating] = useState([]);
+    const [starRating, setStarRating] = useState([]); // Array for overall multi-selection
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [homeCurrency, setHomeCurrency] = useState(null);
     const [homeCity, setHomeCity] = useState('');
-    const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
+    // Removed newHomeCityInput if it's not used at App.js level
+    // const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
@@ -496,7 +495,7 @@ const App = () => {
         setNewCityDurationError('');
         setExpenses([]);
     }, [
-        setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity, setHomeCurrency, // Added homeCurrency
+        setCountries, setCities, setStartDate, setEndDate, setStarRating, setHomeCountry, setHomeCity, setHomeCurrency,
         setTopicsOfInterest, setTravelStyle, setHotelAmenities, setIsPerPerson, setTravelingParties,
         setCurrency, setMoneyAvailable, setMoneySaved, setContingencyPercentage, setEstimatedFlightCost,
         setEstimatedHotelCost, setEstimatedActivityCost, setEstimatedMiscellaneousCost, setEstimatedTransportCost,
@@ -532,7 +531,6 @@ const App = () => {
                 setCities(tripData.cities || []);
                 setStartDate(tripData.startDate ? new Date(tripData.startDate) : null);
                 setEndDate(tripData.endDate ? new Date(tripData.endDate) : null);
-                // MODIFIED: starRating loaded as array
                 setStarRating(Array.isArray(tripData.starRating) ? tripData.starRating : (tripData.starRating ? [tripData.starRating] : []));
                 setHomeCountry(tripData.homeCountry || { name: '', flag: '' });
                 setHomeCurrency(tripData.homeCurrency || null); // Load home currency
@@ -550,7 +548,7 @@ const App = () => {
                 }
 
 
-                setCurrency(tripData.currency || 'USD'); // Load planning currency
+                setCurrency(tripData.currency || 'USD'); 
                 setMoneyAvailable(tripData.moneyAvailable || 0);
                 setMoneySaved(tripData.moneySaved || 0);
                 setContingencyPercentage(tripData.contingencyPercentage || 10);
@@ -664,7 +662,6 @@ const App = () => {
                 createdAt: currentTripId ? summaryData.createdAt : serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 countries, cities,
-                // MODIFIED: starRating saved as array
                 starRating: starRating, 
                 homeCountry, homeCity, topicsOfInterest,
                 travelStyle, hotelAmenities, isPerPerson,
@@ -730,13 +727,12 @@ const App = () => {
                 }
             }, 100);
 
-        } catch (error) {
+        }                           } catch (error) {
             console.error("App.js (saveCurrentTrip) - Error saving trip:", error, error.stack);
         }
     };
 
 
-    // --- MAIN TRAVEL PLAN CALCULATION (modified to call saveCurrentTrip) ---
     const calculateTravelPlan = () => {
         console.log('App.js (calculateTravelPlan) - Calculating travel plan.');
         let hasError = false;
@@ -813,7 +809,6 @@ const App = () => {
             overallDuration,
             startDate: startDate ? startDate.toLocaleDateString() : 'Not set',
             endDate: endDate ? endDate.toLocaleDateString() : 'Not set',
-            // MODIFIED: starRating saved as array
             starRating: starRating, 
             travelStyle,
             hotelAmenities,
@@ -828,7 +823,7 @@ const App = () => {
             numberOfAdults: totalAdults, 
             numberOfChildren: totalChildren, 
             currency, 
-            homeCurrency, // Save home currency
+            homeCurrency, 
             moneyAvailable,
             moneySaved,
             contingencyPercentage,
@@ -906,18 +901,14 @@ const App = () => {
 
         countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
         newCityDuration, setNewCityDuration, 
-        // MODIFIED: newCityStarRating is now an array
         newCityStarRating, setNewCityStarRating, 
         newCityTopics, setNewCityTopics,
         startDate, setStartDate, endDate, setEndDate, overallDuration, 
-        // MODIFIED: starRating is now an array
         starRating, setStarRating, 
         travelStyle, setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, 
-        handleSetHomeCountry, // Pass the new setter
-        homeCurrency, setHomeCurrency, // Pass homeCurrency and setter
+        handleSetHomeCountry, 
+        homeCurrency, setHomeCurrency, 
         topicsOfInterest, setTopicsOfInterest, 
-        // Import from constants
-        availableTopics: AVAILABLE_TOPICS, 
         availableAmenities, 
         isPerPerson, setIsPerPerson,
         travelingParties, setTravelingParties, 
@@ -956,8 +947,7 @@ const App = () => {
 
         getFormattedCurrency, toggleSuggestionSelection,
         newHomeCityInput, setNewHomeCityInput, 
-        // Import from constants
-        STAR_RATING_OPTIONS, TRAVEL_STYLE_OPTIONS, EXPENSE_CATEGORIES // Pass to context for child components
+        STAR_RATING_OPTIONS, AVAILABLE_TOPICS, TRAVEL_STYLE_OPTIONS, EXPENSE_CATEGORIES 
     };
 
     if (!isAuthReady) {
