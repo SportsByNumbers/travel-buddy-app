@@ -55,16 +55,15 @@ export const fetchAI = async (prompt, schema = null) => {
 
 // Function to fetch specific country flag/data including currency
 export const fetchCountryData = async (countryName, allCountries) => {
-    if (!countryName) return { name: '', flag: '', currencyCode: null }; // Added currencyCode
+    if (!countryName) return { name: '', flag: '', currencyCode: null };
     
     // Try to find in already fetched allCountries to avoid new API call if possible
     const foundCountry = allCountries.find(c => c.name.toLowerCase() === countryName.toLowerCase());
     if (foundCountry) {
-        // Ensure that if found, currencyCode is present in the returned object
         return { 
             name: foundCountry.name, 
             flag: foundCountry.flag, 
-            currencyCode: foundCountry.currencyCode || null // Ensure currencyCode is passed if available
+            currencyCode: foundCountry.currencyCode || null
         };
     }
 
@@ -77,7 +76,7 @@ export const fetchCountryData = async (countryName, allCountries) => {
             response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fields=flags,name,currencies`);
             if (!response.ok) {
                 console.warn(`Could not find full data for country: ${countryName}`);
-                return { name: countryName, flag: '', currencyCode: null }; // Return with null currencyCode
+                return { name: countryName, flag: '', currencyCode: null };
             }
         }
         const data = await response.json();
@@ -85,15 +84,15 @@ export const fetchCountryData = async (countryName, allCountries) => {
             const country = data[0];
             let currencyCode = null;
             if (country.currencies) {
-                // Get the first currency code from the currencies object (e.g., {USD: {name: "US Dollar", symbol: "$"}, ...})
+                // Get the first currency code from the currencies object
                 const firstCurrencyKey = Object.keys(country.currencies)[0];
                 currencyCode = firstCurrencyKey;
             }
             return { name: country.name.common, flag: country.flags.svg, currencyCode: currencyCode };
         }
-        return { name: countryName, flag: '', currencyCode: null }; // Return with null currencyCode if no data
+        return { name: countryName, flag: '', currencyCode: null };
     } catch (error) {
         console.error("Error fetching country data including currency:", error);
-        return { name: countryName, flag: '', currencyCode: null }; // Return with null currencyCode on error
+        return { name: countryName, flag: '', currencyCode: null };
     }
 };
