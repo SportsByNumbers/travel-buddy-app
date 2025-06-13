@@ -1,5 +1,5 @@
 // components/BudgetPlanningSection.jsx
-import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react'; // ADDED useMemo
+import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react'; 
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
@@ -24,7 +24,7 @@ const BudgetPlanningSection = () => {
         numberOfPeople,
         numberOfAdultsError,
         numberOfChildrenError,
-        homeCurrency, // NEW: Access homeCurrency from context
+        homeCurrency, 
     } = context;
 
     const [localAdults, setLocalAdults] = useState(travelingParties[0]?.adults || 1);
@@ -38,9 +38,7 @@ const BudgetPlanningSection = () => {
             { value: 'JPY', label: 'JPY (¥) - Japanese Yen' },
             { value: 'AUD', label: 'AUD ($) - Australian Dollar' },
             { value: 'CAD', label: 'CAD ($) - Canadian Dollar' },
-            // Add more common currencies here as needed
         ];
-        // Add home currency if it's not already in the common list
         if (homeCurrency && !commonCurrencies.some(opt => opt.value === homeCurrency)) {
             return [{ value: homeCurrency, label: `${homeCurrency} (Home Currency)` }, ...commonCurrencies];
         }
@@ -58,6 +56,11 @@ const BudgetPlanningSection = () => {
             setLocalChildren(context.travelingParties[0]?.children || 0);
         }
     }, [context.travelingParties]);
+
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('BudgetPlanningSection RENDER: currency:', currency, 'homeCurrency:', homeCurrency, 'moneyAvailable:', moneyAvailable, 'numberOfPeople:', numberOfPeople);
+    console.log('BudgetPlanningSection RENDER: estimatedFlightCost:', estimatedFlightCost, 'estimatedHotelCost:', estimatedHotelCost);
+    // --- END NEW DEBUG LOGS ---
 
     return (
         <SectionWrapper
