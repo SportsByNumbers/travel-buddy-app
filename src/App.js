@@ -78,10 +78,12 @@ const App = () => {
     const [homeCountry, setHomeCountry] = useState({ name: '', flag: '' });
     const [homeCurrency, setHomeCurrency] = useState(null);
     const [homeCity, setHomeCity] = useState('');
+    // newHomeCityInput is passed through context, but not used in App.js directly
     const [newHomeCityInput, setNewHomeCityInput] = useState(''); 
     const [topicsOfInterest, setTopicsOfInterest] = useState([]);
     const [travelStyle, setTravelStyle] = useState('');
     const [hotelAmenities, setHotelAmenities] = useState([]);
+    // UPDATED: Added Wifi, Laundry Services, Laundry Facilities
     const availableAmenities = ['Pool', 'Free Breakfast', 'Pet-Friendly', 'Spa', 'Gym', 'Parking', 'Kids Club', 'Beach Access', 'Wifi', 'Laundry Services', 'Laundry Facilities']; 
     const [isPerPerson, setIsPerPerson] = useState(true);
 
@@ -104,7 +106,7 @@ const App = () => {
     const numberOfPeople = calculatedPeople;
 
 
-    const [currency, setCurrency] = useState('USD'); 
+    const [currency, setCurrency] = useState('USD'); // Default currency, will be updated by home currency
     const [moneyAvailable, setMoneyAvailable] = useState(0);
     const [moneySaved, setMoneySaved] = useState(0);
     const [contingencyPercentage, setContingencyPercentage] = useState(10);
@@ -215,7 +217,7 @@ const App = () => {
                 await createUserWithEmailAndPassword(auth, email, password);
                 console.log("Signed up with Email/Password successfully.");
             }
-        } catch (error) { // CORRECTED
+        } catch (error) {
             console.error("Email/Password Auth Error:", error);
             setAuthError(error.message);
         }
@@ -234,7 +236,7 @@ const App = () => {
             resetTripStates();
             setTravelPlanSummary(null);
             setUserName(null);
-        } catch (error) { // CORRECTED: Removed extra '}'
+        } catch (error) { 
             console.error("Sign out Error:", error);
         }
     };
@@ -383,7 +385,7 @@ const App = () => {
             setActualFlightCost(0);
             console.log('App.js (useEffect expenses) - Not fetching expenses (no current trip or auth not ready)');
         }
-    }, [isAuthReady, userId, db, currentTripId]);
+    }, [isAuthReady, userId, db, currentTripId]); // Added currentTripId to dependencies
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
