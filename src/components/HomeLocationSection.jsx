@@ -24,12 +24,6 @@ const HomeLocationSection = () => {
 
     const { inputValue: homeCountryInputValue, setInputValue: setHomeCountryInputValue, filteredSuggestions: filteredHomeCountrySuggestions, handleInputChange: handleHomeCountryInputChange, clearSuggestions: clearHomeCountrySuggestions } = useCountrySearch(allCountries, homeCountry.name ? [homeCountry] : []);
 
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('HomeLocationSection RENDER: homeCountry:', homeCountry, 'homeCity:', homeCity, 'homeCurrency:', homeCurrency, 'homeCountryInputValue:', homeCountryInputValue);
-    console.log('HomeLocationSection RENDER: homeCountryError:', homeCountryError, 'homeCityError:', homeCityError);
-    console.log('HomeLocationSection RENDER: filteredHomeCountrySuggestions:', filteredHomeCountrySuggestions);
-    // --- END NEW DEBUG LOGS ---
-
     const addHomeCountry = async () => {
         const trimmedCountry = homeCountryInputValue.trim();
         if (trimmedCountry === '') {
