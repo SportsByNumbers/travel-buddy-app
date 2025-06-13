@@ -1,21 +1,24 @@
 // src/components/HomeLocationSection.jsx
+
 import React, { useContext, useRef } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, DollarSign } from 'lucide-react'; // Import DollarSign icon
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import TagInput from './TagInput.jsx';
 import InputField from './InputField.jsx';
 import { useCountrySearch } from '../hooks/useCountrySearch.js';
 import { fetchCountryData } from '../services/apiService.js';
-// Removed: import { safeRender } from '../utils/safeRender.js'; // This import is no longer needed here
+import { safeRender } from '../utils/safeRender.js'; // Might still be needed if you apply it locally here
 
 const HomeLocationSection = () => {
     const {
-        homeCountry, setHomeCountry,
+        homeCountry, 
+        handleSetHomeCountry, 
+        homeCurrency, // Get homeCurrency from context
         homeCity, setHomeCity,
         homeCountryError, setHomeCountryError,
         homeCityError, setHomeCityError,
-        allCountries
+        allCountries 
     } = useContext(TripContext);
 
     const homeCountryInputRef = useRef(null);
@@ -32,9 +35,9 @@ const HomeLocationSection = () => {
             setHomeCountryError("This is already your home country.");
             return;
         }
-        const countryData = await fetchCountryData(trimmedCountry, allCountries);
-        if (countryData.name) {
-            setHomeCountry(countryData);
+        const countryData = await fetchCountryData(trimmedCountry, allCountries); 
+        if (countryData?.name) { 
+            handleSetHomeCountry(countryData); 
             setHomeCountryError('');
         } else {
             setHomeCountryError("Could not find a valid country for the entered name.");
@@ -44,13 +47,13 @@ const HomeLocationSection = () => {
     };
 
     const removeHomeCountry = () => {
-        setHomeCountry({ name: '', flag: '' });
+        handleSetHomeCountry({ name: '', flag: '', currencyCode: null }); 
         setHomeCountryError("Please set your home country.");
     };
 
     const selectHomeCountrySuggestion = (country) => {
-        setHomeCountry(country);
-        setHomeCountryInputValue('');
+        handleSetHomeCountry(country); 
+        setHomeCountryInputValue(''); 
         clearHomeCountrySuggestions();
         setHomeCountryError('');
         if (homeCountryInputRef.current) {
@@ -75,7 +78,7 @@ const HomeLocationSection = () => {
                     onAdd={addHomeCountry}
                     suggestions={filteredHomeCountrySuggestions}
                     onSelectSuggestion={selectHomeCountrySuggestion}
-                    items={homeCountry.name ? [homeCountry] : []}
+                    items={homeCountry.name ? [homeCountry] : []} 
                     onRemove={removeHomeCountry}
                     placeholder="e.g., Australia"
                     error={homeCountryError}
@@ -92,6 +95,12 @@ const HomeLocationSection = () => {
                     required
                 />
             </div>
+            {homeCountry.name && homeCurrency && (
+                <div className="mt-4 p-3 bg-indigo-50 rounded-md flex items-center text-indigo-700 font-semibold">
+                    <DollarSign size={20} className="mr-2" />
+                    <p>Detected Home Currency: {safeRender(homeCurrency)}</p> {/* Display detected currency */}
+                </div>
+            )}
         </SectionWrapper>
     );
 };
