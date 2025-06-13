@@ -4,14 +4,10 @@ import { Calendar } from 'lucide-react';
 import { TripContext } from '../App.js';
 import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
-import { safeRender } from '../utils/safeRender.js'; // Ensure safeRender is imported
+import { safeRender } from '../utils/safeRender.js'; 
 
 const TripDatesSection = () => {
     const { startDate, setStartDate, endDate, setEndDate, overallDuration, dateError, setDateError } = useContext(TripContext);
-
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('TripDatesSection RENDER: startDate:', startDate, 'endDate:', endDate, 'overallDuration:', overallDuration, 'dateError:', dateError);
-    // --- END NEW DEBUG LOGS ---
 
     const handleStartDateChange = (e) => {
         const selectedDate = e.target.value;
