@@ -1,7 +1,7 @@
 // src/constants/options.js
 
 export const STAR_RATING_OPTIONS = [
-    { value: '', label: 'Any Star Rating' },
+    { value: '', label: 'Any Star Rating' }, // Kept for default selection in single-select InputField if used
     { value: '1', label: '1 Star (Budget)' },
     { value: '2', label: '2 Star (Economy)' },
     { value: '3', label: '3 Star (Mid-Range)' },
