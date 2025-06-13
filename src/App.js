@@ -215,7 +215,7 @@ const App = () => {
                 await createUserWithEmailAndPassword(auth, email, password);
                 console.log("Signed up with Email/Password successfully.");
             }
-        } catch (error) {
+        }                           } catch (error) {
             console.error("Email/Password Auth Error:", error);
             setAuthError(error.message);
         }
@@ -234,7 +234,7 @@ const App = () => {
             resetTripStates();
             setTravelPlanSummary(null);
             setUserName(null);
-        } catch (error) { // CORRECTED: Removed extra '}'
+        } catch (error) { // CORRECTED
             console.error("Sign out Error:", error);
         }
     };
@@ -292,7 +292,7 @@ const App = () => {
         console.log('App.js (useEffect trips) - isAuthReady:', isAuthReady, 'userId:', userId, 'db:', db);
         if (isAuthReady && userId && db) {
             const projectIdForPaths = firebaseConfig.projectId;
-            const tripsRef = collection(db, `artifacts/<span class="math-inline">\{projectIdForPaths\}/users/</span>{userId}/trips`);
+            const tripsRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
             const q = query(tripsRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -318,7 +318,7 @@ const App = () => {
         console.log('App.js (useEffect expenses) - isAuthReady:', isAuthReady, 'userId:', userId, 'db:', db, 'currentTripId:', currentTripId);
         if (isAuthReady && userId && db && currentTripId) {
             const projectIdForPaths = firebaseConfig.projectId;
-            const expensesRef = collection(db, `artifacts/<span class="math-inline">\{projectIdForPaths\}/users/</span>{userId}/trips/${currentTripId}/expenses`);
+            const expensesRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips/${currentTripId}/expenses`);
             const q = query(expensesRef);
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -383,7 +383,7 @@ const App = () => {
             setActualFlightCost(0);
             console.log('App.js (useEffect expenses) - Not fetching expenses (no current trip or auth not ready)');
         }
-    }, [isAuthReady, userId, db, currentTripId]); // Added currentTripId to dependencies
+    }, [isAuthReady, userId, db, currentTripId]);
 
 
     // --- EFFECT: Fetch all countries on component mount for predictive text ---
@@ -515,8 +515,8 @@ const App = () => {
             return;
         }
         const projectIdForPaths = firebaseConfig.projectId;
-        const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{projectIdForPaths\}/users/</span>{userId}/trips`, tripId);
-        try { // Corrected: This try block is now correctly structured.
+        const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, tripId);
+        try { 
             const tripDocSnap = await getDoc(tripDocRef);
             if (tripDocSnap.exists()) {
                 const tripData = tripDocSnap.data();
@@ -707,11 +707,11 @@ const App = () => {
 
 
             if (currentTripId) {
-                const tripDocRef = doc(db, `artifacts/<span class="math-inline">\{projectIdForPaths\}/users/</span>{userId}/trips`, currentTripId);
+                const tripDocRef = doc(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`, currentTripId);
                 await setDoc(tripDocRef, tripDataToSave, { merge: true });
                 console.log("App.js (saveCurrentTrip) - Trip updated with ID:", currentTripId);
             } else {
-                const tripsCollectionRef = collection(db, `artifacts/<span class="math-inline">\{projectIdForPaths\}/users/</span>{userId}/trips`);
+                const tripsCollectionRef = collection(db, `artifacts/${projectIdForPaths}/users/${userId}/trips`);
                 const newTripDocRef = await addDoc(tripsCollectionRef, tripDataToSave);
                 setCurrentTripId(newTripDocRef.id);
                 console.log("App.js (saveCurrentTrip) - New trip created with ID:", newTripDocRef.id);
@@ -787,4 +787,310 @@ const App = () => {
             combinedEstimatedTransportCost +
             parseFloat(estimatedMiscellaneousCost);
 
-        const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndC
+        const subTotalEstimatedCost = isPerPerson ? totalEstimatedCostBeforeFoodAndContingency * numberOfPeople : totalEstimatedCostBeforeFoodAndContingency;
+        const finalTotalFoodCost = isPerPerson ? totalFoodCost * numberOfPeople : totalFoodCost;
+
+        const contingencyAmount = (subTotalEstimatedCost + finalTotalFoodCost) * (contingencyPercentage / 100);
+
+        const grandTotalEstimated = subTotalEstimatedCost + finalTotalFoodCost + contingencyAmount;
+
+        const combinedActualTransportCostFromExpenses = actualTransportCost;
+        const actualGrandTotal = actualFlightCost + actualHotelCost + actualActivityCost + actualMiscellaneousCost + actualFoodCost + combinedActualTransportCostFromExpenses;
+
+        const remainingBudgetEstimated = parseFloat(moneyAvailable) + parseFloat(moneySaved) - grandTotalEstimated; // eslint-disable-line no-unused-vars
+        const remainingBudgetActual = parseFloat(moneyAvailable) + parseFloat(moneySaved) - actualGrandTotal; // eslint-disable-line no-unused-vars
+
+
+        const summaryData = {
+            homeCountry,
+            homeCity,
+            countries,
+            cities,
+            overallDuration,
+            startDate: startDate ? startDate.toLocaleDateString() : 'Not set',
+            endDate: endDate ? endDate.toLocaleDateString() : 'Not set',
+            starRating: starRating, 
+            travelStyle,
+            hotelAmenities,
+            activities: finalActivities,
+            sportingEvents: finalSportingEvents,
+            foodLocations: finalFoodLocations,
+            themeParks: finalThemeParks,
+            touristSpots: finalTouristSpots,
+            tours: finalTours,
+            isPerPerson,
+            travelingParties, 
+            numberOfAdults: totalAdults, 
+            numberOfChildren: totalChildren, 
+            currency, 
+            homeCurrency, 
+            moneyAvailable,
+            moneySaved,
+            contingencyPercentage,
+            contingencyAmount, 
+
+            estimatedFlightCost,
+            estimatedHotelCost,
+            estimatedActivityCost,
+            estimatedMiscellaneousCost,
+            combinedEstimatedTransportCost,
+            totalEstimatedCost: subTotalEstimatedCost,
+            grandTotalEstimated,
+
+            actualFlightCost,
+            actualHotelCost,
+            actualActivityCost,
+            actualMiscellaneousCost,
+            actualTransportCost: combinedActualTransportCostFromExpenses,
+            actualFoodCost,
+            actualGrandTotal, 
+
+            breakfastAllowance,
+            lunchAllowance,
+            dinnerAllowance,
+            snacksAllowance,
+            totalDailyFoodAllowance,
+            totalFoodCost: finalTotalFoodCost,
+
+            carRental,
+            carRentalCost,
+            shuttle,
+            shuttleCost,
+            airportTransfers,
+            airportTransfersCost,
+            airportParking,
+            airportParkingCost,
+            estimatedInterCityFlightCost,
+            estimatedInterCityTrainCost,
+            estimatedInterCityBusCost,
+            localPublicTransport,
+            taxiRideShare,
+            walking,
+            dailyLocalTransportAllowance,
+
+            remainingBudgetEstimated, 
+            remainingBudgetActual,    
+            topicsOfInterest,
+            selectedSuggestedActivities,
+            selectedSuggestedFoodLocations,
+            selectedSuggestedThemeParks,
+            selectedSuggestedTouristSpots,
+            selectedSuggestedTours,
+            selectedSuggestedSportingEvents,
+        };
+
+        saveCurrentTrip(summaryData);
+    };
+
+    const getFormattedCurrency = (amount) => {
+        const numAmount = parseFloat(amount);
+        if (isNaN(numAmount)) return `${currency}0.00`;
+        switch (currency) {
+            case 'JPY': return `¥${numAmount.toFixed(0)}`;
+            case 'GBP': return `£${numAmount.toFixed(2)}`;
+            case 'EUR': return `€${numAmount.toFixed(2)}`;
+            default: return `$${numAmount.toFixed(2)}`;
+        }
+    };
+
+    const contextValue = {
+        db, auth, userId, userName, isAuthReady,
+        appId: firebaseConfig.appId,
+        trips, setTrips, currentTripId, setCurrentTripId, loadTrip, createNewTrip,
+        isNewTripStarted, setIsNewTripStarted,
+
+        countries, setCountries, newCountry, setNewCountry, cities, setCities, newCityName, setNewCityName,
+        newCityDuration, setNewCityDuration, 
+        newCityStarRating, setNewCityStarRating, 
+        newCityTopics, setNewCityTopics,
+        startDate, setStartDate, endDate, setEndDate, overallDuration, 
+        starRating, setStarRating, 
+        travelStyle, setTravelStyle, hotelAmenities, setHotelAmenities, homeCountry, 
+        handleSetHomeCountry, 
+        homeCurrency, setHomeCurrency, 
+        topicsOfInterest, setTopicsOfInterest, 
+        availableAmenities, 
+        isPerPerson, setIsPerPerson,
+        travelingParties, setTravelingParties, 
+        numberOfPeople,
+        currency, setCurrency, 
+        moneyAvailable, setMoneyAvailable, moneySaved, setMoneySaved, contingencyPercentage, setContingencyPercentage,
+        estimatedFlightCost, setEstimatedFlightCost, estimatedHotelCost, setEstimatedHotelCost, estimatedActivityCost,
+        setEstimatedActivityCost, estimatedMiscellaneousCost, setEstimatedMiscellaneousCost, estimatedTransportCost,
+        setEstimatedTransportCost, carRentalCost, setCarRentalCost, shuttleCost, setShuttleCost, airportTransfersCost,
+        setAirportTransfersCost, airportParkingCost, setAirportParkingCost, estimatedInterCityFlightCost,
+        setEstimatedInterCityFlightCost, estimatedInterCityTrainCost, setEstimatedInterCityTrainCost,
+        estimatedInterCityBusCost, setEstimatedInterCityBusCost, localPublicTransport, setLocalPublicTransport,
+        taxiRideShare, setTaxiRideShare, walking, setWalking, dailyLocalTransportAllowance, setDailyLocalTransportAllowance,
+        actualFlightCost, setActualFlightCost, actualHotelCost, setActualHotelCost, actualActivityCost,
+        setActualActivityCost, actualTransportCost, setActualTransportCost, actualMiscellaneousCost,
+        setActualMiscellaneousCost, actualFoodCost, setActualFoodCost, breakfastAllowance, setBreakfastAllowance,
+        lunchAllowance, setLunchAllowance, dinnerAllowance, setDinnerAllowance, snacksAllowance, setSnacksAllowance,
+        carRental, setCarRental, shuttle, setShuttle, airportTransfers, setAirportTransfers, airportParking, setAirportParking,
+        travelPlanSummary, setTravelPlanSummary,
+        isGeneratingSuggestions, setIsGeneratingSuggestions, suggestionError,
+        setSuggestionError, allCountries,
+        isGeneratingBudget, setIsGeneratingBudget, budgetError, setBudgetError,
+        expenses, setExpenses,
+
+        selectedSuggestedActivities, toggleSuggestedActivities, setSelectedSuggestedActivities,
+        selectedSuggestedFoodLocations, toggleSuggestedFoodLocations, setSelectedSuggestedFoodLocations,
+        selectedSuggestedThemeParks, toggleSuggestedThemeParks, setSelectedSuggestedThemeParks,
+        selectedSuggestedTouristSpots, toggleSuggestedTouristSpots, setSelectedSuggestedTouristSpots,
+        selectedSuggestedTours, toggleSuggestedTours, setSelectedSuggestedTours,
+        selectedSuggestedSportingEvents, toggleSuggestedSportingEvents, setSelectedSuggestedSportingEvents,
+
+        homeCountryError, setHomeCountryError, homeCityError, setHomeCityError, destCountryError, setDestCountryError,
+        destCityError, setDestCityError, dateError, setDateError,
+        numberOfAdultsError, setNumberOfAdultsError, numberOfChildrenError, setNumberOfChildrenError,
+        newCityNameError, setNewCityNameError, newCityDurationError, setNewCityDurationError,
+
+        getFormattedCurrency, toggleSuggestionSelection,
+        newHomeCityInput, setNewHomeCityInput, 
+        STAR_RATING_OPTIONS, AVAILABLE_TOPICS, TRAVEL_STYLE_OPTIONS, EXPENSE_CATEGORIES 
+    };
+
+    if (!isAuthReady) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+                <Loader className="animate-spin text-indigo-600" size={48} />
+                <p className="ml-4 text-indigo-800 text-lg">Loading application...</p>
+            </div>
+        );
+    }
+
+    return (
+        <TripContext.Provider value={contextValue}>
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 font-sans antialiased print:bg-white print:p-0">
+                <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-2xl print:shadow-none print:rounded-none print:p-4">
+                    <h1 className="text-4xl font-extrabold text-center text-indigo-900 mb-6 tracking-tight print:text-black">
+                        <span className="block text-indigo-600 text-xl mb-1 print:text-gray-700">Your Ultimate</span>
+                        Travel Planner
+                    </h1>
+
+                    {userId ? (
+                        <>
+                            <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg shadow-inner mb-6 print:hidden">
+                                <p className="text-sm text-gray-600 mb-2 sm:mb-0">
+                                    Welcome, <span className="font-semibold text-indigo-700 break-all">
+                                        {userName || userId}
+                                    </span>!
+                                </p>
+                                <div className="flex space-x-3">
+                                    <button
+                                        onClick={createNewTrip}
+                                        className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md text-sm font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md"
+                                    >
+                                        <PlusCircle size={16} className="mr-1" /> New Trip
+                                    </button>
+                                    <TripList />
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-semibold hover:bg-red-600 transition-colors duration-200 shadow-md"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+
+
+                            {/* Main content area for authenticated users */}
+                            {currentTripId !== null || isNewTripStarted ? (
+                                <ErrorBoundary>
+                                    <HomeLocationSection /> 
+                                    <DestinationsSection /> 
+                                    <TripDatesSection /> 
+                                    <PreferencesSection /> 
+                                    <ItinerarySuggestions /> 
+                                    <BudgetPlanningSection /> 
+                                    <FoodAllowanceSection /> 
+                                    <TransportOptionsSection /> 
+                                    <TravelPlanSummary /> 
+                                    <ExpenseTracker /> 
+
+                                    <div className="text-center mt-10 print:hidden">
+                                        <button
+                                            onClick={calculateTravelPlan}
+                                            className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={!homeCountry.name || !homeCity || (countries.length === 0 && cities.length === 0) || !startDate || !endDate || overallDuration < 1 || numberOfPeople < 1}
+                                        >
+                                            {isGeneratingSuggestions ? (
+                                                <span className="flex items-center justify-center">
+                                                    <Loader className="animate-spin mr-2" size={24} /> Generating Plan & Saving...
+                                                </span>
+                                            ) : (
+                                                currentTripId ? 'Update Travel Plan' : 'Generate & Save Travel Plan'
+                                            )}
+                                        </button>
+                                    </div>
+
+                                </ErrorBoundary>
+                            ) : (
+                                <div className="text-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
+                                    <p className="text-lg mb-4">You're signed in! Start by creating a new trip or loading an existing one!</p>
+                                    <button
+                                        onClick={createNewTrip}
+                                        className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                                    >
+                                        <PlusCircle size={20} className="mr-2" /> Start New Travel Plan
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl shadow-inner text-gray-600">
+                            <h2 className="text-2xl font-bold text-indigo-800 mb-6">{isLoginMode ? 'Sign In' : 'Sign Up'} to Plan Your Trip</h2>
+                            {authError && <p className="text-red-500 mb-4">{authError}</p>}
+
+                            <button
+                                onClick={handleGoogleSignIn}
+                                className="inline-flex items-center px-6 py-3 mb-4 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out shadow-md"
+                            >
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" className="w-5 h-5 mr-3" />
+                                {isLoginMode ? 'Sign In with Google' : 'Sign Up with Google'}
+                            </button>
+
+                            <div className="w-full max-w-sm px-4">
+                                <div className="relative flex py-5 items-center">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="flex-shrink mx-4 text-gray-500">OR</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                </div>
+
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-4 py-3 mb-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                />
+                                <button
+                                    onClick={handleEmailAuth}
+                                    className="w-full px-6 py-3 mb-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-300 ease-in-out shadow-md"
+                                >
+                                    {isLoginMode ? 'Sign In with Email' : 'Sign Up with Email'}
+                                </button>
+
+                                <button
+                                    onClick={() => setIsLoginMode(!isLoginMode)}
+                                    className="w-full text-indigo-600 hover:underline text-sm font-medium transition duration-200 ease-in-out"
+                                >
+                                    {isLoginMode ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </TripContext.Provider>
+    );
+};
+
+export default App;
