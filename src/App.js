@@ -194,7 +194,7 @@ const App = () => {
         try {
             await signInWithPopup(auth, googleProvider);
             console.log("Signed in with Google successfully.");
-        } catch (error) { // CORRECTED: Removed the extra '}' before 'catch'
+        } catch (error) {
             console.error("Google Sign-in Error:", error);
             setAuthError(error.message);
         }
@@ -234,7 +234,7 @@ const App = () => {
             resetTripStates();
             setTravelPlanSummary(null);
             setUserName(null);
-        } catch (error) {
+        }                           } catch (error) {
             console.error("Sign out Error:", error);
         }
     };
@@ -391,20 +391,18 @@ const App = () => {
         const fetchAllCountries = async () => {
             console.log('App.js (useEffect countries) - Fetching all countries...');
             try {
-                // Request currencies field from RestCountries API
                 const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,currencies');
                 const data = await response.json();
                 setAllCountries(data.map(country => {
                     let currencyCode = null;
                     if (country.currencies) {
-                        // Get the first currency code from the currencies object
                         const firstCurrencyKey = Object.keys(country.currencies)[0];
                         currencyCode = firstCurrencyKey;
                     }
                     return {
                         name: country.name.common,
                         flag: country.flags.svg,
-                        currencyCode: currencyCode, // Store currency code
+                        currencyCode: currencyCode,
                     };
                 }));
                 console.log('App.js (useEffect countries) - Countries fetched successfully.');
@@ -416,15 +414,15 @@ const App = () => {
     }, []);
 
     // --- Helper to set home country and update main currency state ---
-    // This is a custom setter function that also updates homeCurrency and default currency
     const handleSetHomeCountry = useCallback((countryData) => {
+        console.log('App.js (handleSetHomeCountry) - Setting home country:', countryData);
         setHomeCountry(countryData);
         if (countryData && countryData.currencyCode) {
             setHomeCurrency(countryData.currencyCode);
-            setCurrency(countryData.currencyCode); // Set main currency to home currency by default
+            setCurrency(countryData.currencyCode);
         } else {
             setHomeCurrency(null);
-            setCurrency('USD'); // Fallback if no currency code
+            setCurrency('USD');
         }
     }, [setHomeCountry, setHomeCurrency, setCurrency]);
 
@@ -435,10 +433,9 @@ const App = () => {
         setCities([]);
         setStartDate(null);
         setEndDate(null);
-        // MODIFIED: starRating now resets to an empty array for multi-selection
         setStarRating([]);
         setHomeCountry({ name: '', flag: '' });
-        setHomeCurrency(null); // Reset home currency
+        setHomeCurrency(null);
         setHomeCity('');
         setTopicsOfInterest([]);
         setTravelStyle('');
@@ -446,7 +443,7 @@ const App = () => {
         setIsPerPerson(true);
         setTravelingParties([{ id: 1, name: 'Main Group', adults: 1, children: 0 }]);
 
-        setCurrency('USD'); // Default back to USD
+        setCurrency('USD');
         setMoneyAvailable(0);
         setMoneySaved(0);
         setContingencyPercentage(10);
@@ -539,10 +536,6 @@ const App = () => {
                 setHotelAmenities(tripData.hotelAmenities || []);
                 setIsPerPerson(tripData.isPerPerson !== undefined ? tripData.isPerPerson : true);
 
-                // CRITICAL FIX FOR "true is not iterable" ERROR:
-                // Ensure tripData.travelingParties is explicitly an array.
-                // If it's not, it means saved data might be corrupted from a previous bug,
-                // so we reset it to the default initial array.
                 if (Array.isArray(tripData.travelingParties)) {
                     setTravelingParties(tripData.travelingParties);
                 } else {
@@ -616,18 +609,19 @@ const App = () => {
         setTravelPlanSummary(null);
         setIsNewTripStarted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log('App.js (createNewTrip) - isNewTripStarted set to true. currentTripId is null.');
     };
 
     // --- Function to save the current trip ---
     const saveCurrentTrip = async (summaryData) => {
-        console.log('App.js (saveCurrentTrip) - Attempting to save trip.');
+        console.log('App.js (saveCurrentTrip) - Attempting to save trip with summaryData:', summaryData);
         if (!db || !userId) {
             console.error("App.js (saveCurrentTrip) - Firestore not initialized or user not authenticated.");
             return;
         }
         const projectIdForPaths = firebaseConfig.projectId;
 
-        try { // This is line 627 where the try block starts
+        try { 
             const totalAdults = partiesToProcess.reduce((sum, party) => sum + (party.adults || 0), 0);
             const totalChildren = partiesToProcess.reduce((sum, party) => sum + (party.children || 0), 0);
 
@@ -730,14 +724,17 @@ const App = () => {
                 }
             }, 100);
 
-        } catch (error) { // CORRECTED: This 'catch' block must directly follow the 'try' block
+        } catch (error) { 
             console.error("App.js (saveCurrentTrip) - Error saving trip:", error, error.stack);
         }
+        console.log("App.js (saveCurrentTrip) - Trip saved/updated. Current Trip ID:", currentTripId);
     };
 
 
     const calculateTravelPlan = () => {
-        console.log('App.js (calculateTravelPlan) - Calculating travel plan.');
+        console.log('App.js (calculateTravelPlan) - Starting calculation.');
+        console.log('App.js (calculateTravelPlan) - States for calculation: homeCountry:', homeCountry, 'homeCity:', homeCity, 'countries:', countries, 'cities:', cities, 'startDate:', startDate, 'endDate:', endDate, 'numberOfPeople:', numberOfPeople);
+
         let hasError = false;
         if (homeCountry.name === '') { setHomeCountryError("Please set your home country."); hasError = true; } else { setHomeCountryError(''); }
         if (homeCity === '') { setHomeCityError("Please set your home city."); hasError = true; } else { setHomeCityError(''); }
