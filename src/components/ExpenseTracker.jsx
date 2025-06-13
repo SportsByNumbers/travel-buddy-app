@@ -5,9 +5,7 @@ import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import { PlusCircle, DollarSign, XCircle } from 'lucide-react';
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { safeRender } => {
-    // ... (safeRender implementation) ...
-};
+import { safeRender } from '../utils/safeRender.js'; 
 
 const ExpenseTracker = () => {
     const { db, userId, currentTripId, expenses, currency, getFormattedCurrency, appId } = useContext(TripContext);
@@ -18,10 +16,6 @@ const ExpenseTracker = () => {
     const [expenseDate, setExpenseDate] = useState(''); // Date of expense
     const [amountError, setAmountError] = useState('');
     const [descriptionError, setDescriptionError] = useState('');
-
-    // --- NEW DEBUG LOGS HERE ---
-    console.log('ExpenseTracker RENDER: currentTripId:', currentTripId, 'expenses.length:', expenses.length, 'currency:', currency);
-    // --- END NEW DEBUG LOGS ---
 
     const expenseCategories = ['Food', 'Transport', 'Activities', 'Hotel', 'Flight', 'Miscellaneous', 'Shopping'];
 
