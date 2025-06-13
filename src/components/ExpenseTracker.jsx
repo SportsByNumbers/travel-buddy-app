@@ -5,6 +5,9 @@ import SectionWrapper from './SectionWrapper.jsx';
 import InputField from './InputField.jsx';
 import { PlusCircle, DollarSign, XCircle } from 'lucide-react';
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { safeRender } => {
+    // ... (safeRender implementation) ...
+};
 
 const ExpenseTracker = () => {
     const { db, userId, currentTripId, expenses, currency, getFormattedCurrency, appId } = useContext(TripContext);
@@ -16,12 +19,15 @@ const ExpenseTracker = () => {
     const [amountError, setAmountError] = useState('');
     const [descriptionError, setDescriptionError] = useState('');
 
+    // --- NEW DEBUG LOGS HERE ---
+    console.log('ExpenseTracker RENDER: currentTripId:', currentTripId, 'expenses.length:', expenses.length, 'currency:', currency);
+    // --- END NEW DEBUG LOGS ---
+
     const expenseCategories = ['Food', 'Transport', 'Activities', 'Hotel', 'Flight', 'Miscellaneous', 'Shopping'];
 
-    // Set default expense date to today
     useEffect(() => {
         const today = new Date();
-        setExpenseDate(today.toISOString().split('T')[0]); // Format as YYYY-MM-DD
+        setExpenseDate(today.toISOString().split('T')[0]);
     }, []);
 
     const handleAddExpense = async () => {
@@ -43,7 +49,6 @@ const ExpenseTracker = () => {
 
         if (!db || !userId || !currentTripId) {
             console.error("Cannot add expense: Firestore not initialized, user not authenticated, or no trip selected.");
-            // Optionally, show a user-friendly message
             return;
         }
 
@@ -53,13 +58,13 @@ const ExpenseTracker = () => {
                 amount: parseFloat(amount),
                 category: category,
                 currency: currency,
-                date: new Date(expenseDate), // Store as Firestore Timestamp
+                date: new Date(expenseDate),
                 createdAt: serverTimestamp(),
             });
             setDescription('');
             setAmount('');
             setCategory('Food');
-            setExpenseDate(new Date().toISOString().split('T')[0]); // Reset to today
+            setExpenseDate(new Date().toISOString().split('T')[0]);
             console.log("Expense added successfully!");
         } catch (error) {
             console.error("Error adding expense:", error);
@@ -148,10 +153,10 @@ const ExpenseTracker = () => {
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
                                         {expenses.map((expense) => (
-                                            <tr key={expense.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{expense.date.toLocaleDateString()}</td>
-                                                <td className="py-3 px-4 text-sm text-gray-800">{expense.description}</td>
-                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-600">{expense.category}</td>
+                                            <tr key={safeRender(expense.id)} className="hover:bg-gray-50 transition-colors duration-150">
+                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{safeRender(expense.date?.toLocaleDateString())}</td>
+                                                <td className="py-3 px-4 text-sm text-gray-800">{safeRender(expense.description)}</td>
+                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-600">{safeRender(expense.category)}</td>
                                                 <td className="py-3 px-4 whitespace-nowrap text-right font-medium text-gray-900">{getFormattedCurrency(expense.amount)}</td>
                                                 <td className="py-3 px-4 whitespace-nowrap text-right">
                                                     <button
